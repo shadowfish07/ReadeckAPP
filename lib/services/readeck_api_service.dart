@@ -95,6 +95,60 @@ class ReadeckApiService {
 
     return shuffled.take(5).toList();
   }
+
+  // 标记/取消标记书签为喜爱
+  Future<bool> toggleBookmarkMark(String bookmarkId, bool isMarked) async {
+    if (!isConfigured) {
+      throw Exception('API未配置，请先设置服务器地址和令牌');
+    }
+
+    final url = Uri.parse('$_baseUrl/api/bookmarks/$bookmarkId');
+
+    try {
+      final response = await http.patch(
+        url,
+        headers: _headers,
+        body: json.encode({
+          'is_marked': !isMarked, // 切换标记状态
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return !isMarked; // 返回新的标记状态
+      } else {
+        throw Exception('标记书签失败: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('网络请求失败: $e');
+    }
+  }
+
+  // 存档/取消存档书签
+  Future<bool> toggleBookmarkArchive(String bookmarkId, bool isArchived) async {
+    if (!isConfigured) {
+      throw Exception('API未配置，请先设置服务器地址和令牌');
+    }
+
+    final url = Uri.parse('$_baseUrl/api/bookmarks/$bookmarkId');
+
+    try {
+      final response = await http.patch(
+        url,
+        headers: _headers,
+        body: json.encode({
+          'is_archived': !isArchived, // 切换存档状态
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return !isArchived; // 返回新的存档状态
+      } else {
+        throw Exception('存档书签失败: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('网络请求失败: $e');
+    }
+  }
 }
 
 // 辅助方法：将动态类型转换为int

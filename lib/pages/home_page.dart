@@ -127,6 +127,111 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _toggleBookmarkMark(
+      String bookmarkId, bool currentMarkStatus) async {
+    try {
+      final newMarkStatus = await widget.apiService
+          .toggleBookmarkMark(bookmarkId, currentMarkStatus);
+
+      // 更新本地书签列表中的标记状态
+      setState(() {
+        final index =
+            _dailyBookmarks.indexWhere((bookmark) => bookmark.id == bookmarkId);
+        if (index != -1) {
+          _dailyBookmarks[index] = Bookmark(
+            id: _dailyBookmarks[index].id,
+            title: _dailyBookmarks[index].title,
+            url: _dailyBookmarks[index].url,
+            siteName: _dailyBookmarks[index].siteName,
+            description: _dailyBookmarks[index].description,
+            created: _dailyBookmarks[index].created,
+            isMarked: newMarkStatus,
+            isArchived: _dailyBookmarks[index].isArchived,
+            readProgress: _dailyBookmarks[index].readProgress,
+            labels: _dailyBookmarks[index].labels,
+            imageUrl: _dailyBookmarks[index].imageUrl,
+          );
+        }
+      });
+
+      // 显示成功提示
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(newMarkStatus ? '已标记为喜爱' : '已取消喜爱标记'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      // 显示错误提示
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('操作失败: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _toggleBookmarkArchive(
+      String bookmarkId, bool currentArchiveStatus) async {
+    try {
+      final newArchiveStatus = await widget.apiService
+          .toggleBookmarkArchive(bookmarkId, currentArchiveStatus);
+
+      // 如果书签被存档，从当前列表中移除
+      if (newArchiveStatus) {
+        setState(() {
+          _dailyBookmarks.removeWhere((bookmark) => bookmark.id == bookmarkId);
+        });
+
+        // 显示成功提示
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('已存档'),
+              duration: const Duration(seconds: 2),
+              action: SnackBarAction(
+                label: '撤销',
+                onPressed: () {
+                  // 撤销存档操作
+                  _toggleBookmarkArchive(bookmarkId, true);
+                },
+              ),
+            ),
+          );
+        }
+      } else {
+        // 如果取消存档，重新加载书签列表
+        _loadDailyBookmarks();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('已取消存档'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      // 显示错误提示
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('操作失败: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -241,6 +346,10 @@ class _HomePageState extends State<HomePage> {
           return BookmarkCard(
             bookmark: _dailyBookmarks[index],
             onTap: () => _openUrl(_dailyBookmarks[index].url),
+            onToggleMark: (bookmarkId, currentMarkStatus) =>
+                _toggleBookmarkMark(bookmarkId, currentMarkStatus),
+            onToggleArchive: (bookmarkId, currentArchiveStatus) =>
+                _toggleBookmarkArchive(bookmarkId, currentArchiveStatus),
           );
         },
       ),
@@ -251,11 +360,15 @@ class _HomePageState extends State<HomePage> {
 class BookmarkCard extends StatelessWidget {
   final Bookmark bookmark;
   final VoidCallback onTap;
+  final Function(String bookmarkId, bool currentMarkStatus)? onToggleMark;
+  final Function(String bookmarkId, bool currentArchiveStatus)? onToggleArchive;
 
   const BookmarkCard({
     super.key,
     required this.bookmark,
     required this.onTap,
+    this.onToggleMark,
+    this.onToggleArchive,
   });
 
   @override
@@ -355,24 +468,43 @@ class BookmarkCard extends StatelessWidget {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  if (bookmark.isMarked)
-                    Icon(
-                      Icons.star,
-                      size: 16,
-                      color: Colors.amber[700],
-                    ),
                   const Spacer(),
-                  Icon(
-                    Icons.open_in_browser,
-                    size: 16,
-                    color: Theme.of(context).colorScheme.primary,
+                  // 标记喜爱按钮
+                  IconButton(
+                    onPressed: onToggleMark != null
+                        ? () => onToggleMark!(bookmark.id, bookmark.isMarked)
+                        : null,
+                    icon: Icon(
+                      bookmark.isMarked
+                          ? Icons.favorite
+                          : Icons.favorite_border,
+                      size: 20,
+                      color: bookmark.isMarked ? Colors.red : Colors.grey[600],
+                    ),
+                    tooltip: '标记喜爱',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
                   ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '点击阅读',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontSize: 12,
+                  const SizedBox(width: 8),
+                  // 存档按钮
+                  IconButton(
+                    onPressed: onToggleArchive != null
+                        ? () =>
+                            onToggleArchive!(bookmark.id, bookmark.isArchived)
+                        : null,
+                    icon: Icon(
+                      Icons.archive_outlined,
+                      size: 20,
+                      color: Colors.grey[600],
+                    ),
+                    tooltip: '存档',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
                     ),
                   ),
                 ],
