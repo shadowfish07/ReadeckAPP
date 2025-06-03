@@ -1,16 +1,64 @@
 import 'package:flutter/material.dart';
 import '../services/readeck_api_service.dart';
+import 'about_page.dart';
 
-class SettingsPage extends StatefulWidget {
+class SettingsPage extends StatelessWidget {
   final ReadeckApiService apiService;
 
   const SettingsPage({super.key, required this.apiService});
 
   @override
-  State<SettingsPage> createState() => _SettingsPageState();
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('设置'),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      ),
+      body: ListView(
+        children: [
+          ListTile(
+            leading: const Icon(Icons.api),
+            title: const Text('API 配置'),
+            subtitle: const Text('配置 Readeck 服务器连接'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => ApiConfigPage(apiService: apiService),
+                ),
+              );
+            },
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.info),
+            title: const Text('关于'),
+            subtitle: const Text('应用信息和版本'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const AboutPage(),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-class _SettingsPageState extends State<SettingsPage> {
+class ApiConfigPage extends StatefulWidget {
+  final ReadeckApiService apiService;
+
+  const ApiConfigPage({super.key, required this.apiService});
+
+  @override
+  State<ApiConfigPage> createState() => _ApiConfigPageState();
+}
+
+class _ApiConfigPageState extends State<ApiConfigPage> {
   final _formKey = GlobalKey<FormState>();
   final _baseUrlController = TextEditingController();
   final _tokenController = TextEditingController();
@@ -23,8 +71,17 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _loadCurrentConfig() async {
-    // 这里可以从SharedPreferences加载当前配置
-    // 为了简化，暂时留空
+    // 从apiService加载当前配置
+    final baseUrl = widget.apiService.baseUrl;
+    final token = widget.apiService.token;
+
+    if (baseUrl != null) {
+      _baseUrlController.text = baseUrl;
+    }
+
+    if (token != null) {
+      _tokenController.text = token;
+    }
   }
 
   @override
@@ -80,7 +137,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('设置'),
+        title: const Text('API 配置'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: Padding(

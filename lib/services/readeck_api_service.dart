@@ -29,6 +29,12 @@ class ReadeckApiService {
   // 检查是否已配置
   bool get isConfigured => _baseUrl != null && _token != null;
 
+  // 获取当前配置的基础URL
+  String? get baseUrl => _baseUrl;
+
+  // 获取当前配置的令牌
+  String? get token => _token;
+
   // 获取请求头
   Map<String, String> get _headers => {
         'Authorization': 'Bearer $_token',
