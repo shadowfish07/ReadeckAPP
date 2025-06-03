@@ -212,4 +212,24 @@ class Bookmark {
       imageUrl: json['resources']?['image']?['src'],
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'url': url,
+      'site_name': siteName,
+      'description': description,
+      'created': created.toIso8601String(),
+      'is_marked': isMarked,
+      'is_archived': isArchived,
+      'read_progress': readProgress,
+      'labels': labels,
+      'resources': imageUrl != null
+          ? {
+              'image': {'src': imageUrl}
+            }
+          : null,
+    };
+  }
 }

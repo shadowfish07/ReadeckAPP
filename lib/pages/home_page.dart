@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/readeck_api_service.dart';
 import 'settings_page.dart';
 
@@ -23,11 +25,53 @@ class _HomePageState extends State<HomePage> {
   List<Bookmark> _dailyBookmarks = [];
   bool _isLoading = false;
   String? _error;
+  static const String _lastRefreshDateKey = 'last_refresh_date';
 
   @override
   void initState() {
     super.initState();
-    _loadDailyBookmarks();
+    _checkAndLoadDailyBookmarks();
+  }
+
+  // 检查是否需要刷新今日书签
+  Future<void> _checkAndLoadDailyBookmarks() async {
+    final prefs = await SharedPreferences.getInstance();
+    final today = DateTime.now();
+    final todayString =
+        '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+    final lastRefreshDate = prefs.getString(_lastRefreshDateKey);
+
+    // 如果今天还没有刷新过，或者是第一次使用，则自动刷新
+    if (lastRefreshDate != todayString) {
+      await _loadDailyBookmarks();
+      await prefs.setString(_lastRefreshDateKey, todayString);
+    } else {
+      // 今天已经刷新过，加载缓存的书签
+      await _loadCachedBookmarks();
+    }
+  }
+
+  // 加载缓存的书签数据
+  Future<void> _loadCachedBookmarks() async {
+    final prefs = await SharedPreferences.getInstance();
+    final cachedBookmarksJson = prefs.getString('cached_daily_bookmarks');
+
+    if (cachedBookmarksJson != null) {
+      try {
+        final List<dynamic> bookmarksData = json.decode(cachedBookmarksJson);
+        setState(() {
+          _dailyBookmarks =
+              bookmarksData.map((json) => Bookmark.fromJson(json)).toList();
+          _isLoading = false;
+        });
+        return;
+      } catch (e) {
+        // 缓存数据解析失败，重新加载
+      }
+    }
+
+    // 没有缓存或缓存无效，重新加载
+    await _loadDailyBookmarks();
   }
 
   Future<void> _loadDailyBookmarks() async {
@@ -49,11 +93,26 @@ class _HomePageState extends State<HomePage> {
         _dailyBookmarks = bookmarks;
         _isLoading = false;
       });
+
+      // 缓存今日书签数据
+      await _cacheDailyBookmarks(bookmarks);
     } catch (e) {
       setState(() {
         _error = e.toString();
         _isLoading = false;
       });
+    }
+  }
+
+  // 缓存今日书签数据
+  Future<void> _cacheDailyBookmarks(List<Bookmark> bookmarks) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final bookmarksJson =
+          json.encode(bookmarks.map((b) => b.toJson()).toList());
+      await prefs.setString('cached_daily_bookmarks', bookmarksJson);
+    } catch (e) {
+      // 缓存失败不影响主要功能
     }
   }
 
@@ -134,7 +193,7 @@ class _HomePageState extends State<HomePage> {
 
     // 如果设置页面返回true，说明配置已更新，重新加载数据
     if (result == true) {
-      _loadDailyBookmarks();
+      _checkAndLoadDailyBookmarks();
     }
   }
 
@@ -250,11 +309,6 @@ class _HomePageState extends State<HomePage> {
         title: const Text('今日阅读'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _isLoading ? null : _loadDailyBookmarks,
-            tooltip: '刷新',
-          ),
-          IconButton(
             icon: const Icon(Icons.settings),
             onPressed: _navigateToSettings,
             tooltip: '设置',
@@ -347,22 +401,19 @@ class _HomePageState extends State<HomePage> {
       );
     }
 
-    return RefreshIndicator(
-      onRefresh: _loadDailyBookmarks,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: _dailyBookmarks.length,
-        itemBuilder: (context, index) {
-          return BookmarkCard(
-            bookmark: _dailyBookmarks[index],
-            onTap: () => _openUrl(_dailyBookmarks[index].url),
-            onToggleMark: (bookmarkId, currentMarkStatus) =>
-                _toggleBookmarkMark(bookmarkId, currentMarkStatus),
-            onToggleArchive: (bookmarkId, currentArchiveStatus) =>
-                _toggleBookmarkArchive(bookmarkId, currentArchiveStatus),
-          );
-        },
-      ),
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _dailyBookmarks.length,
+      itemBuilder: (context, index) {
+        return BookmarkCard(
+          bookmark: _dailyBookmarks[index],
+          onTap: () => _openUrl(_dailyBookmarks[index].url),
+          onToggleMark: (bookmarkId, currentMarkStatus) =>
+              _toggleBookmarkMark(bookmarkId, currentMarkStatus),
+          onToggleArchive: (bookmarkId, currentArchiveStatus) =>
+              _toggleBookmarkArchive(bookmarkId, currentArchiveStatus),
+        );
+      },
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'services/readeck_api_service.dart';
 import 'pages/home_page.dart';
 
@@ -14,6 +15,7 @@ class ReadeckApp extends StatefulWidget {
 }
 
 class _ReadeckAppState extends State<ReadeckApp> {
+  static const String _themeModeKey = 'theme_mode';
   final ReadeckApiService _apiService = ReadeckApiService();
   bool _isInitialized = false;
   ThemeMode _themeMode = ThemeMode.system;
@@ -26,12 +28,22 @@ class _ReadeckAppState extends State<ReadeckApp> {
 
   Future<void> _initializeApp() async {
     await _apiService.initialize();
+    await _loadThemeMode();
     setState(() {
       _isInitialized = true;
     });
   }
 
-  void _changeThemeMode(ThemeMode themeMode) {
+  Future<void> _loadThemeMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    final themeModeIndex =
+        prefs.getInt(_themeModeKey) ?? ThemeMode.system.index;
+    _themeMode = ThemeMode.values[themeModeIndex];
+  }
+
+  Future<void> _changeThemeMode(ThemeMode themeMode) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_themeModeKey, themeMode.index);
     setState(() {
       _themeMode = themeMode;
     });
