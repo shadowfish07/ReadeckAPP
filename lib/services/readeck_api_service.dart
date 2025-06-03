@@ -48,10 +48,6 @@ class ReadeckApiService {
       final response = await http.get(url, headers: _headers);
 
       if (response.statusCode == 200) {
-        print('📄 响应体长度: ${response.body.length}');
-        print(
-            '📄 响应体前100字符: ${response.body.length > 100 ? response.body.substring(0, 100) : response.body}');
-
         // 检查响应体是否为空或无效
         if (response.body.isEmpty) {
           throw Exception('服务器返回空响应');
@@ -61,8 +57,6 @@ class ReadeckApiService {
         try {
           data = json.decode(response.body);
         } catch (formatException) {
-          print('💥 JSON解析失败: $formatException');
-          print('📄 完整响应体: ${response.body}');
           throw Exception('JSON解析失败: $formatException');
         }
 
@@ -75,21 +69,14 @@ class ReadeckApiService {
           // 包含bookmarks字段的对象
           bookmarksJson = data['bookmarks'] ?? [];
         } else {
-          print('💥 未知的数据结构: ${data.runtimeType}');
           throw Exception('未知的API响应格式');
         }
-
-        print('📚 解析到 ${bookmarksJson.length} 个书签');
 
         return bookmarksJson.map((json) => Bookmark.fromJson(json)).toList();
       } else {
         throw Exception('获取书签失败: ${response.statusCode}');
       }
     } catch (e) {
-      print('API请求异常详情:');
-      print('请求URL: $_baseUrl/api/bookmarks?read_status=unread&limit=100');
-      print('错误信息: $e');
-      print('错误类型: ${e.runtimeType}');
       throw Exception('网络请求失败: $e');
     }
   }

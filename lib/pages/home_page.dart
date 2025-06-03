@@ -53,24 +53,61 @@ class _HomePageState extends State<HomePage> {
   Future<void> _openUrl(String url) async {
     try {
       final uri = Uri.parse(url);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('无法打开链接'),
-              backgroundColor: Colors.red,
-            ),
-          );
+
+      // 首先尝试使用外部应用打开
+      bool launched = false;
+
+      try {
+        if (await canLaunchUrl(uri)) {
+          launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
         }
+      } catch (e) {
+        // 外部应用启动失败，尝试其他模式
+        launched = false;
+      }
+
+      // 如果外部应用启动失败，尝试使用平台默认方式
+      if (!launched) {
+        try {
+          launched = await launchUrl(uri, mode: LaunchMode.platformDefault);
+        } catch (e) {
+          launched = false;
+        }
+      }
+
+      // 如果仍然失败，尝试使用内置WebView
+      if (!launched) {
+        try {
+          launched = await launchUrl(uri, mode: LaunchMode.inAppWebView);
+        } catch (e) {
+          launched = false;
+        }
+      }
+
+      if (!launched && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                '无法打开链接: $url\n\n可能原因：\n• 设备上没有安装合适的浏览器应用\n• 链接格式不正确\n• 网络连接问题'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: '复制链接',
+              textColor: Colors.white,
+              onPressed: () {
+                // 这里可以添加复制到剪贴板的功能
+              },
+            ),
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('打开链接失败: $e'),
+            content: Text('打开链接时发生错误: $e'),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
           ),
         );
       }
