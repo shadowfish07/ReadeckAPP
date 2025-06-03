@@ -16,6 +16,7 @@ class ReadeckApp extends StatefulWidget {
 class _ReadeckAppState extends State<ReadeckApp> {
   final ReadeckApiService _apiService = ReadeckApiService();
   bool _isInitialized = false;
+  ThemeMode _themeMode = ThemeMode.system;
 
   @override
   void initState() {
@@ -30,6 +31,12 @@ class _ReadeckAppState extends State<ReadeckApp> {
     });
   }
 
+  void _changeThemeMode(ThemeMode themeMode) {
+    setState(() {
+      _themeMode = themeMode;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -40,15 +47,12 @@ class _ReadeckAppState extends State<ReadeckApp> {
           brightness: Brightness.light,
         ),
         useMaterial3: true,
-        appBarTheme: AppBarTheme(
+        appBarTheme: const AppBarTheme(
           centerTitle: false,
+          elevation: 4.0,
           titleTextStyle: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w500,
-            color: Colors.black87,
-          ),
-          iconTheme: const IconThemeData(
-            color: Colors.black87,
           ),
         ),
         cardTheme: CardTheme(
@@ -58,8 +62,34 @@ class _ReadeckAppState extends State<ReadeckApp> {
           ),
         ),
       ),
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.deepPurple,
+          brightness: Brightness.dark,
+        ),
+        useMaterial3: true,
+        appBarTheme: const AppBarTheme(
+          centerTitle: false,
+          elevation: 4.0,
+          titleTextStyle: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        cardTheme: CardTheme(
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+      themeMode: _themeMode,
       home: _isInitialized
-          ? HomePage(apiService: _apiService)
+          ? HomePage(
+              apiService: _apiService,
+              onThemeChanged: _changeThemeMode,
+              currentThemeMode: _themeMode,
+            )
           : const Scaffold(
               body: Center(
                 child: CircularProgressIndicator(),

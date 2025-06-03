@@ -5,8 +5,15 @@ import 'settings_page.dart';
 
 class HomePage extends StatefulWidget {
   final ReadeckApiService apiService;
+  final Function(ThemeMode) onThemeChanged;
+  final ThemeMode currentThemeMode;
 
-  const HomePage({super.key, required this.apiService});
+  const HomePage({
+    super.key,
+    required this.apiService,
+    required this.onThemeChanged,
+    required this.currentThemeMode,
+  });
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -117,7 +124,11 @@ class _HomePageState extends State<HomePage> {
   Future<void> _navigateToSettings() async {
     final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
-        builder: (context) => SettingsPage(apiService: widget.apiService),
+        builder: (context) => SettingsPage(
+          apiService: widget.apiService,
+          onThemeChanged: widget.onThemeChanged,
+          currentThemeMode: widget.currentThemeMode,
+        ),
       ),
     );
 
@@ -237,7 +248,6 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('今日阅读'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),

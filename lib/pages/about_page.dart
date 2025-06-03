@@ -9,7 +9,6 @@ class AboutPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('关于'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),

@@ -4,15 +4,21 @@ import 'about_page.dart';
 
 class SettingsPage extends StatelessWidget {
   final ReadeckApiService apiService;
+  final Function(ThemeMode) onThemeChanged;
+  final ThemeMode currentThemeMode;
 
-  const SettingsPage({super.key, required this.apiService});
+  const SettingsPage({
+    super.key,
+    required this.apiService,
+    required this.onThemeChanged,
+    required this.currentThemeMode,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('设置'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: ListView(
         children: [
@@ -31,6 +37,16 @@ class SettingsPage extends StatelessWidget {
           ),
           const Divider(),
           ListTile(
+            leading: const Icon(Icons.palette),
+            title: const Text('主题模式'),
+            subtitle: Text(_getThemeModeText(currentThemeMode)),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              _showThemeModeDialog(context);
+            },
+          ),
+          const Divider(),
+          ListTile(
             leading: const Icon(Icons.info),
             title: const Text('关于'),
             subtitle: const Text('应用信息和版本'),
@@ -45,6 +61,74 @@ class SettingsPage extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  String _getThemeModeText(ThemeMode mode) {
+    switch (mode) {
+      case ThemeMode.light:
+        return '浅色模式';
+      case ThemeMode.dark:
+        return '深色模式';
+      case ThemeMode.system:
+        return '跟随系统';
+    }
+  }
+
+  void _showThemeModeDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('选择主题模式'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RadioListTile<ThemeMode>(
+                title: const Text('浅色模式'),
+                value: ThemeMode.light,
+                groupValue: this.currentThemeMode,
+                onChanged: (ThemeMode? value) {
+                  if (value != null) {
+                    this.onThemeChanged(value);
+                    Navigator.of(context).pop();
+                  }
+                },
+              ),
+              RadioListTile<ThemeMode>(
+                title: const Text('深色模式'),
+                value: ThemeMode.dark,
+                groupValue: this.currentThemeMode,
+                onChanged: (ThemeMode? value) {
+                  if (value != null) {
+                    this.onThemeChanged(value);
+                    Navigator.of(context).pop();
+                  }
+                },
+              ),
+              RadioListTile<ThemeMode>(
+                title: const Text('跟随系统'),
+                value: ThemeMode.system,
+                groupValue: this.currentThemeMode,
+                onChanged: (ThemeMode? value) {
+                  if (value != null) {
+                    this.onThemeChanged(value);
+                    Navigator.of(context).pop();
+                  }
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('取消'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -138,7 +222,6 @@ class _ApiConfigPageState extends State<ApiConfigPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('API 配置'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
