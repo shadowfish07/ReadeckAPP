@@ -40,8 +40,16 @@ class _ReadeckAppState extends State<ReadeckApp> {
           brightness: Brightness.light,
         ),
         useMaterial3: true,
-        appBarTheme: const AppBarTheme(
-          centerTitle: true,
+        appBarTheme: AppBarTheme(
+          centerTitle: false,
+          titleTextStyle: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
+          ),
+          iconTheme: const IconThemeData(
+            color: Colors.black87,
+          ),
         ),
         cardTheme: CardTheme(
           elevation: 2,
