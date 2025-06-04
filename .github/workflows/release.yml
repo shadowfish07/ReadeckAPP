@@ -1,5 +1,9 @@
 name: Build and Release
 
+permissions:
+  contents: write
+  actions: read
+
 on:
   push:
     tags:
@@ -55,8 +59,21 @@ jobs:
           git commit -m "chore: update version to ${{ steps.version.outputs.version }}" || exit 0
           git push origin HEAD:main || exit 0
 
-      - name: Build APK
+      - name: Setup signingQueue
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/release-key.jks
+          echo "storeFile=release-key.jks" > key.properties
+          echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> key.properties
+          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> key.properties
+          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> key.properties
+
+      - name: Build signed APK
         run: flutter build apk --release
+
+      - name: Clean up signing files
+        run: |
+          rm -f android/app/release-key.jks
+          rm -f android/key.properties
 
       - name: Build App Bundle
         run: flutter build appbundle --release
