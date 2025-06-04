@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:confetti/confetti.dart';
 import '../services/readeck_api_service.dart';
+import '../widgets/common/celebration_overlay.dart';
 import 'settings_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -28,6 +29,8 @@ class _HomePageState extends State<HomePage> {
   bool _isLoading = false;
   String? _error;
   bool _showCelebration = false;
+  bool _hasCompletedDailyReading = false; // 标记是否已完成今日阅读
+  bool _noUnreadBookmarks = false; // 标记是否没有未读书签
   late ConfettiController _confettiController;
   static const String _lastRefreshDateKey = 'last_refresh_date';
 
@@ -90,9 +93,18 @@ class _HomePageState extends State<HomePage> {
         final cachedBookmarks =
             bookmarksData.map((json) => Bookmark.fromJson(json)).toList();
 
+        // 过滤掉已归档的书签
+        final unArchivedBookmarks =
+            cachedBookmarks.where((bookmark) => !bookmark.isArchived).toList();
+
         setState(() {
-          _dailyBookmarks = cachedBookmarks;
+          _dailyBookmarks = unArchivedBookmarks;
           _isLoading = false;
+          // 如果缓存中所有书签都已归档，标记为已完成今日阅读
+          _hasCompletedDailyReading =
+              cachedBookmarks.isNotEmpty && unArchivedBookmarks.isEmpty;
+          // 重置没有未读书签的状态
+          _noUnreadBookmarks = false;
         });
 
         // 异步更新书签数据
@@ -118,6 +130,7 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _isLoading = true;
       _error = null;
+      _noUnreadBookmarks = false;
     });
 
     try {
@@ -125,6 +138,10 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _dailyBookmarks = bookmarks;
         _isLoading = false;
+        // 如果API返回空列表，说明没有未读书签
+        _noUnreadBookmarks = bookmarks.isEmpty;
+        // 重置完成状态
+        _hasCompletedDailyReading = false;
       });
 
       // 缓存今日书签数据
@@ -371,8 +388,11 @@ class _HomePageState extends State<HomePage> {
           _dailyBookmarks.removeWhere((bookmark) => bookmark.id == bookmarkId);
         });
 
-        // 检查是否所有书签都已归档
+        // 检查是否所有书签都已归档（完成今日阅读）
         if (_dailyBookmarks.isEmpty) {
+          setState(() {
+            _hasCompletedDailyReading = true;
+          });
           _showCelebrationScreen();
         } else {
           // 显示成功提示
@@ -428,6 +448,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _refreshNewContent() async {
     setState(() {
       _showCelebration = false;
+      _hasCompletedDailyReading = false;
     });
     _confettiController.stop();
     await _loadDailyBookmarks();
@@ -527,37 +548,91 @@ class _HomePageState extends State<HomePage> {
     }
 
     if (_dailyBookmarks.isEmpty && !_showCelebration) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.book_outlined,
-                size: 64,
-                color: Colors.grey,
-              ),
-              SizedBox(height: 16),
-              Text(
-                '暂无未读书签',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.grey,
+      // 区分两种情况：完成今日阅读 vs 没有未读书签
+      if (_hasCompletedDailyReading) {
+        // 已完成今日阅读，显示庆祝界面
+        return CelebrationOverlay(
+          onRefreshNewContent: _refreshNewContent,
+        );
+      } else if (_noUnreadBookmarks) {
+        // API返回没有未读书签
+        return Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.check_circle_outline,
+                  size: 64,
+                  color: Colors.green,
                 ),
-              ),
-              SizedBox(height: 8),
-              Text(
-                '去Readeck添加一些书签吧！',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey,
+                const SizedBox(height: 16),
+                const Text(
+                  '已读完所有待读书签',
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.green,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 8),
+                Text(
+                  '太棒了！去Readeck添加更多书签继续阅读吧！',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  onPressed: _loadDailyBookmarks,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('刷新'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      );
+        );
+      } else {
+        // 默认情况（初始状态或其他）
+        return const Center(
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.book_outlined,
+                  size: 64,
+                  color: Colors.grey,
+                ),
+                SizedBox(height: 16),
+                Text(
+                  '暂无未读书签',
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.grey,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  '去Readeck添加一些书签吧！',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
     }
 
     return ListView.builder(
@@ -606,55 +681,9 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
           ),
-          // 庆祝内容
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.all(32),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // 庆祝文字
-                  const Text(
-                    '🎉 恭喜完成今日阅读！',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    '您已经完成了今天的所有阅读任务\n坚持阅读，收获知识！',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white70,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 48),
-                  // 刷新按钮
-                  ElevatedButton.icon(
-                    onPressed: _refreshNewContent,
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('再来一组'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 16,
-                      ),
-                      textStyle: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          CelebrationOverlay(
+            onRefreshNewContent: _refreshNewContent,
+          )
         ],
       ),
     );
