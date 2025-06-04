@@ -155,6 +155,57 @@ class ReadeckApiService {
       throw Exception('网络请求失败: $e');
     }
   }
+
+  // 批量获取书签的最新信息
+  Future<List<Bookmark>> getBatchBookmarksInfo(List<String> bookmarkIds) async {
+    if (!isConfigured) {
+      throw Exception('API未配置，请先设置服务器地址和令牌');
+    }
+
+    if (bookmarkIds.isEmpty) {
+      return [];
+    }
+
+    // 构建查询参数，使用id=1&id=2的格式
+    final queryParams = bookmarkIds.map((id) => 'id=$id').join('&');
+    final url = Uri.parse('$_baseUrl/api/bookmarks?$queryParams');
+
+    try {
+      final response = await http.get(url, headers: _headers);
+
+      if (response.statusCode == 200) {
+        // 检查响应体是否为空或无效
+        if (response.body.isEmpty) {
+          throw Exception('服务器返回空响应');
+        }
+
+        dynamic data;
+        try {
+          data = json.decode(response.body);
+        } catch (formatException) {
+          throw Exception('JSON解析失败: $formatException');
+        }
+
+        // 检查返回的数据结构
+        List<dynamic> bookmarksJson;
+        if (data is List) {
+          // 直接返回书签数组
+          bookmarksJson = data;
+        } else if (data is Map && data.containsKey('bookmarks')) {
+          // 包含bookmarks字段的对象
+          bookmarksJson = data['bookmarks'] ?? [];
+        } else {
+          throw Exception('未知的API响应格式');
+        }
+
+        return bookmarksJson.map((json) => Bookmark.fromJson(json)).toList();
+      } else {
+        throw Exception('批量获取书签失败: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('网络请求失败: $e');
+    }
+  }
 }
 
 // 辅助方法：将动态类型转换为int

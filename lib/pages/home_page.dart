@@ -59,11 +59,16 @@ class _HomePageState extends State<HomePage> {
     if (cachedBookmarksJson != null) {
       try {
         final List<dynamic> bookmarksData = json.decode(cachedBookmarksJson);
+        final cachedBookmarks =
+            bookmarksData.map((json) => Bookmark.fromJson(json)).toList();
+
         setState(() {
-          _dailyBookmarks =
-              bookmarksData.map((json) => Bookmark.fromJson(json)).toList();
+          _dailyBookmarks = cachedBookmarks;
           _isLoading = false;
         });
+
+        // 异步更新书签数据
+        _updateBookmarksInBackground();
         return;
       } catch (e) {
         // 缓存数据解析失败，重新加载
@@ -113,6 +118,81 @@ class _HomePageState extends State<HomePage> {
       await prefs.setString('cached_daily_bookmarks', bookmarksJson);
     } catch (e) {
       // 缓存失败不影响主要功能
+    }
+  }
+
+  // 在后台异步更新书签数据
+  Future<void> _updateBookmarksInBackground() async {
+    if (!widget.apiService.isConfigured) {
+      return;
+    }
+
+    // 从持久化存储中读取缓存的书签数据
+    final prefs = await SharedPreferences.getInstance();
+    final cachedBookmarksJson = prefs.getString('cached_daily_bookmarks');
+
+    if (cachedBookmarksJson == null) {
+      return;
+    }
+
+    List<Bookmark> cachedBookmarks;
+    try {
+      final List<dynamic> bookmarksData = json.decode(cachedBookmarksJson);
+      cachedBookmarks =
+          bookmarksData.map((json) => Bookmark.fromJson(json)).toList();
+    } catch (e) {
+      debugPrint('解析缓存书签数据失败: $e');
+      return;
+    }
+
+    if (cachedBookmarks.isEmpty) {
+      return;
+    }
+
+    // 发请求前，先回显
+    setState(() {
+      _dailyBookmarks = cachedBookmarks;
+    });
+
+    try {
+      // 提取所有书签ID
+      final bookmarkIds = cachedBookmarks.map((b) => b.id).toList();
+
+      // 批量获取最新的书签信息
+      final updatedBookmarks =
+          await widget.apiService.getBatchBookmarksInfo(bookmarkIds);
+
+      if (updatedBookmarks.isNotEmpty) {
+        // 创建一个Map来快速查找更新的书签
+        final updatedBookmarksMap = <String, Bookmark>{};
+        for (final bookmark in updatedBookmarks) {
+          updatedBookmarksMap[bookmark.id] = bookmark;
+        }
+
+        // 更新缓存的书签数据
+        final mergedBookmarks = <Bookmark>[];
+        for (final cachedBookmark in cachedBookmarks) {
+          final updatedBookmark = updatedBookmarksMap[cachedBookmark.id];
+          if (updatedBookmark != null) {
+            mergedBookmarks.add(updatedBookmark);
+          } else {
+            // 如果没有找到更新的数据，保留缓存的数据
+            mergedBookmarks.add(cachedBookmark);
+          }
+        }
+
+        // 更新UI
+        setState(() {
+          _dailyBookmarks = mergedBookmarks;
+        });
+
+        // 更新缓存
+        await _cacheDailyBookmarks(mergedBookmarks);
+      }
+    } catch (e) {
+      // 后台更新失败不影响用户体验，静默处理
+      // 可以选择记录日志或显示轻微的提示
+      debugPrint('后台更新书签失败: $e');
     }
   }
 
@@ -276,8 +356,8 @@ class _HomePageState extends State<HomePage> {
           );
         }
       } else {
-        // 如果取消存档，重新加载书签列表
-        _loadDailyBookmarks();
+        // 如果取消存档，异步更新书签列表
+        _updateBookmarksInBackground();
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
