@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/readeck_api_service.dart';
 import 'about_page.dart';
 
-class SettingsPage extends StatelessWidget {
+class SettingsPage extends StatefulWidget {
   final ReadeckApiService apiService;
   final Function(ThemeMode) onThemeChanged;
   final ThemeMode currentThemeMode;
@@ -15,51 +15,77 @@ class SettingsPage extends StatelessWidget {
   });
 
   @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  bool _configChanged = false;
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('设置'),
-      ),
-      body: ListView(
-        children: [
-          ListTile(
-            leading: const Icon(Icons.api),
-            title: const Text('API 配置'),
-            subtitle: const Text('配置 Readeck 服务器连接'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => ApiConfigPage(apiService: apiService),
-                ),
-              );
+    return WillPopScope(
+      onWillPop: () async {
+        // 当用户返回时，如果配置发生了变化，返回true通知首页刷新
+        Navigator.of(context).pop(_configChanged);
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('设置'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.of(context).pop(_configChanged);
             },
           ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.palette),
-            title: const Text('主题模式'),
-            subtitle: Text(_getThemeModeText(currentThemeMode)),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              _showThemeModeDialog(context);
-            },
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.info),
-            title: const Text('关于'),
-            subtitle: const Text('应用信息和版本'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const AboutPage(),
-                ),
-              );
-            },
-          ),
-        ],
+        ),
+        body: ListView(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.api),
+              title: const Text('API 配置'),
+              subtitle: const Text('配置 Readeck 服务器连接'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () async {
+                final result = await Navigator.of(context).push<bool>(
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        ApiConfigPage(apiService: widget.apiService),
+                  ),
+                );
+
+                // 如果API配置发生了变化，标记需要通知首页刷新
+                if (result == true) {
+                  _configChanged = true;
+                }
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.palette),
+              title: const Text('主题模式'),
+              subtitle: Text(_getThemeModeText(widget.currentThemeMode)),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                _showThemeModeDialog(context);
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.info),
+              title: const Text('关于'),
+              subtitle: const Text('应用信息和版本'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const AboutPage(),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -87,10 +113,10 @@ class SettingsPage extends StatelessWidget {
               RadioListTile<ThemeMode>(
                 title: const Text('浅色模式'),
                 value: ThemeMode.light,
-                groupValue: this.currentThemeMode,
+                groupValue: widget.currentThemeMode,
                 onChanged: (ThemeMode? value) {
                   if (value != null) {
-                    this.onThemeChanged(value);
+                    widget.onThemeChanged(value);
                     Navigator.of(context).pop();
                   }
                 },
@@ -98,10 +124,10 @@ class SettingsPage extends StatelessWidget {
               RadioListTile<ThemeMode>(
                 title: const Text('深色模式'),
                 value: ThemeMode.dark,
-                groupValue: this.currentThemeMode,
+                groupValue: widget.currentThemeMode,
                 onChanged: (ThemeMode? value) {
                   if (value != null) {
-                    this.onThemeChanged(value);
+                    widget.onThemeChanged(value);
                     Navigator.of(context).pop();
                   }
                 },
@@ -109,10 +135,10 @@ class SettingsPage extends StatelessWidget {
               RadioListTile<ThemeMode>(
                 title: const Text('跟随系统'),
                 value: ThemeMode.system,
-                groupValue: this.currentThemeMode,
+                groupValue: widget.currentThemeMode,
                 onChanged: (ThemeMode? value) {
                   if (value != null) {
-                    this.onThemeChanged(value);
+                    widget.onThemeChanged(value);
                     Navigator.of(context).pop();
                   }
                 },
