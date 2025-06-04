@@ -35,4 +35,4 @@
 -keep class com.google.gson.stream.** { *; }
 
 # Application classes that will be serialized/deserialized over Gson
--keep class com.example.readeck_app.** { *; }
+-keep class me.zqydev.readeck_app.** { *; }
