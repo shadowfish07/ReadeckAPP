@@ -1,8 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/services.dart';
+import 'dart:convert';
 
-class AboutPage extends StatelessWidget {
+class AboutPage extends StatefulWidget {
   const AboutPage({super.key});
+
+  @override
+  State<AboutPage> createState() => _AboutPageState();
+}
+
+class _AboutPageState extends State<AboutPage> {
+  String _version = '1.0.0';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVersion();
+  }
+
+  Future<void> _loadVersion() async {
+    try {
+      final String pubspecContent = await rootBundle.loadString('pubspec.yaml');
+      final RegExp versionRegex = RegExp(r'version:\s*([^\s]+)');
+      final Match? match = versionRegex.firstMatch(pubspecContent);
+      if (match != null) {
+        setState(() {
+          _version = match.group(1)!.split('+')[0]; // 移除build number部分
+        });
+      }
+    } catch (e) {
+      // 如果读取失败，保持默认版本号
+      debugPrint('Failed to load version: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +98,7 @@ class AboutPage extends StatelessWidget {
             const SizedBox(height: 8),
             // 版本信息
             Text(
-              '版本 1.0.0',
+              '版本 $_version',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),

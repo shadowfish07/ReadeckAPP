@@ -1,0 +1,129 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+      - "v*.*.*-beta*"
+
+jobs:
+  build:
+    name: Build and Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "zulu"
+          java-version: "17"
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.19.0"
+          channel: "stable"
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG=${GITHUB_REF#refs/tags/v}
+          echo "version=$TAG" >> $GITHUB_OUTPUT
+          echo "Version: $TAG"
+
+      - name: Update version in pubspec.yaml
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          sed -i "s/^version: .*/version: $VERSION/" pubspec.yaml
+
+      - name: Update version in about page
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          sed -i "s/'版本 [^']*'/'版本 $VERSION'/" lib/pages/about_page.dart
+
+      - name: Commit version updates
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add pubspec.yaml lib/pages/about_page.dart
+          git commit -m "chore: update version to ${{ steps.version.outputs.version }}" || exit 0
+          git push origin HEAD:main || exit 0
+
+      - name: Build APK
+        run: flutter build apk --release
+
+      - name: Build App Bundle
+        run: flutter build appbundle --release
+
+      - name: Build iOS (if on macOS)
+        if: runner.os == 'macOS'
+        run: |
+          flutter build ios --release --no-codesign
+
+      - name: Build Web
+        run: flutter build web --release
+
+      - name: Build Linux
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev
+          flutter build linux --release
+
+      - name: Create release archive
+        run: |
+          mkdir -p release-files
+          cp build/app/outputs/flutter-apk/app-release.apk release-files/readeck-app-${{ steps.version.outputs.version }}.apk
+          cp build/app/outputs/bundle/release/app-release.aab release-files/readeck-app-${{ steps.version.outputs.version }}.aab
+
+          # Package web build
+          cd build/web
+          tar -czf ../../release-files/readeck-app-web-${{ steps.version.outputs.version }}.tar.gz .
+          cd ../..
+
+          # Package Linux build
+          cd build/linux/x64/release/bundle
+          tar -czf ../../../../../release-files/readeck-app-linux-${{ steps.version.outputs.version }}.tar.gz .
+          cd ../../../../..
+
+      - name: Determine if prerelease
+        id: prerelease
+        run: |
+          if [[ "${{ steps.version.outputs.version }}" == *"beta"* ]]; then
+            echo "prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "prerelease=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: Release v${{ steps.version.outputs.version }}
+          body: |
+            ## Readeck APP v${{ steps.version.outputs.version }}
+
+            ### 📱 下载链接
+            - **Android APK**: readeck-app-${{ steps.version.outputs.version }}.apk
+            - **Android App Bundle**: readeck-app-${{ steps.version.outputs.version }}.aab
+            - **Web版本**: readeck-app-web-${{ steps.version.outputs.version }}.tar.gz
+            - **Linux版本**: readeck-app-linux-${{ steps.version.outputs.version }}.tar.gz
+
+            ### 🔄 更新内容
+            请查看提交历史了解详细更新内容。
+
+            ### 📋 安装说明
+            - **Android**: 下载APK文件直接安装
+            - **Web**: 解压tar.gz文件并部署到Web服务器
+            - **Linux**: 解压tar.gz文件并运行可执行文件
+          files: |
+            release-files/*
+          prerelease: ${{ steps.prerelease.outputs.prerelease }}
+          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
