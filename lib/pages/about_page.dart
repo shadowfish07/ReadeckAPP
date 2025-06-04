@@ -98,7 +98,7 @@ class _AboutPageState extends State<AboutPage> {
             const SizedBox(height: 8),
             // 版本信息
             Text(
-              '版本 $_version',
+              '版本 0.0.1-beta',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
