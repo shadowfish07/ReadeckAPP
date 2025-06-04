@@ -25,11 +25,32 @@ jobs:
           distribution: "zulu"
           java-version: "17"
 
+      - name: Cache Flutter SDK
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.pub-cache
+            ${{ runner.tool_cache }}/flutter
+          key: ${{ runner.os }}-flutter-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-flutter-
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: "3.24.0"
           channel: "stable"
+          cache: true
+
+      - name: Cache Pub dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.pub-cache
+            .dart_tool
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
 
       - name: Get dependencies
         run: flutter pub get
@@ -53,6 +74,17 @@ jobs:
           git add pubspec.yaml lib/pages/about_page.dart
           git commit -m "chore: update version to ${{ steps.version.outputs.version }}" || exit 0
           git push origin HEAD:main || exit 0
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.android/build-cache
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
 
       - name: Setup signingQueue
         run: |
@@ -83,6 +115,16 @@ jobs:
       - name: Build Web
         continue-on-error: true
         run: flutter build web --release
+
+      - name: Cache Linux dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            /var/cache/apt
+            /var/lib/apt
+          key: ${{ runner.os }}-apt-${{ hashFiles('.github/workflows/release.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-apt-
 
       - name: Build Linux
         continue-on-error: true
