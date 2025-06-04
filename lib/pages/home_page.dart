@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:confetti/confetti.dart';
 import '../services/readeck_api_service.dart';
 import 'settings_page.dart';
 
@@ -25,11 +27,17 @@ class _HomePageState extends State<HomePage> {
   List<Bookmark> _dailyBookmarks = [];
   bool _isLoading = false;
   String? _error;
+  bool _showCelebration = false;
+  late ConfettiController _confettiController;
   static const String _lastRefreshDateKey = 'last_refresh_date';
 
   @override
   void initState() {
     super.initState();
+    // 初始化礼花控制器
+    _confettiController = ConfettiController(
+      duration: const Duration(seconds: 3),
+    );
     // 监听 API 服务的加载状态变化
     widget.apiService.addListener(_onApiLoadingStateChanged);
     _checkAndLoadDailyBookmarks();
@@ -39,6 +47,8 @@ class _HomePageState extends State<HomePage> {
   void dispose() {
     // 移除监听器
     widget.apiService.removeListener(_onApiLoadingStateChanged);
+    // 释放动画控制器
+    _confettiController.dispose();
     super.dispose();
   }
 
@@ -167,9 +177,10 @@ class _HomePageState extends State<HomePage> {
       return;
     }
 
-    // 发请求前，先回显
+    // 发请求前，先回显（过滤掉已存档的）
     setState(() {
-      _dailyBookmarks = cachedBookmarks;
+      _dailyBookmarks =
+          cachedBookmarks.where((bookmark) => !bookmark.isArchived).toList();
     });
 
     try {
@@ -198,10 +209,12 @@ class _HomePageState extends State<HomePage> {
             mergedBookmarks.add(cachedBookmark);
           }
         }
-
-        // 更新UI
+        // 异步更新U
+        // 更新UI（过滤掉已存档的）
         setState(() {
-          _dailyBookmarks = mergedBookmarks;
+          _dailyBookmarks = mergedBookmarks
+              .where((bookmark) => !bookmark.isArchived)
+              .toList();
         });
 
         // 更新缓存
@@ -350,6 +363,7 @@ class _HomePageState extends State<HomePage> {
     try {
       final newArchiveStatus = await widget.apiService
           .toggleBookmarkArchive(bookmarkId, currentArchiveStatus);
+      _updateBookmarksInBackground();
 
       // 如果书签被存档，从当前列表中移除
       if (newArchiveStatus) {
@@ -357,26 +371,28 @@ class _HomePageState extends State<HomePage> {
           _dailyBookmarks.removeWhere((bookmark) => bookmark.id == bookmarkId);
         });
 
-        // 显示成功提示
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('已存档'),
-              duration: const Duration(seconds: 2),
-              action: SnackBarAction(
-                label: '撤销',
-                onPressed: () {
-                  // 撤销存档操作
-                  _toggleBookmarkArchive(bookmarkId, true);
-                },
+        // 检查是否所有书签都已归档
+        if (_dailyBookmarks.isEmpty) {
+          _showCelebrationScreen();
+        } else {
+          // 显示成功提示
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text('已存档'),
+                duration: const Duration(seconds: 2),
+                action: SnackBarAction(
+                  label: '撤销',
+                  onPressed: () {
+                    // 撤销存档操作
+                    _toggleBookmarkArchive(bookmarkId, true);
+                  },
+                ),
               ),
-            ),
-          );
+            );
+          }
         }
       } else {
-        // 如果取消存档，异步更新书签列表
-        _updateBookmarksInBackground();
-
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -400,6 +416,23 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  // 显示庆祝界面
+  void _showCelebrationScreen() {
+    setState(() {
+      _showCelebration = true;
+    });
+    _confettiController.play();
+  }
+
+  // 刷新一组新内容
+  Future<void> _refreshNewContent() async {
+    setState(() {
+      _showCelebration = false;
+    });
+    _confettiController.stop();
+    await _loadDailyBookmarks();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -407,7 +440,8 @@ class _HomePageState extends State<HomePage> {
         title: Row(
           children: [
             const Text('今日阅读'),
-            if (widget.apiService.isLoading) ...[
+            // 只有在body内没有loading时，才在标题区显示loading
+            if (widget.apiService.isLoading && !_isLoading) ...[
               const SizedBox(width: 8),
               const SizedBox(
                 width: 12,
@@ -435,7 +469,12 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      body: _buildBody(),
+      body: Stack(
+        children: [
+          _buildBody(),
+          if (_showCelebration) _buildCelebrationOverlay(),
+        ],
+      ),
     );
   }
 
@@ -487,7 +526,7 @@ class _HomePageState extends State<HomePage> {
       );
     }
 
-    if (_dailyBookmarks.isEmpty) {
+    if (_dailyBookmarks.isEmpty && !_showCelebration) {
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(16),
@@ -534,6 +573,90 @@ class _HomePageState extends State<HomePage> {
               _toggleBookmarkArchive(bookmarkId, currentArchiveStatus),
         );
       },
+    );
+  }
+
+  // 构建庆祝界面覆盖层
+  Widget _buildCelebrationOverlay() {
+    return Container(
+      color: Colors.black.withOpacity(0.8),
+      child: Stack(
+        children: [
+          // 礼花动画 - 从左下角发射
+          Align(
+            alignment: Alignment.bottomLeft,
+            child: ConfettiWidget(
+              confettiController: _confettiController,
+              blastDirection: -pi / 4, // 向右上方发射
+              maxBlastForce: 40,
+              minBlastForce: 5,
+              emissionFrequency: 0.05,
+              numberOfParticles: 50,
+              gravity: 0.1,
+              shouldLoop: false,
+              colors: const [
+                Colors.red,
+                Colors.blue,
+                Colors.green,
+                Colors.yellow,
+                Colors.purple,
+                Colors.orange,
+                Colors.pink,
+                Colors.cyan,
+              ],
+            ),
+          ),
+          // 庆祝内容
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // 庆祝文字
+                  const Text(
+                    '🎉 恭喜完成今日阅读！',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    '您已经完成了今天的所有阅读任务\n坚持阅读，收获知识！',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white70,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 48),
+                  // 刷新按钮
+                  ElevatedButton.icon(
+                    onPressed: _refreshNewContent,
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('再来一组'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 16,
+                      ),
+                      textStyle: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
