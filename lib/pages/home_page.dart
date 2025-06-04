@@ -30,7 +30,25 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    // 监听 API 服务的加载状态变化
+    widget.apiService.addListener(_onApiLoadingStateChanged);
     _checkAndLoadDailyBookmarks();
+  }
+
+  @override
+  void dispose() {
+    // 移除监听器
+    widget.apiService.removeListener(_onApiLoadingStateChanged);
+    super.dispose();
+  }
+
+  // API 加载状态变化回调
+  void _onApiLoadingStateChanged() {
+    if (mounted) {
+      setState(() {
+        // 触发重建以更新 AppBar 标题
+      });
+    }
   }
 
   // 检查是否需要刷新今日书签
@@ -386,7 +404,29 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('今日阅读'),
+        title: Row(
+          children: [
+            const Text('今日阅读'),
+            if (widget.apiService.isLoading) ...[
+              const SizedBox(width: 8),
+              const SizedBox(
+                width: 12,
+                height: 12,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                '加载中',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
+            ],
+          ],
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),

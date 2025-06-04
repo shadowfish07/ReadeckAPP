@@ -2,13 +2,26 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart';
 
-class ReadeckApiService {
+class ReadeckApiService extends ChangeNotifier {
   static const String _baseUrlKey = 'readeck_base_url';
   static const String _tokenKey = 'readeck_token';
 
   String? _baseUrl;
   String? _token;
+  bool _isLoading = false;
+
+  // 获取加载状态
+  bool get isLoading => _isLoading;
+
+  // 设置加载状态
+  void _setLoading(bool loading) {
+    if (_isLoading != loading) {
+      _isLoading = loading;
+      notifyListeners();
+    }
+  }
 
   // 初始化服务，从本地存储加载配置
   Future<void> initialize() async {
@@ -47,6 +60,7 @@ class ReadeckApiService {
       throw Exception('API未配置，请先设置服务器地址和令牌');
     }
 
+    _setLoading(true);
     final url =
         Uri.parse('$_baseUrl/api/bookmarks?read_status=unread&limit=100');
 
@@ -78,11 +92,16 @@ class ReadeckApiService {
           throw Exception('未知的API响应格式');
         }
 
-        return bookmarksJson.map((json) => Bookmark.fromJson(json)).toList();
+        final result =
+            bookmarksJson.map((json) => Bookmark.fromJson(json)).toList();
+        _setLoading(false);
+        return result;
       } else {
+        _setLoading(false);
         throw Exception('获取书签失败: ${response.statusCode}');
       }
     } catch (e) {
+      _setLoading(false);
       throw Exception('网络请求失败: $e');
     }
   }
@@ -108,6 +127,7 @@ class ReadeckApiService {
       throw Exception('API未配置，请先设置服务器地址和令牌');
     }
 
+    _setLoading(true);
     final url = Uri.parse('$_baseUrl/api/bookmarks/$bookmarkId');
 
     try {
@@ -120,11 +140,14 @@ class ReadeckApiService {
       );
 
       if (response.statusCode == 200) {
+        _setLoading(false);
         return !isMarked; // 返回新的标记状态
       } else {
+        _setLoading(false);
         throw Exception('标记书签失败: ${response.statusCode}');
       }
     } catch (e) {
+      _setLoading(false);
       throw Exception('网络请求失败: $e');
     }
   }
@@ -135,6 +158,7 @@ class ReadeckApiService {
       throw Exception('API未配置，请先设置服务器地址和令牌');
     }
 
+    _setLoading(true);
     final url = Uri.parse('$_baseUrl/api/bookmarks/$bookmarkId');
 
     try {
@@ -147,11 +171,14 @@ class ReadeckApiService {
       );
 
       if (response.statusCode == 200) {
+        _setLoading(false);
         return !isArchived; // 返回新的存档状态
       } else {
+        _setLoading(false);
         throw Exception('存档书签失败: ${response.statusCode}');
       }
     } catch (e) {
+      _setLoading(false);
       throw Exception('网络请求失败: $e');
     }
   }
@@ -166,6 +193,7 @@ class ReadeckApiService {
       return [];
     }
 
+    _setLoading(true);
     // 构建查询参数，使用id=1&id=2的格式
     final queryParams = bookmarkIds.map((id) => 'id=$id').join('&');
     final url = Uri.parse('$_baseUrl/api/bookmarks?$queryParams');
@@ -198,11 +226,16 @@ class ReadeckApiService {
           throw Exception('未知的API响应格式');
         }
 
-        return bookmarksJson.map((json) => Bookmark.fromJson(json)).toList();
+        final result =
+            bookmarksJson.map((json) => Bookmark.fromJson(json)).toList();
+        _setLoading(false);
+        return result;
       } else {
+        _setLoading(false);
         throw Exception('批量获取书签失败: ${response.statusCode}');
       }
     } catch (e) {
+      _setLoading(false);
       throw Exception('网络请求失败: $e');
     }
   }
