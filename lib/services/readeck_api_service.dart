@@ -1,13 +1,12 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
 import '../models/bookmark.dart';
+import 'storage_service.dart';
 
 class ReadeckApiService extends ChangeNotifier {
-  static const String _baseUrlKey = 'readeck_base_url';
-  static const String _tokenKey = 'readeck_token';
+  final StorageService _storageService = StorageService.instance;
 
   String? _baseUrl;
   String? _token;
@@ -26,16 +25,15 @@ class ReadeckApiService extends ChangeNotifier {
 
   // 初始化服务，从本地存储加载配置
   Future<void> initialize() async {
-    final prefs = await SharedPreferences.getInstance();
-    _baseUrl = prefs.getString(_baseUrlKey);
-    _token = prefs.getString(_tokenKey);
+    await _storageService.initialize();
+    final config = _storageService.getApiConfig();
+    _baseUrl = config['baseUrl'];
+    _token = config['token'];
   }
 
   // 设置API配置
   Future<void> setConfig(String baseUrl, String token) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_baseUrlKey, baseUrl);
-    await prefs.setString(_tokenKey, token);
+    await _storageService.saveApiConfig(baseUrl, token);
     _baseUrl = baseUrl;
     _token = token;
   }

@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:confetti/confetti.dart';
 import '../services/readeck_api_service.dart';
+import '../services/storage_service.dart';
 import '../widgets/common/celebration_overlay.dart';
 import '../models/bookmark.dart';
 import 'settings_page.dart';
@@ -26,6 +26,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final StorageService _storageService = StorageService.instance;
   List<Bookmark> _dailyBookmarks = [];
   bool _isLoading = false;
   String? _error;
@@ -67,16 +68,15 @@ class _HomePageState extends State<HomePage> {
 
   // 检查是否需要刷新今日书签
   Future<void> _checkAndLoadDailyBookmarks() async {
-    final prefs = await SharedPreferences.getInstance();
     final today = DateTime.now();
     final todayString =
         '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
-    final lastRefreshDate = prefs.getString(_lastRefreshDateKey);
+    final lastRefreshDate = _storageService.getString(_lastRefreshDateKey);
 
     // 如果今天还没有刷新过，或者是第一次使用，则自动刷新
     if (lastRefreshDate != todayString) {
       await _loadDailyBookmarks();
-      await prefs.setString(_lastRefreshDateKey, todayString);
+      await _storageService.saveString(_lastRefreshDateKey, todayString);
     } else {
       // 今天已经刷新过，加载缓存的书签
       await _loadCachedBookmarks();
@@ -85,8 +85,8 @@ class _HomePageState extends State<HomePage> {
 
   // 加载缓存的书签数据
   Future<void> _loadCachedBookmarks() async {
-    final prefs = await SharedPreferences.getInstance();
-    final cachedBookmarksJson = prefs.getString('cached_daily_bookmarks');
+    final cachedBookmarksJson =
+        _storageService.getString('cached_daily_bookmarks');
 
     if (cachedBookmarksJson != null) {
       try {
@@ -158,10 +158,9 @@ class _HomePageState extends State<HomePage> {
   // 缓存今日书签数据
   Future<void> _cacheDailyBookmarks(List<Bookmark> bookmarks) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
       final bookmarksJson =
           json.encode(bookmarks.map((b) => b.toJson()).toList());
-      await prefs.setString('cached_daily_bookmarks', bookmarksJson);
+      await _storageService.saveString('cached_daily_bookmarks', bookmarksJson);
     } catch (e) {
       // 缓存失败不影响主要功能
     }
@@ -174,8 +173,8 @@ class _HomePageState extends State<HomePage> {
     }
 
     // 从持久化存储中读取缓存的书签数据
-    final prefs = await SharedPreferences.getInstance();
-    final cachedBookmarksJson = prefs.getString('cached_daily_bookmarks');
+    final cachedBookmarksJson =
+        _storageService.getString('cached_daily_bookmarks');
 
     if (cachedBookmarksJson == null) {
       return;
