@@ -7,11 +7,19 @@ import '../services/readeck_api_service.dart';
 import '../services/storage_service.dart';
 import '../widgets/common/celebration_overlay.dart';
 import '../models/bookmark.dart';
-import '../utils/storage_keys.dart';
 import 'settings_page.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final ReadeckApiService apiService;
+  final Function(ThemeMode) onThemeChanged;
+  final ThemeMode currentThemeMode;
+
+  const HomePage({
+    super.key,
+    required this.apiService,
+    required this.onThemeChanged,
+    required this.currentThemeMode,
+  });
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -19,7 +27,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final StorageService _storageService = StorageService.instance;
-  final ReadeckApiService _apiService = ReadeckApiService();
   List<Bookmark> _dailyBookmarks = [];
   bool _isLoading = false;
   String? _error;
@@ -27,6 +34,7 @@ class _HomePageState extends State<HomePage> {
   bool _hasCompletedDailyReading = false; // 标记是否已完成今日阅读
   bool _noUnreadBookmarks = false; // 标记是否没有未读书签
   late ConfettiController _confettiController;
+  static const String _lastRefreshDateKey = 'last_refresh_date';
 
   @override
   void initState() {
@@ -36,14 +44,14 @@ class _HomePageState extends State<HomePage> {
       duration: const Duration(seconds: 3),
     );
     // 监听 API 服务的加载状态变化
-    _apiService.addListener(_onApiLoadingStateChanged);
+    widget.apiService.addListener(_onApiLoadingStateChanged);
     _checkAndLoadDailyBookmarks();
   }
 
   @override
   void dispose() {
     // 移除监听器
-    _apiService.removeListener(_onApiLoadingStateChanged);
+    widget.apiService.removeListener(_onApiLoadingStateChanged);
     // 释放动画控制器
     _confettiController.dispose();
     super.dispose();
@@ -63,14 +71,12 @@ class _HomePageState extends State<HomePage> {
     final today = DateTime.now();
     final todayString =
         '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
-    final lastRefreshDate =
-        _storageService.getString(StorageKeys.lastRefreshDate);
+    final lastRefreshDate = _storageService.getString(_lastRefreshDateKey);
 
     // 如果今天还没有刷新过，或者是第一次使用，则自动刷新
     if (lastRefreshDate != todayString) {
       await _loadDailyBookmarks();
-      await _storageService.saveString(
-          StorageKeys.lastRefreshDate, todayString);
+      await _storageService.saveString(_lastRefreshDateKey, todayString);
     } else {
       // 今天已经刷新过，加载缓存的书签
       await _loadCachedBookmarks();
@@ -80,7 +86,7 @@ class _HomePageState extends State<HomePage> {
   // 加载缓存的书签数据
   Future<void> _loadCachedBookmarks() async {
     final cachedBookmarksJson =
-        _storageService.getString(StorageKeys.cachedDailyBookmarks);
+        _storageService.getString('cached_daily_bookmarks');
 
     if (cachedBookmarksJson != null) {
       try {
@@ -115,7 +121,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _loadDailyBookmarks() async {
-    if (!_apiService.isConfigured) {
+    if (!widget.apiService.isConfigured) {
       setState(() {
         _error = '请先配置API设置';
       });
@@ -129,7 +135,7 @@ class _HomePageState extends State<HomePage> {
     });
 
     try {
-      final bookmarks = await _apiService.getRandomUnreadBookmarks();
+      final bookmarks = await widget.apiService.getRandomUnreadBookmarks();
       setState(() {
         _dailyBookmarks = bookmarks;
         _isLoading = false;
@@ -154,8 +160,7 @@ class _HomePageState extends State<HomePage> {
     try {
       final bookmarksJson =
           json.encode(bookmarks.map((b) => b.toJson()).toList());
-      await _storageService.saveString(
-          StorageKeys.cachedDailyBookmarks, bookmarksJson);
+      await _storageService.saveString('cached_daily_bookmarks', bookmarksJson);
     } catch (e) {
       // 缓存失败不影响主要功能
     }
@@ -163,13 +168,13 @@ class _HomePageState extends State<HomePage> {
 
   // 在后台异步更新书签数据
   Future<void> _updateBookmarksInBackground() async {
-    if (!_apiService.isConfigured) {
+    if (!widget.apiService.isConfigured) {
       return;
     }
 
     // 从持久化存储中读取缓存的书签数据
     final cachedBookmarksJson =
-        _storageService.getString(StorageKeys.cachedDailyBookmarks);
+        _storageService.getString('cached_daily_bookmarks');
 
     if (cachedBookmarksJson == null) {
       return;
@@ -201,7 +206,7 @@ class _HomePageState extends State<HomePage> {
 
       // 批量获取最新的书签信息
       final updatedBookmarks =
-          await _apiService.getBatchBookmarksInfo(bookmarkIds);
+          await widget.apiService.getBatchBookmarksInfo(bookmarkIds);
 
       if (updatedBookmarks.isNotEmpty) {
         // 创建一个Map来快速查找更新的书签
@@ -306,7 +311,11 @@ class _HomePageState extends State<HomePage> {
   Future<void> _navigateToSettings() async {
     final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
-        builder: (context) => const SettingsPage(),
+        builder: (context) => SettingsPage(
+          apiService: widget.apiService,
+          onThemeChanged: widget.onThemeChanged,
+          currentThemeMode: widget.currentThemeMode,
+        ),
       ),
     );
 
@@ -319,8 +328,8 @@ class _HomePageState extends State<HomePage> {
   Future<void> _toggleBookmarkMark(
       String bookmarkId, bool currentMarkStatus) async {
     try {
-      final newMarkStatus =
-          await _apiService.toggleBookmarkMark(bookmarkId, currentMarkStatus);
+      final newMarkStatus = await widget.apiService
+          .toggleBookmarkMark(bookmarkId, currentMarkStatus);
 
       // 更新本地书签列表中的标记状态
       setState(() {
@@ -359,8 +368,8 @@ class _HomePageState extends State<HomePage> {
   Future<void> _toggleBookmarkArchive(
       String bookmarkId, bool currentArchiveStatus) async {
     try {
-      final newArchiveStatus = await _apiService.toggleBookmarkArchive(
-          bookmarkId, currentArchiveStatus);
+      final newArchiveStatus = await widget.apiService
+          .toggleBookmarkArchive(bookmarkId, currentArchiveStatus);
       _updateBookmarksInBackground();
 
       // 如果书签被存档，从当前列表中移除
@@ -443,7 +452,7 @@ class _HomePageState extends State<HomePage> {
           children: [
             const Text('今日阅读'),
             // 只有在body内没有loading时，才在标题区显示loading
-            if (_apiService.isLoading && !_isLoading) ...[
+            if (widget.apiService.isLoading && !_isLoading) ...[
               const SizedBox(width: 8),
               const SizedBox(
                 width: 12,
@@ -517,10 +526,10 @@ class _HomePageState extends State<HomePage> {
               ),
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: _apiService.isConfigured
+                onPressed: widget.apiService.isConfigured
                     ? _loadDailyBookmarks
                     : _navigateToSettings,
-                child: Text(_apiService.isConfigured ? '重试' : '前往设置'),
+                child: Text(widget.apiService.isConfigured ? '重试' : '前往设置'),
               ),
             ],
           ),

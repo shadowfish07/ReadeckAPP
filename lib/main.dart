@@ -1,37 +1,52 @@
 import 'package:flutter/material.dart';
+import 'services/readeck_api_service.dart';
 import 'services/storage_service.dart';
-import 'utils/storage_keys.dart';
 import 'pages/home_page.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const ReadeckApp());
 }
 
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+class ReadeckApp extends StatefulWidget {
+  const ReadeckApp({super.key});
 
   @override
-  State<MyApp> createState() => _MyAppState();
+  State<ReadeckApp> createState() => _ReadeckAppState();
 }
 
-class _MyAppState extends State<MyApp> {
-  ThemeMode _themeMode = ThemeMode.system;
+class _ReadeckAppState extends State<ReadeckApp> {
+  static const String _themeModeKey = 'theme_mode';
+  final ReadeckApiService _apiService = ReadeckApiService();
   final StorageService _storageService = StorageService.instance;
+  bool _isInitialized = false;
+  ThemeMode _themeMode = ThemeMode.system;
 
   @override
   void initState() {
     super.initState();
-    _loadThemeMode();
+    _initializeApp();
+  }
+
+  Future<void> _initializeApp() async {
+    await _storageService.initialize();
+    await _apiService.initialize();
+    await _loadThemeMode();
+    setState(() {
+      _isInitialized = true;
+    });
   }
 
   Future<void> _loadThemeMode() async {
-    await _storageService.initialize();
-    final themeModeIndex = _storageService.getInt(StorageKeys.themeMode);
-    if (themeModeIndex != null) {
-      setState(() {
-        _themeMode = ThemeMode.values[themeModeIndex];
-      });
-    }
+    final themeModeIndex =
+        _storageService.getInt(_themeModeKey) ?? ThemeMode.system.index;
+    _themeMode = ThemeMode.values[themeModeIndex];
+  }
+
+  Future<void> _changeThemeMode(ThemeMode themeMode) async {
+    await _storageService.saveInt(_themeModeKey, themeMode.index);
+    setState(() {
+      _themeMode = themeMode;
+    });
   }
 
   @override
@@ -81,7 +96,17 @@ class _MyAppState extends State<MyApp> {
         ),
       ),
       themeMode: _themeMode,
-      home: const HomePage(),
+      home: _isInitialized
+          ? HomePage(
+              apiService: _apiService,
+              onThemeChanged: _changeThemeMode,
+              currentThemeMode: _themeMode,
+            )
+          : const Scaffold(
+              body: Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
       debugShowCheckedModeBanner: false,
     );
   }
