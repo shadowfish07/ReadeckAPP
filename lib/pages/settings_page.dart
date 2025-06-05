@@ -23,11 +23,13 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        // 当用户返回时，如果配置发生了变化，返回true通知首页刷新
-        Navigator.of(context).pop(_configChanged);
-        return false;
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (!didPop) {
+          // 当用户返回时，如果配置发生了变化，返回true通知首页刷新
+          Navigator.of(context).pop(_configChanged);
+        }
       },
       child: Scaffold(
         appBar: AppBar(

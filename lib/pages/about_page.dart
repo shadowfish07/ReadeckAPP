@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/services.dart';
-import 'dart:convert';
 
 class AboutPage extends StatefulWidget {
   const AboutPage({super.key});
@@ -184,16 +183,16 @@ class _AboutPageState extends State<AboutPage> {
                           ),
                     ),
                     const SizedBox(height: 12),
-                    ListTile(
-                      leading: const Icon(Icons.code),
-                      title: const Text('开发者'),
-                      subtitle: const Text('ShadowFish'),
+                    const ListTile(
+                      leading: Icon(Icons.code),
+                      title: Text('开发者'),
+                      subtitle: Text('ShadowFish'),
                       contentPadding: EdgeInsets.zero,
                     ),
-                    ListTile(
-                      leading: const Icon(Icons.flutter_dash),
-                      title: const Text('技术栈'),
-                      subtitle: const Text('Flutter & Dart'),
+                    const ListTile(
+                      leading: Icon(Icons.flutter_dash),
+                      title: Text('技术栈'),
+                      subtitle: Text('Flutter & Dart'),
                       contentPadding: EdgeInsets.zero,
                     ),
                   ],
