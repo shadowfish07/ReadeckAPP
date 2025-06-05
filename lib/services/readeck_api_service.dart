@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
+import '../models/bookmark.dart';
 
 class ReadeckApiService extends ChangeNotifier {
   static const String _baseUrlKey = 'readeck_base_url';
@@ -238,82 +239,5 @@ class ReadeckApiService extends ChangeNotifier {
       _setLoading(false);
       throw Exception('网络请求失败: $e');
     }
-  }
-}
-
-// 辅助方法：将动态类型转换为int
-int? _parseIntFromDynamic(dynamic value) {
-  if (value == null) return null;
-  if (value is int) return value;
-  if (value is String) {
-    return int.tryParse(value);
-  }
-  if (value is double) return value.toInt();
-  return null;
-}
-
-// 书签数据模型
-class Bookmark {
-  final String id;
-  final String title;
-  final String url;
-  final String? siteName;
-  final String? description;
-  final DateTime created;
-  final bool isMarked;
-  final bool isArchived;
-  final int readProgress;
-  final List<String> labels;
-  final String? imageUrl;
-
-  Bookmark({
-    required this.id,
-    required this.title,
-    required this.url,
-    this.siteName,
-    this.description,
-    required this.created,
-    required this.isMarked,
-    required this.isArchived,
-    required this.readProgress,
-    required this.labels,
-    this.imageUrl,
-  });
-
-  factory Bookmark.fromJson(Map<String, dynamic> json) {
-    return Bookmark(
-      id: json['id'] ?? '',
-      title: json['title'] ?? '无标题',
-      url: json['url'] ?? '',
-      siteName: json['site_name'],
-      description: json['description'],
-      created:
-          DateTime.parse(json['created'] ?? DateTime.now().toIso8601String()),
-      isMarked: json['is_marked'] ?? false,
-      isArchived: json['is_archived'] ?? false,
-      readProgress: _parseIntFromDynamic(json['read_progress']) ?? 0,
-      labels: List<String>.from(json['labels'] ?? []),
-      imageUrl: json['resources']?['image']?['src'],
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'title': title,
-      'url': url,
-      'site_name': siteName,
-      'description': description,
-      'created': created.toIso8601String(),
-      'is_marked': isMarked,
-      'is_archived': isArchived,
-      'read_progress': readProgress,
-      'labels': labels,
-      'resources': imageUrl != null
-          ? {
-              'image': {'src': imageUrl}
-            }
-          : null,
-    };
   }
 }

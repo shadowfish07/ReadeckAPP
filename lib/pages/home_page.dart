@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:confetti/confetti.dart';
 import '../services/readeck_api_service.dart';
 import '../widgets/common/celebration_overlay.dart';
+import '../models/bookmark.dart';
 import 'settings_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -336,18 +337,8 @@ class _HomePageState extends State<HomePage> {
         final index =
             _dailyBookmarks.indexWhere((bookmark) => bookmark.id == bookmarkId);
         if (index != -1) {
-          _dailyBookmarks[index] = Bookmark(
-            id: _dailyBookmarks[index].id,
-            title: _dailyBookmarks[index].title,
-            url: _dailyBookmarks[index].url,
-            siteName: _dailyBookmarks[index].siteName,
-            description: _dailyBookmarks[index].description,
-            created: _dailyBookmarks[index].created,
+          _dailyBookmarks[index] = _dailyBookmarks[index].copyWith(
             isMarked: newMarkStatus,
-            isArchived: _dailyBookmarks[index].isArchived,
-            readProgress: _dailyBookmarks[index].readProgress,
-            labels: _dailyBookmarks[index].labels,
-            imageUrl: _dailyBookmarks[index].imageUrl,
           );
         }
       });
