@@ -1,25 +1,45 @@
 import 'package:flutter/material.dart';
 import '../services/readeck_api_service.dart';
+import '../services/storage_service.dart';
+import '../utils/storage_keys.dart';
 import 'about_page.dart';
 
 class SettingsPage extends StatefulWidget {
-  final ReadeckApiService apiService;
-  final Function(ThemeMode) onThemeChanged;
-  final ThemeMode currentThemeMode;
-
-  const SettingsPage({
-    super.key,
-    required this.apiService,
-    required this.onThemeChanged,
-    required this.currentThemeMode,
-  });
+  const SettingsPage({super.key});
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
 }
 
 class _SettingsPageState extends State<SettingsPage> {
+  final StorageService _storageService = StorageService.instance;
+  final ReadeckApiService _apiService = ReadeckApiService();
   bool _configChanged = false;
+  ThemeMode _currentThemeMode = ThemeMode.system;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadThemeMode();
+  }
+
+  Future<void> _loadThemeMode() async {
+    await _storageService.initialize();
+    final themeModeIndex = _storageService.getInt(StorageKeys.themeMode);
+    if (themeModeIndex != null) {
+      setState(() {
+        _currentThemeMode = ThemeMode.values[themeModeIndex];
+      });
+    }
+  }
+
+  Future<void> _saveThemeMode(ThemeMode themeMode) async {
+    await _storageService.initialize();
+    _storageService.saveInt(StorageKeys.themeMode, themeMode.index);
+    setState(() {
+      _currentThemeMode = themeMode;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,10 +69,10 @@ class _SettingsPageState extends State<SettingsPage> {
               subtitle: const Text('配置 Readeck 服务器连接'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () async {
-                final result = await Navigator.of(context).push<bool>(
+                final result = await Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (context) =>
-                        ApiConfigPage(apiService: widget.apiService),
+                        ApiConfigPage(apiService: _apiService),
                   ),
                 );
 
@@ -66,7 +86,7 @@ class _SettingsPageState extends State<SettingsPage> {
             ListTile(
               leading: const Icon(Icons.palette),
               title: const Text('主题模式'),
-              subtitle: Text(_getThemeModeText(widget.currentThemeMode)),
+              subtitle: Text(_getThemeModeText(_currentThemeMode)),
               trailing: const Icon(Icons.chevron_right),
               onTap: () {
                 _showThemeModeDialog(context);
@@ -115,10 +135,10 @@ class _SettingsPageState extends State<SettingsPage> {
               RadioListTile<ThemeMode>(
                 title: const Text('浅色模式'),
                 value: ThemeMode.light,
-                groupValue: widget.currentThemeMode,
+                groupValue: _currentThemeMode,
                 onChanged: (ThemeMode? value) {
                   if (value != null) {
-                    widget.onThemeChanged(value);
+                    _saveThemeMode(value);
                     Navigator.of(context).pop();
                   }
                 },
@@ -126,10 +146,10 @@ class _SettingsPageState extends State<SettingsPage> {
               RadioListTile<ThemeMode>(
                 title: const Text('深色模式'),
                 value: ThemeMode.dark,
-                groupValue: widget.currentThemeMode,
+                groupValue: _currentThemeMode,
                 onChanged: (ThemeMode? value) {
                   if (value != null) {
-                    widget.onThemeChanged(value);
+                    _saveThemeMode(value);
                     Navigator.of(context).pop();
                   }
                 },
@@ -137,10 +157,10 @@ class _SettingsPageState extends State<SettingsPage> {
               RadioListTile<ThemeMode>(
                 title: const Text('跟随系统'),
                 value: ThemeMode.system,
-                groupValue: widget.currentThemeMode,
+                groupValue: _currentThemeMode,
                 onChanged: (ThemeMode? value) {
                   if (value != null) {
-                    widget.onThemeChanged(value);
+                    _saveThemeMode(value);
                     Navigator.of(context).pop();
                   }
                 },
