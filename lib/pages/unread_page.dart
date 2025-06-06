@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/readeck_api_service.dart';
 import '../models/bookmark.dart';
-import '../pages/home_page.dart';
+import 'daily_read_page.dart';
 
 class UnreadPage extends StatefulWidget {
   final ReadeckApiService apiService;

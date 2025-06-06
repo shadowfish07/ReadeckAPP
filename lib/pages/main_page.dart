@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/readeck_api_service.dart';
-import 'home_page.dart';
+import 'daily_read_page.dart';
 import 'unread_page.dart';
 import 'settings_page.dart';
 
@@ -34,7 +34,7 @@ class _MainPageState extends State<MainPage> {
   Widget _getCurrentPage() {
     switch (_selectedIndex) {
       case 0:
-        return HomePage(
+        return DailyReadPage(
           apiService: widget.apiService,
           onThemeChanged: widget.onThemeChanged,
           currentThemeMode: widget.currentThemeMode,
@@ -53,7 +53,7 @@ class _MainPageState extends State<MainPage> {
           showAppBar: false,
         );
       default:
-        return HomePage(
+        return DailyReadPage(
           apiService: widget.apiService,
           onThemeChanged: widget.onThemeChanged,
           currentThemeMode: widget.currentThemeMode,

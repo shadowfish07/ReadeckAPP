@@ -8,13 +8,13 @@ import '../services/storage_service.dart';
 import '../widgets/common/celebration_overlay.dart';
 import '../models/bookmark.dart';
 
-class HomePage extends StatefulWidget {
+class DailyReadPage extends StatefulWidget {
   final ReadeckApiService apiService;
   final Function(ThemeMode) onThemeChanged;
   final ThemeMode currentThemeMode;
   final bool showAppBar;
 
-  const HomePage({
+  const DailyReadPage({
     super.key,
     required this.apiService,
     required this.onThemeChanged,
@@ -23,10 +23,10 @@ class HomePage extends StatefulWidget {
   });
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<DailyReadPage> createState() => _DailyReadPageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _DailyReadPageState extends State<DailyReadPage> {
   final StorageService _storageService = StorageService.instance;
   List<Bookmark> _dailyBookmarks = [];
   bool _isLoading = false;
