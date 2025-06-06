@@ -7,18 +7,19 @@ import '../services/readeck_api_service.dart';
 import '../services/storage_service.dart';
 import '../widgets/common/celebration_overlay.dart';
 import '../models/bookmark.dart';
-import 'settings_page.dart';
 
 class HomePage extends StatefulWidget {
   final ReadeckApiService apiService;
   final Function(ThemeMode) onThemeChanged;
   final ThemeMode currentThemeMode;
+  final bool showAppBar;
 
   const HomePage({
     super.key,
     required this.apiService,
     required this.onThemeChanged,
     required this.currentThemeMode,
+    this.showAppBar = true,
   });
 
   @override
@@ -308,23 +309,6 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Future<void> _navigateToSettings() async {
-    final result = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (context) => SettingsPage(
-          apiService: widget.apiService,
-          onThemeChanged: widget.onThemeChanged,
-          currentThemeMode: widget.currentThemeMode,
-        ),
-      ),
-    );
-
-    // 如果设置页面返回true，说明配置已更新，重新加载数据
-    if (result == true) {
-      _checkAndLoadDailyBookmarks();
-    }
-  }
-
   Future<void> _toggleBookmarkMark(
       String bookmarkId, bool currentMarkStatus) async {
     try {
@@ -447,33 +431,34 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            const Text('今日阅读'),
-            // 只有在body内没有loading时，才在标题区显示loading
-            if (widget.apiService.isLoading && !_isLoading) ...[
-              const SizedBox(width: 8),
-              const SizedBox(
-                width: 12,
-                height: 12,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                ),
+      appBar: widget.showAppBar
+          ? AppBar(
+              title: Row(
+                children: [
+                  const Text('今日阅读'),
+                  // 只有在body内没有loading时，才在标题区显示loading
+                  if (widget.apiService.isLoading && !_isLoading) ...[
+                    const SizedBox(width: 8),
+                    const SizedBox(
+                      width: 12,
+                      height: 12,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Text(
+                      '加载中',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ],
               ),
-              const SizedBox(width: 8),
-              const Text(
-                '加载中',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.normal,
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-      drawer: _buildDrawer(context),
+            )
+          : null,
       body: Stack(
         children: [
           _buildBody(),
@@ -520,10 +505,8 @@ class _HomePageState extends State<HomePage> {
               ),
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: widget.apiService.isConfigured
-                    ? _loadDailyBookmarks
-                    : _navigateToSettings,
-                child: Text(widget.apiService.isConfigured ? '重试' : '前往设置'),
+                onPressed: _loadDailyBookmarks,
+                child: const Text('重试'),
               ),
             ],
           ),
@@ -674,55 +657,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   // 构建左侧抽屉菜单
-  Widget _buildDrawer(BuildContext context) {
-    return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          // 今日阅读菜单项
-          ListTile(
-            leading: const Icon(Icons.today),
-            title: const Text(
-              '今日阅读',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            onTap: () {
-              Navigator.pop(context); // 关闭抽屉
-              // 当前已经在今日阅读页面，无需跳转
-            },
-            selected: true, // 标记为当前选中项
-            selectedTileColor:
-                Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
-          ),
-          // 分割线
-          const Divider(
-            height: 1,
-            thickness: 1,
-            indent: 16,
-            endIndent: 16,
-          ),
-          // 设置菜单项
-          ListTile(
-            leading: const Icon(Icons.settings),
-            title: const Text(
-              '设置',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            onTap: () {
-              Navigator.pop(context); // 关闭抽屉
-              _navigateToSettings(); // 跳转到设置页面
-            },
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class BookmarkCard extends StatelessWidget {

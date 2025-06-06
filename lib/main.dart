@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'services/readeck_api_service.dart';
 import 'services/storage_service.dart';
-import 'pages/home_page.dart';
+import 'pages/main_page.dart';
 
 void main() {
   runApp(const ReadeckApp());
@@ -97,7 +97,7 @@ class _ReadeckAppState extends State<ReadeckApp> {
       ),
       themeMode: _themeMode,
       home: _isInitialized
-          ? HomePage(
+          ? MainPage(
               apiService: _apiService,
               onThemeChanged: _changeThemeMode,
               currentThemeMode: _themeMode,

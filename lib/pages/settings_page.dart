@@ -6,12 +6,14 @@ class SettingsPage extends StatefulWidget {
   final ReadeckApiService apiService;
   final Function(ThemeMode) onThemeChanged;
   final ThemeMode currentThemeMode;
+  final bool showAppBar;
 
   const SettingsPage({
     super.key,
     required this.apiService,
     required this.onThemeChanged,
     required this.currentThemeMode,
+    this.showAppBar = true,
   });
 
   @override
@@ -32,15 +34,17 @@ class _SettingsPageState extends State<SettingsPage> {
         }
       },
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('设置'),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () {
-              Navigator.of(context).pop(_configChanged);
-            },
-          ),
-        ),
+        appBar: widget.showAppBar
+            ? AppBar(
+                title: const Text('设置'),
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () {
+                    Navigator.of(context).pop(_configChanged);
+                  },
+                ),
+              )
+            : null,
         body: ListView(
           children: [
             ListTile(
@@ -163,8 +167,13 @@ class _SettingsPageState extends State<SettingsPage> {
 
 class ApiConfigPage extends StatefulWidget {
   final ReadeckApiService apiService;
+  final bool showAppBar;
 
-  const ApiConfigPage({super.key, required this.apiService});
+  const ApiConfigPage({
+    super.key,
+    required this.apiService,
+    this.showAppBar = true,
+  });
 
   @override
   State<ApiConfigPage> createState() => _ApiConfigPageState();
@@ -248,9 +257,11 @@ class _ApiConfigPageState extends State<ApiConfigPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('API 配置'),
-      ),
+      appBar: widget.showAppBar
+          ? AppBar(
+              title: const Text('API 配置'),
+            )
+          : null,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
