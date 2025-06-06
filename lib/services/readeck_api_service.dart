@@ -53,18 +53,106 @@ class ReadeckApiService extends ChangeNotifier {
         'Content-Type': 'application/json',
       };
 
-  // 获取未读书签
-  Future<List<Bookmark>> getUnreadBookmarks() async {
+  /// 获取书签列表
+  ///
+  /// 支持所有 Readeck API 查询参数：
+  /// - [search]: 全文搜索字符串
+  /// - [title]: 书签标题
+  /// - [author]: 作者姓名
+  /// - [site]: 书签站点名称或域名
+  /// - [type]: 书签类型 (article, photo, video)
+  /// - [labels]: 一个或多个标签
+  /// - [isLoaded]: 按加载状态过滤
+  /// - [hasErrors]: 过滤有或没有错误的书签
+  /// - [hasLabels]: 过滤有或没有标签的书签
+  /// - [isMarked]: 按标记（收藏）状态过滤
+  /// - [isArchived]: 按归档状态过滤
+  /// - [rangeStart]: 开始日期
+  /// - [rangeEnd]: 结束日期
+  /// - [readStatus]: 阅读进度状态 (unread, reading, read)
+  /// - [updatedSince]: 检索在此日期之后创建的书签
+  /// - [ids]: 一个或多个书签 ID
+  /// - [collection]: 集合 ID
+  /// - [sort]: 排序参数 (created, -created, domain, -domain, duration, -duration, published, -published, site, -site, title, -title)
+  /// - [limit]: 每页项目数
+  /// - [offset]: 分页偏移量
+  Future<List<Bookmark>> getBookmarks({
+    String? search,
+    String? title,
+    String? author,
+    String? site,
+    String? type,
+    List<String>? labels,
+    bool? isLoaded,
+    bool? hasErrors,
+    bool? hasLabels,
+    bool? isMarked,
+    bool? isArchived,
+    String? rangeStart,
+    String? rangeEnd,
+    String? readStatus,
+    String? updatedSince,
+    List<String>? ids,
+    String? collection,
+    String? sort,
+    int? limit,
+    int? offset,
+  }) async {
     if (!isConfigured) {
       throw Exception('API未配置，请先设置服务器地址和令牌');
     }
 
     _setLoading(true);
-    final url =
-        Uri.parse('$_baseUrl/api/bookmarks?read_status=unread&limit=100');
+
+    // 构建查询参数
+    final queryParts = <String>[];
+
+    if (search != null) queryParts.add('search=${Uri.encodeComponent(search)}');
+    if (title != null) queryParts.add('title=${Uri.encodeComponent(title)}');
+    if (author != null) queryParts.add('author=${Uri.encodeComponent(author)}');
+    if (site != null) queryParts.add('site=${Uri.encodeComponent(site)}');
+    if (type != null) queryParts.add('type=${Uri.encodeComponent(type)}');
+    if (labels != null && labels.isNotEmpty) {
+      for (final label in labels) {
+        queryParts.add('labels=${Uri.encodeComponent(label)}');
+      }
+    }
+    if (isLoaded != null) queryParts.add('is_loaded=${isLoaded.toString()}');
+    if (hasErrors != null) queryParts.add('has_errors=${hasErrors.toString()}');
+    if (hasLabels != null) queryParts.add('has_labels=${hasLabels.toString()}');
+    if (isMarked != null) queryParts.add('is_marked=${isMarked.toString()}');
+    if (isArchived != null) {
+      queryParts.add('is_archived=${isArchived.toString()}');
+    }
+    if (rangeStart != null) {
+      queryParts.add('range_start=${Uri.encodeComponent(rangeStart)}');
+    }
+    if (rangeEnd != null) {
+      queryParts.add('range_end=${Uri.encodeComponent(rangeEnd)}');
+    }
+    if (readStatus != null) {
+      queryParts.add('read_status=${Uri.encodeComponent(readStatus)}');
+    }
+    if (updatedSince != null) {
+      queryParts.add('updated_since=${Uri.encodeComponent(updatedSince)}');
+    }
+    if (ids != null && ids.isNotEmpty) {
+      for (final id in ids) {
+        queryParts.add('id=${Uri.encodeComponent(id)}');
+      }
+    }
+    if (collection != null) {
+      queryParts.add('collection=${Uri.encodeComponent(collection)}');
+    }
+    if (sort != null) queryParts.add('sort=${Uri.encodeComponent(sort)}');
+    if (limit != null) queryParts.add('limit=${limit.toString()}');
+    if (offset != null) queryParts.add('offset=${offset.toString()}');
+
+    final queryString = queryParts.isNotEmpty ? '?${queryParts.join('&')}' : '';
+    final uri = Uri.parse('$_baseUrl/api/bookmarks$queryString');
 
     try {
-      final response = await http.get(url, headers: _headers);
+      final response = await http.get(uri, headers: _headers);
 
       if (response.statusCode == 200) {
         // 检查响应体是否为空或无效
@@ -103,6 +191,14 @@ class ReadeckApiService extends ChangeNotifier {
       _setLoading(false);
       throw Exception('网络请求失败: $e');
     }
+  }
+
+  /// 获取未读书签（保持向后兼容性）
+  Future<List<Bookmark>> getUnreadBookmarks() async {
+    return getBookmarks(
+      readStatus: 'unread',
+      limit: 100,
+    );
   }
 
   // 随机获取5个未读书签
