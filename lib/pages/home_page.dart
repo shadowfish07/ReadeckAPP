@@ -472,14 +472,8 @@ class _HomePageState extends State<HomePage> {
             ],
           ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: _navigateToSettings,
-            tooltip: '设置',
-          ),
-        ],
       ),
+      drawer: _buildDrawer(context),
       body: Stack(
         children: [
           _buildBody(),
@@ -674,6 +668,57 @@ class _HomePageState extends State<HomePage> {
           CelebrationOverlay(
             onRefreshNewContent: _refreshNewContent,
           )
+        ],
+      ),
+    );
+  }
+
+  // 构建左侧抽屉菜单
+  Widget _buildDrawer(BuildContext context) {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          // 今日阅读菜单项
+          ListTile(
+            leading: const Icon(Icons.today),
+            title: const Text(
+              '今日阅读',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            onTap: () {
+              Navigator.pop(context); // 关闭抽屉
+              // 当前已经在今日阅读页面，无需跳转
+            },
+            selected: true, // 标记为当前选中项
+            selectedTileColor:
+                Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+          ),
+          // 分割线
+          const Divider(
+            height: 1,
+            thickness: 1,
+            indent: 16,
+            endIndent: 16,
+          ),
+          // 设置菜单项
+          ListTile(
+            leading: const Icon(Icons.settings),
+            title: const Text(
+              '设置',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            onTap: () {
+              Navigator.pop(context); // 关闭抽屉
+              _navigateToSettings(); // 跳转到设置页面
+            },
+          ),
         ],
       ),
     );
