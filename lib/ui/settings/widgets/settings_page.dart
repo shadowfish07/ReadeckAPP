@@ -39,47 +39,40 @@ class SettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          '设置',
-        ),
-      ),
-      body: ListenableBuilder(
-        listenable: viewModel,
-        builder: (context, _) => ListView(
-          children: [
-            ListTile(
-              leading: const Icon(Icons.api),
-              title: const Text('API 配置'),
-              subtitle: const Text('配置 Readeck 服务器连接'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () async {
-                context.go(Routes.apiConfigSetting);
-              },
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.palette),
-              title: const Text('主题模式'),
-              subtitle: Text(_getThemeModeText(viewModel.themeMode)),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                _showThemeModeDialog(context);
-              },
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.info),
-              title: const Text('关于'),
-              subtitle: const Text('应用信息和版本'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                context.go(Routes.about);
-              },
-            ),
-          ],
-        ),
+    return ListenableBuilder(
+      listenable: viewModel,
+      builder: (context, _) => ListView(
+        children: [
+          ListTile(
+            leading: const Icon(Icons.api),
+            title: const Text('API 配置'),
+            subtitle: const Text('配置 Readeck 服务器连接'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () async {
+              context.go(Routes.apiConfigSetting);
+            },
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.palette),
+            title: const Text('主题模式'),
+            subtitle: Text(_getThemeModeText(viewModel.themeMode)),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              _showThemeModeDialog(context);
+            },
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.info),
+            title: const Text('关于'),
+            subtitle: const Text('应用信息和版本'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              context.go(Routes.about);
+            },
+          ),
+        ],
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:readeck_app/ui/core/main_layout.dart';
 import 'package:readeck_app/ui/settings/view_models/about_viewmodel.dart';
 import 'package:readeck_app/ui/settings/view_models/settings_viewmodel.dart';
 import 'package:readeck_app/ui/settings/widgets/about_page.dart';
@@ -7,33 +8,56 @@ import 'package:readeck_app/ui/settings/widgets/settings_page.dart';
 
 import 'routes.dart';
 
+// AppBar 配置映射
+final Map<String, String> _routeTitleMap = {
+  Routes.settings: '设置',
+  Routes.about: '关于',
+  Routes.apiConfigSetting: 'API 配置',
+  Routes.home: '首页',
+  Routes.dailyRead: '每日阅读',
+  Routes.unread: '未读',
+};
+
+// 根据路由获取标题
+String? _getTitleForRoute(String location) {
+  return _routeTitleMap[location];
+}
+
 GoRouter router() => GoRouter(
-      initialLocation: Routes.home,
+      initialLocation: Routes.settings,
       debugLogDiagnostics: true,
       routes: [
-        GoRoute(
-          path: Routes.home,
-          builder: (context, state) {
-            final viewModel = SettingsViewModel(context.read());
-            return SettingsPage(viewModel: viewModel);
-          },
-          routes: [
-            GoRoute(
-                path: Routes.settingsRelative,
-                builder: (context, state) {
-                  final viewModel = SettingsViewModel(context.read());
-                  return SettingsPage(viewModel: viewModel);
-                },
-                routes: [
-                  GoRoute(
-                      path: Routes.aboutRelative,
-                      builder: (context, state) {
-                        final viewModel = AboutViewModel();
-                        return AboutPage(viewModel: viewModel);
-                      }),
-                ]),
-          ],
-        ),
+        ShellRoute(
+            builder: (context, state, child) {
+              // 根据当前路由确定页面标题
+              final title = _getTitleForRoute(state.matchedLocation);
+              return MainLayout(
+                title: title,
+                child: child,
+              ); // 包含侧边菜单的布局
+            },
+            routes: [
+              GoRoute(
+                  path: Routes.settings,
+                  builder: (context, state) {
+                    return ChangeNotifierProvider(
+                      create: (context) => SettingsViewModel(context.read()),
+                      child: Consumer<SettingsViewModel>(
+                        builder: (context, viewModel, child) {
+                          return SettingsPage(viewModel: viewModel);
+                        },
+                      ),
+                    );
+                  },
+                  routes: [
+                    GoRoute(
+                        path: Routes.aboutRelative,
+                        builder: (context, state) {
+                          final viewModel = AboutViewModel();
+                          return AboutPage(viewModel: viewModel);
+                        }),
+                  ]),
+            ])
       ],
     );
 
