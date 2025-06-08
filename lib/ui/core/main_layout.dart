@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:readeck_app/routing/routes.dart';
 
 class MainLayout extends StatelessWidget {
   final Widget child;
@@ -36,16 +37,25 @@ class MainLayout extends StatelessWidget {
       drawer: NavigationDrawer(
         children: [
           ListTile(
-            title: const Text('首页'),
-            onTap: () => context.go('/home'),
+            title: const Text('每日阅读'),
+            onTap: () {
+              context.pop();
+              context.go(Routes.dailyRead);
+            },
           ),
           ListTile(
             title: const Text('个人资料'),
-            onTap: () => context.go('/profile'),
+            onTap: () {
+              context.pop();
+              context.go('/profile');
+            },
           ),
           ListTile(
             title: const Text('设置'),
-            onTap: () => context.go('/settings'),
+            onTap: () {
+              context.pop();
+              context.go(Routes.settings);
+            },
           ),
         ],
       ),

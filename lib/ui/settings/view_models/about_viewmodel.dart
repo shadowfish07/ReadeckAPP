@@ -12,7 +12,7 @@ class AboutViewModel extends ChangeNotifier {
 
   String _version = 'Unknown';
   String get version => _version;
-  final log = Logger('AboutViewModel');
+  final _log = Logger('AboutViewModel');
 
   Future<Result<void>> _loadVersion() async {
     try {
@@ -25,11 +25,11 @@ class AboutViewModel extends ChangeNotifier {
         return const Result.ok(null);
       }
       notifyListeners();
-      log.warning("Wrong Version Format. pubspecContent: $pubspecContent");
+      _log.warning("Wrong Version Format. pubspecContent: $pubspecContent");
       return Result.error(Exception("Wrong Version Format"));
     } on Exception catch (e) {
       // 如果读取失败，保持默认版本号
-      log.severe('Failed to load version: $e');
+      _log.severe('Failed to load version: $e');
       notifyListeners();
       return Result.error(e);
     }

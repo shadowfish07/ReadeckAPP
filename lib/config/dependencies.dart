@@ -1,6 +1,11 @@
+import 'package:path/path.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
-import 'package:readeck_app/data/service/readeck_service.dart';
+import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
+import 'package:readeck_app/data/repository/daily_read_history/daily_read_history_repository.dart';
+import 'package:readeck_app/data/service/database_service.dart';
+import 'package:readeck_app/data/service/readeck_api_client.dart';
+import 'package:readeck_app/domain/use_cases/bookmark_operation_use_cases.dart';
 
 import '../data/service/shared_preference_service.dart';
 import '../data/repository/theme/theme_repository.dart';
@@ -19,6 +24,10 @@ List<SingleChildWidget> providers(String host, String token) {
         context.read<ThemeRepository>(),
       ),
     ),
-    Provider(create: (context) => ReadeckService(host, token))
+    Provider(create: (context) => ReadeckApiClient(host, token)),
+    Provider(create: (context) => DatabaseService()),
+    Provider(create: (context) => BookmarkRepository(context.read())),
+    Provider(create: (context) => DailyReadHistoryRepository(context.read())),
+    Provider(create: (context) => BookmarkOperationUseCases(context.read()))
   ];
 }

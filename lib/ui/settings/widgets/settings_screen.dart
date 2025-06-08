@@ -3,8 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:readeck_app/routing/routes.dart';
 import 'package:readeck_app/ui/settings/view_models/settings_viewmodel.dart';
 
-class SettingsPage extends StatelessWidget {
-  const SettingsPage({super.key, required this.viewModel});
+class SettingsScreen extends StatelessWidget {
+  const SettingsScreen({super.key, required this.viewModel});
 
   final SettingsViewModel viewModel;
 
@@ -69,7 +69,7 @@ class SettingsPage extends StatelessWidget {
             subtitle: const Text('应用信息和版本'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              context.go(Routes.about);
+              context.push(Routes.about);
             },
           ),
         ],

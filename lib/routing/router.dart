@@ -1,10 +1,12 @@
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:readeck_app/ui/core/main_layout.dart';
+import 'package:readeck_app/ui/daily_read/view_models/daily_read_viewmodel.dart';
+import 'package:readeck_app/ui/daily_read/widgets/daily_read_screen.dart';
 import 'package:readeck_app/ui/settings/view_models/about_viewmodel.dart';
 import 'package:readeck_app/ui/settings/view_models/settings_viewmodel.dart';
 import 'package:readeck_app/ui/settings/widgets/about_page.dart';
-import 'package:readeck_app/ui/settings/widgets/settings_page.dart';
+import 'package:readeck_app/ui/settings/widgets/settings_screen.dart';
 
 import 'routes.dart';
 
@@ -24,7 +26,7 @@ String? _getTitleForRoute(String location) {
 }
 
 GoRouter router() => GoRouter(
-      initialLocation: Routes.settings,
+      initialLocation: Routes.dailyRead,
       debugLogDiagnostics: true,
       routes: [
         ShellRoute(
@@ -38,26 +40,39 @@ GoRouter router() => GoRouter(
             },
             routes: [
               GoRoute(
-                  path: Routes.settings,
-                  builder: (context, state) {
-                    return ChangeNotifierProvider(
-                      create: (context) => SettingsViewModel(context.read()),
-                      child: Consumer<SettingsViewModel>(
-                        builder: (context, viewModel, child) {
-                          return SettingsPage(viewModel: viewModel);
-                        },
-                      ),
-                    );
-                  },
-                  routes: [
-                    GoRoute(
-                        path: Routes.aboutRelative,
-                        builder: (context, state) {
-                          final viewModel = AboutViewModel();
-                          return AboutPage(viewModel: viewModel);
-                        }),
-                  ]),
-            ])
+                path: Routes.dailyRead,
+                builder: (context, state) {
+                  return ChangeNotifierProvider(
+                    create: (context) => DailyReadViewModel(
+                        context.read(), context.read(), context.read()),
+                    child: Consumer<DailyReadViewModel>(
+                      builder: (context, viewModel, child) {
+                        return DailyReadScreen(viewModel: viewModel);
+                      },
+                    ),
+                  );
+                },
+              ),
+              GoRoute(
+                path: Routes.settings,
+                builder: (context, state) {
+                  return ChangeNotifierProvider(
+                    create: (context) => SettingsViewModel(context.read()),
+                    child: Consumer<SettingsViewModel>(
+                      builder: (context, viewModel, child) {
+                        return SettingsScreen(viewModel: viewModel);
+                      },
+                    ),
+                  );
+                },
+              ),
+            ]),
+        GoRoute(
+            path: Routes.about,
+            builder: (context, state) {
+              final viewModel = AboutViewModel();
+              return AboutPage(viewModel: viewModel);
+            }),
       ],
     );
 
