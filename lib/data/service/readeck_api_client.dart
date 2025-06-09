@@ -2,17 +2,25 @@ import 'dart:convert';
 
 import 'package:logging/logging.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
-import 'package:readeck_app/utils/result.dart';
 import 'package:http/http.dart' as http;
+import 'package:readeck_app/utils/api_not_configured_exception.dart';
+import 'package:result_dart/result_dart.dart';
 
 class ReadeckApiClient {
   ReadeckApiClient(this._host, this._token);
 
-  final String? _host;
-  final String? _token;
+  String? _host;
+  String? _token;
   final _log = Logger("ReadeckApiClient");
 
-  bool get _isConfigured => _host != null && _token != null;
+  /// 更新API配置
+  void updateConfig(String? host, String? token) {
+    _host = host;
+    _token = token;
+  }
+
+  bool get _isConfigured =>
+      (_host != null && _host != '') || (_token != null && _token != '');
 
   Map<String, String> get _headers => {
         'Authorization': 'Bearer $_token',
@@ -42,7 +50,7 @@ class ReadeckApiClient {
   /// - [sort]: 排序参数 (created, -created, domain, -domain, duration, -duration, published, -published, site, -site, title, -title)
   /// - [limit]: 每页项目数
   /// - [offset]: 分页偏移量
-  Future<Result<List<Bookmark>>> getBookmarks({
+  AsyncResult<List<Bookmark>> getBookmarks({
     String? search,
     String? title,
     String? author,
@@ -65,7 +73,7 @@ class ReadeckApiClient {
     int? offset,
   }) async {
     if (!_isConfigured) {
-      return Result.error(Exception('API未配置，请先设置服务器地址和令牌'));
+      return Failure(ApiNotConfiguredException());
     }
 
     // 构建查询参数
@@ -122,7 +130,7 @@ class ReadeckApiClient {
         // 检查响应体是否为空或无效
         if (response.body.isEmpty) {
           _log.warning("服务器返回空响应。uri: $uri");
-          return Result.error(Exception("服务器返回空响应"));
+          return Failure(Exception("服务器返回空响应"));
         }
 
         dynamic data;
@@ -130,7 +138,7 @@ class ReadeckApiClient {
           data = json.decode(response.body);
         } catch (formatException) {
           _log.warning("JSON解析失败。uri: $uri, 响应体: ${response.body}");
-          return Result.error(Exception("JSON解析失败：$formatException"));
+          return Failure(Exception("JSON解析失败：$formatException"));
         }
 
         // 检查返回的数据结构
@@ -140,19 +148,19 @@ class ReadeckApiClient {
           bookmarksJson = data;
         } else {
           _log.warning("无效的响应格式。uri: $uri, 响应体: ${response.body}");
-          return Result.error(Exception("无效的响应格式"));
+          return Failure(Exception("无效的响应格式"));
         }
 
         final result =
             bookmarksJson.map((json) => Bookmark.fromJson(json)).toList();
-        return Result.ok(result);
+        return Success(result);
       } else {
         _log.warning("获取书签失败。uri: $uri, 状态码: ${response.statusCode}");
-        return Result.error(Exception('获取书签失败: ${response.statusCode}'));
+        return Failure(Exception('获取书签失败: ${response.statusCode}'));
       }
     } catch (e) {
       _log.warning("网络请求失败。uri: $uri, 错误: $e");
-      return Result.error(Exception('网络请求失败: $e'));
+      return Failure(Exception('网络请求失败: $e'));
     }
   }
 
@@ -168,7 +176,7 @@ class ReadeckApiClient {
   /// - [labels]: 替换书签的标签
   /// - [addLabels]: 向书签添加给定标签
   /// - [removeLabels]: 从书签中删除给定标签
-  Future<Result<Map<String, dynamic>>> updateBookmark(
+  AsyncResult<Map<String, dynamic>> updateBookmark(
     String bookmarkId, {
     String? title,
     bool? isMarked,
@@ -181,7 +189,7 @@ class ReadeckApiClient {
     List<String>? removeLabels,
   }) async {
     if (!_isConfigured) {
-      return Result.error(Exception('API未配置，请先设置服务器地址和令牌'));
+      return Failure(ApiNotConfiguredException());
     }
 
     // 构建请求体
@@ -194,7 +202,7 @@ class ReadeckApiClient {
     if (readProgress != null) {
       // 确保阅读进度在 0-100 范围内
       if (readProgress < 0 || readProgress > 100) {
-        return Result.error(Exception('阅读进度必须在 0-100 范围内'));
+        return Failure(Exception('阅读进度必须在 0-100 范围内'));
       }
       requestBody['read_progress'] = readProgress;
     }
@@ -205,7 +213,7 @@ class ReadeckApiClient {
 
     // 如果没有任何更新参数，返回错误
     if (requestBody.isEmpty) {
-      return Result.error(Exception('至少需要提供一个更新参数'));
+      return Failure(Exception('至少需要提供一个更新参数'));
     }
 
     final uri =
@@ -222,7 +230,7 @@ class ReadeckApiClient {
         // 检查响应体是否为空或无效
         if (response.body.isEmpty) {
           _log.warning("服务器返回空响应。uri: $uri");
-          return Result.error(Exception("服务器返回空响应"));
+          return Failure(Exception("服务器返回空响应"));
         }
 
         dynamic data;
@@ -230,23 +238,23 @@ class ReadeckApiClient {
           data = json.decode(response.body);
         } catch (formatException) {
           _log.warning("JSON解析失败。uri: $uri, 响应体: ${response.body}");
-          return Result.error(Exception("JSON解析失败：$formatException"));
+          return Failure(Exception("JSON解析失败：$formatException"));
         }
 
         // 返回更新结果
         if (data is Map<String, dynamic>) {
-          return Result.ok(data);
+          return Success(data);
         } else {
           _log.warning("无效的响应格式。uri: $uri, 响应体: ${response.body}");
-          return Result.error(Exception("无效的响应格式"));
+          return Failure(Exception("无效的响应格式"));
         }
       } else {
         _log.warning("更新书签失败。uri: $uri, 状态码: ${response.statusCode}");
-        return Result.error(Exception('更新书签失败: ${response.statusCode}'));
+        return Failure(Exception('更新书签失败: ${response.statusCode}'));
       }
     } catch (e) {
       _log.warning("网络请求失败。uri: $uri, 错误: $e");
-      return Result.error(Exception('网络请求失败: $e'));
+      return Failure(Exception('网络请求失败: $e'));
     }
   }
 }

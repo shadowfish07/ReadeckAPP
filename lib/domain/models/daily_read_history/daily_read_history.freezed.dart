@@ -15,9 +15,16 @@ T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$DailyReadHistory implements DiagnosticableTreeMixin {
-  @Converter()
-  String get id;
+  int get id;
+  @JsonKey(
+      name: "created_date",
+      fromJson: _dateTimeFromJson,
+      toJson: _dateTimeToJson)
   DateTime get createdDate;
+  @JsonKey(
+      name: "bookmark_ids",
+      fromJson: _bookmarkIdsFromJson,
+      toJson: _bookmarkIdsToJson)
   List<String> get bookmarkIds;
 
   /// Create a copy of DailyReadHistory
@@ -70,7 +77,17 @@ abstract mixin class $DailyReadHistoryCopyWith<$Res> {
       _$DailyReadHistoryCopyWithImpl;
   @useResult
   $Res call(
-      {@Converter() String id, DateTime createdDate, List<String> bookmarkIds});
+      {int id,
+      @JsonKey(
+          name: "created_date",
+          fromJson: _dateTimeFromJson,
+          toJson: _dateTimeToJson)
+      DateTime createdDate,
+      @JsonKey(
+          name: "bookmark_ids",
+          fromJson: _bookmarkIdsFromJson,
+          toJson: _bookmarkIdsToJson)
+      List<String> bookmarkIds});
 }
 
 /// @nodoc
@@ -94,7 +111,7 @@ class _$DailyReadHistoryCopyWithImpl<$Res>
       id: null == id
           ? _self.id
           : id // ignore: cast_nullable_to_non_nullable
-              as String,
+              as int,
       createdDate: null == createdDate
           ? _self.createdDate
           : createdDate // ignore: cast_nullable_to_non_nullable
@@ -113,20 +130,35 @@ class _DailyReadHistory
     with DiagnosticableTreeMixin
     implements DailyReadHistory {
   const _DailyReadHistory(
-      {@Converter() required this.id,
+      {required this.id,
+      @JsonKey(
+          name: "created_date",
+          fromJson: _dateTimeFromJson,
+          toJson: _dateTimeToJson)
       required this.createdDate,
+      @JsonKey(
+          name: "bookmark_ids",
+          fromJson: _bookmarkIdsFromJson,
+          toJson: _bookmarkIdsToJson)
       required final List<String> bookmarkIds})
       : _bookmarkIds = bookmarkIds;
   factory _DailyReadHistory.fromJson(Map<String, dynamic> json) =>
       _$DailyReadHistoryFromJson(json);
 
   @override
-  @Converter()
-  final String id;
+  final int id;
   @override
+  @JsonKey(
+      name: "created_date",
+      fromJson: _dateTimeFromJson,
+      toJson: _dateTimeToJson)
   final DateTime createdDate;
   final List<String> _bookmarkIds;
   @override
+  @JsonKey(
+      name: "bookmark_ids",
+      fromJson: _bookmarkIdsFromJson,
+      toJson: _bookmarkIdsToJson)
   List<String> get bookmarkIds {
     if (_bookmarkIds is EqualUnmodifiableListView) return _bookmarkIds;
     // ignore: implicit_dynamic_type
@@ -189,7 +221,17 @@ abstract mixin class _$DailyReadHistoryCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {@Converter() String id, DateTime createdDate, List<String> bookmarkIds});
+      {int id,
+      @JsonKey(
+          name: "created_date",
+          fromJson: _dateTimeFromJson,
+          toJson: _dateTimeToJson)
+      DateTime createdDate,
+      @JsonKey(
+          name: "bookmark_ids",
+          fromJson: _bookmarkIdsFromJson,
+          toJson: _bookmarkIdsToJson)
+      List<String> bookmarkIds});
 }
 
 /// @nodoc
@@ -213,7 +255,7 @@ class __$DailyReadHistoryCopyWithImpl<$Res>
       id: null == id
           ? _self.id
           : id // ignore: cast_nullable_to_non_nullable
-              as String,
+              as int,
       createdDate: null == createdDate
           ? _self.createdDate
           : createdDate // ignore: cast_nullable_to_non_nullable

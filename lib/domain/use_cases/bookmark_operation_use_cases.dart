@@ -1,7 +1,7 @@
 import 'package:logging/logging.dart';
 import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
-import 'package:readeck_app/utils/result.dart';
+import 'package:result_dart/result_dart.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class BookmarkOperationUseCases {
@@ -11,15 +11,15 @@ class BookmarkOperationUseCases {
 
   final _log = Logger("BookmarkOperationUseCases");
 
-  Future<Result<void>> toggleBookmarkMarked(Bookmark bookmark) async {
+  AsyncResult<void> toggleBookmarkMarked(Bookmark bookmark) async {
     return _bookmarkRepository.toggleMarked(bookmark);
   }
 
-  Future<Result<void>> toggleBookmarkArchived(Bookmark bookmark) async {
+  AsyncResult<void> toggleBookmarkArchived(Bookmark bookmark) async {
     return _bookmarkRepository.toggleArchived(bookmark);
   }
 
-  Future<Result<void>> openUrl(String url) async {
+  AsyncResult<void> openUrl(String url) async {
     try {
       final uri = Uri.parse(url);
 
@@ -58,13 +58,13 @@ class BookmarkOperationUseCases {
 
       if (!launched) {
         _log.warning("无法打开链接：$url");
-        return Result.error(Exception("无法打开链接"));
+        return Failure(Exception("无法打开链接"));
       }
 
-      return const Result.ok(null);
+      return const Success(unit);
     } catch (e) {
       _log.warning("打开链接时发生错误：$url", e);
-      return Result.error(Exception("打开链接时发生错误"));
+      return Failure(Exception("打开链接时发生错误"));
     }
   }
 }

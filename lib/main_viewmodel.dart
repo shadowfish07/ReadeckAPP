@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'data/repository/theme/theme_repository.dart';
-import 'utils/result.dart';
 
 class MainAppViewModel extends ChangeNotifier {
   MainAppViewModel(this._themeRepository) {
@@ -24,8 +23,8 @@ class MainAppViewModel extends ChangeNotifier {
   Future<void> _load() async {
     try {
       final result = await _themeRepository.getThemeMode();
-      if (result is Ok<ThemeMode>) {
-        _themeMode = result.value;
+      if (result.isSuccess()) {
+        _themeMode = result.getOrNull()!;
       }
     } on Exception catch (_) {
       // handle error

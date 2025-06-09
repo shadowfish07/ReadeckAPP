@@ -214,6 +214,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_command:
+    dependency: "direct main"
+    description:
+      name: flutter_command
+      sha256: e6e77c60ac104aec297ccf7c90d186d0409bbcd8665df7c0ff43f34d9d538067
+      url: "https://pub.dev"
+    source: hosted
+    version: "7.2.2"
   flutter_lints:
     dependency: "direct dev"
     description:
@@ -256,6 +264,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.0"
+  functional_listener:
+    dependency: transitive
+    description:
+      name: functional_listener
+      sha256: c096db771b4ce7ba0f886cc4a761044b11e8276a7bc24cfc812dc4b2bc6f5b16
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.1.0"
   glob:
     dependency: transitive
     description:
@@ -504,6 +520,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.5.0"
+  quiver:
+    dependency: transitive
+    description:
+      name: quiver
+      sha256: ea0b925899e64ecdfbf9c7becb60d5b50e706ade44a85b2363be2a22d88117d2
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.2.2"
+  result_dart:
+    dependency: "direct main"
+    description:
+      name: result_dart
+      sha256: eecf5b08b63572b348bfaa56a50f30191fe21d9edacef59d0e19a33905dd184d
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.0"
   shared_preferences:
     dependency: "direct main"
     description:

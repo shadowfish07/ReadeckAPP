@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:result_dart/result_dart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SharedPreferencesService {
@@ -6,33 +7,63 @@ class SharedPreferencesService {
   static const String _kReadeckApiHost = 'readeckApiHost';
   static const String _kReadeckApiToken = 'readeckApiToken';
 
-  Future<void> setThemeMode(int value) async {
+  AsyncResult<void> setThemeMode(int value) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_kThemeMode, value);
+    try {
+      await prefs.setInt(_kThemeMode, value);
+      return const Success(unit);
+    } on Exception catch (e) {
+      return Failure(e);
+    }
   }
 
-  Future<int> getThemeMode() async {
+  AsyncResult<int> getThemeMode() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kThemeMode) ?? ThemeMode.system.index;
+    try {
+      final value = prefs.getInt(_kThemeMode) ?? ThemeMode.system.index;
+      return Success(value);
+    } on Exception catch (e) {
+      return Failure(e);
+    }
   }
 
-  Future<void> setReadeckApiHost(String value) async {
+  AsyncResult<void> setReadeckApiHost(String value) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_kReadeckApiHost, value);
+    try {
+      await prefs.setString(_kReadeckApiHost, value);
+      return const Success(unit);
+    } on Exception catch (e) {
+      return Failure(e);
+    }
   }
 
-  Future<String> getReadeckApiHost() async {
+  AsyncResult<String> getReadeckApiHost() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kReadeckApiHost) ?? '';
+    try {
+      final value = prefs.getString(_kReadeckApiHost) ?? '';
+      return Success(value);
+    } on Exception catch (e) {
+      return Failure(e);
+    }
   }
 
-  Future<void> setReadeckApiToken(String value) async {
+  AsyncResult<void> setReadeckApiToken(String value) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_kReadeckApiToken, value);
+    try {
+      await prefs.setString(_kReadeckApiToken, value);
+      return const Success(unit);
+    } on Exception catch (e) {
+      return Failure(e);
+    }
   }
 
-  Future<String> getReadeckApiToken() async {
+  AsyncResult<String> getReadeckApiToken() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kReadeckApiToken) ?? '';
+    try {
+      final value = prefs.getString(_kReadeckApiToken) ?? '';
+      return Success(value);
+    } on Exception catch (e) {
+      return Failure(e);
+    }
   }
 }

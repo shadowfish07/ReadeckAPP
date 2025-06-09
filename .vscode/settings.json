@@ -3,5 +3,5 @@
   "editor.codeActionsOnSave": {
     "source.fixAll": "always"
   },
-  "cSpell.words": ["prefs"]
+  "cSpell.words": ["AUTOINCREMENT", "localtime", "prefs", "viewmodel"]
 }

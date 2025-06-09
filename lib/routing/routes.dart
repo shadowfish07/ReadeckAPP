@@ -1,5 +1,5 @@
 abstract final class Routes {
-  static const home = '/';
+  // static const home = '/';
   static const settings = '/$settingsRelative';
   static const settingsRelative = 'settings';
   static const apiConfigSetting =

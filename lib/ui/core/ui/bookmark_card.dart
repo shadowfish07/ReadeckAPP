@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_command/flutter_command.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
-import 'package:readeck_app/utils/command.dart';
 
-class BookmarkCard extends StatelessWidget {
+class BookmarkCard extends StatefulWidget {
   final Bookmark bookmark;
-  final Command1<void, String> onOpenUrl;
+  final Command onOpenUrl;
   final Function(Bookmark bookmark)? onToggleMark;
   final Function(Bookmark bookmark)? onToggleArchive;
 
@@ -18,38 +18,48 @@ class BookmarkCard extends StatelessWidget {
   });
 
   @override
+  State<BookmarkCard> createState() => _BookmarkCardState();
+}
+
+class _BookmarkCardState extends State<BookmarkCard> {
+  @override
+  didChangeDependencies() {
+    widget.onOpenUrl.errors.where((x) => x != null).listen((error, _) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString()),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 5),
+          action: SnackBarAction(
+            label: '复制链接',
+            textColor: Colors.white,
+            onPressed: () async {
+              await Clipboard.setData(ClipboardData(text: widget.bookmark.url));
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('链接已复制到剪贴板'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              }
+            },
+          ),
+        ),
+      );
+    });
+    super.didChangeDependencies();
+  }
+
+  @override
   Widget build(BuildContext rootContext) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
       child: InkWell(
         onTap: () async {
-          final url = bookmark.url;
-          await onOpenUrl.execute(url);
-          if (onOpenUrl.error && rootContext.mounted) {
-            ScaffoldMessenger.of(rootContext).showSnackBar(
-              SnackBar(
-                content: Text(onOpenUrl.result.toString()),
-                backgroundColor: Colors.red,
-                duration: const Duration(seconds: 5),
-                action: SnackBarAction(
-                  label: '复制链接',
-                  textColor: Colors.white,
-                  onPressed: () async {
-                    await Clipboard.setData(ClipboardData(text: url));
-                    if (rootContext.mounted) {
-                      ScaffoldMessenger.of(rootContext).showSnackBar(
-                        const SnackBar(
-                          content: Text('链接已复制到剪贴板'),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                    }
-                  },
-                ),
-              ),
-            );
-          }
+          final url = widget.bookmark.url;
+          widget.onOpenUrl(url);
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
@@ -59,7 +69,7 @@ class BookmarkCard extends StatelessWidget {
             children: [
               // 标题
               Text(
-                bookmark.title,
+                widget.bookmark.title,
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -72,7 +82,7 @@ class BookmarkCard extends StatelessWidget {
               // 站点名称和创建时间
               Row(
                 children: [
-                  if (bookmark.siteName != null) ...[
+                  if (widget.bookmark.siteName != null) ...[
                     Icon(
                       Icons.language,
                       size: 16,
@@ -81,7 +91,7 @@ class BookmarkCard extends StatelessWidget {
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
-                        bookmark.siteName!,
+                        widget.bookmark.siteName!,
                         style: TextStyle(
                           color: Theme.of(rootContext).colorScheme.primary,
                           fontSize: 14,
@@ -92,7 +102,7 @@ class BookmarkCard extends StatelessWidget {
                   ],
                   const Spacer(),
                   Text(
-                    _formatDate(bookmark.created),
+                    _formatDate(widget.bookmark.created),
                     style: TextStyle(
                       color: Colors.grey[600],
                       fontSize: 12,
@@ -102,11 +112,11 @@ class BookmarkCard extends StatelessWidget {
               ),
 
               // 描述
-              if (bookmark.description != null &&
-                  bookmark.description!.isNotEmpty) ...[
+              if (widget.bookmark.description != null &&
+                  widget.bookmark.description!.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Text(
-                  bookmark.description!,
+                  widget.bookmark.description!,
                   style: TextStyle(
                     color: Colors.grey[700],
                     fontSize: 14,
@@ -117,12 +127,12 @@ class BookmarkCard extends StatelessWidget {
               ],
 
               // 标签
-              if (bookmark.labels.isNotEmpty) ...[
+              if (widget.bookmark.labels.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 Wrap(
                   spacing: 8,
                   runSpacing: 4,
-                  children: bookmark.labels.take(3).map((label) {
+                  children: widget.bookmark.labels.take(3).map((label) {
                     return Chip(
                       label: Text(
                         label,
@@ -144,15 +154,17 @@ class BookmarkCard extends StatelessWidget {
                   const Spacer(),
                   // 标记喜爱按钮
                   IconButton(
-                    onPressed: onToggleMark != null
-                        ? () => onToggleMark!(bookmark)
+                    onPressed: widget.onToggleMark != null
+                        ? () => widget.onToggleMark!(widget.bookmark)
                         : null,
                     icon: Icon(
-                      bookmark.isMarked
+                      widget.bookmark.isMarked
                           ? Icons.favorite
                           : Icons.favorite_border,
                       size: 20,
-                      color: bookmark.isMarked ? Colors.red : Colors.grey[600],
+                      color: widget.bookmark.isMarked
+                          ? Colors.red
+                          : Colors.grey[600],
                     ),
                     tooltip: '标记喜爱',
                     padding: EdgeInsets.zero,
@@ -164,8 +176,8 @@ class BookmarkCard extends StatelessWidget {
                   const SizedBox(width: 8),
                   // 存档按钮
                   IconButton(
-                    onPressed: onToggleArchive != null
-                        ? () => onToggleArchive!(bookmark)
+                    onPressed: widget.onToggleArchive != null
+                        ? () => widget.onToggleArchive!(widget.bookmark)
                         : null,
                     icon: Icon(
                       Icons.archive_outlined,

@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:result_dart/result_dart.dart';
 
-import '../../../utils/result.dart';
 import '../../service/shared_preference_service.dart';
 
 class ThemeRepository {
@@ -12,22 +12,21 @@ class ThemeRepository {
 
   final SharedPreferencesService _service;
 
-  Future<Result<ThemeMode>> getThemeMode() async {
-    try {
-      final value = await _service.getThemeMode();
-      return Result.ok(ThemeMode.values[value]);
-    } on Exception catch (e) {
-      return Result.error(e);
+  AsyncResult<ThemeMode> getThemeMode() async {
+    final value = await _service.getThemeMode();
+    if (value.isError()) {
+      return Failure(Exception(value.exceptionOrNull()));
     }
+    return Success(ThemeMode.values[value.getOrNull()!]);
   }
 
-  Future<Result<void>> setThemeMode(ThemeMode value) async {
+  AsyncResult<void> setThemeMode(ThemeMode value) async {
     try {
       await _service.setThemeMode(value.index);
       _themeModeController.add(value);
-      return const Result.ok(null);
+      return const Success(unit);
     } on Exception catch (e) {
-      return Result.error(e);
+      return Failure(e);
     }
   }
 

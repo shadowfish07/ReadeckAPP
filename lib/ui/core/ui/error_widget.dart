@@ -5,7 +5,7 @@ class ErrorWidget extends StatelessWidget {
       {super.key, this.message = '未知错误', this.error, this.onRetry});
 
   final String message;
-  final Exception? error;
+  final String? error;
   final VoidCallback? onRetry;
 
   @override

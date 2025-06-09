@@ -1,5 +1,9 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:readeck_app/data/repository/settings/settings_repository.dart';
+import 'package:readeck_app/ui/api_config/view_models/api_config_viewmodel.dart';
+import 'package:readeck_app/ui/api_config/widgets/api_config_page.dart';
 import 'package:readeck_app/ui/core/main_layout.dart';
 import 'package:readeck_app/ui/daily_read/view_models/daily_read_viewmodel.dart';
 import 'package:readeck_app/ui/daily_read/widgets/daily_read_screen.dart';
@@ -15,7 +19,6 @@ final Map<String, String> _routeTitleMap = {
   Routes.settings: '设置',
   Routes.about: '关于',
   Routes.apiConfigSetting: 'API 配置',
-  Routes.home: '首页',
   Routes.dailyRead: '每日阅读',
   Routes.unread: '未读',
 };
@@ -25,9 +28,10 @@ String? _getTitleForRoute(String location) {
   return _routeTitleMap[location];
 }
 
-GoRouter router() => GoRouter(
+GoRouter router(SettingsRepository settingsRepository) => GoRouter(
       initialLocation: Routes.dailyRead,
       debugLogDiagnostics: true,
+      redirect: _redirect,
       routes: [
         ShellRoute(
             builder: (context, state, child) {
@@ -73,25 +77,27 @@ GoRouter router() => GoRouter(
               final viewModel = AboutViewModel();
               return AboutPage(viewModel: viewModel);
             }),
+        GoRoute(
+            path: Routes.apiConfigSetting,
+            builder: (context, state) {
+              final viewModel = ApiConfigViewModel(context.read());
+              return ApiConfigPage(viewModel: viewModel);
+            }),
       ],
     );
 
-// TODO API 配置未定义就跳到定义页
-// // From https://github.com/flutter/packages/blob/main/packages/go_router/example/lib/redirection.dart
-// Future<String?> _redirect(BuildContext context, GoRouterState state) async {
-//   // if the user is not logged in, they need to login
-//   final loggedIn = await context.read<AuthRepository>().isAuthenticated;
-//   final loggingIn = state.matchedLocation == Routes.login;
-//   if (!loggedIn) {
-//     return Routes.login;
-//   }
+Future<String?> _redirect(BuildContext context, GoRouterState state) async {
+  final isApiConfigured =
+      await context.read<SettingsRepository>().isApiConfigured();
 
-//   // if the user is logged in but still on the login page, send them to
-//   // the home page
-//   if (loggingIn) {
-//     return Routes.home;
-//   }
+  if (isApiConfigured.isError()) {
+    return null;
+  }
 
-//   // no need to redirect at all
-//   return null;
-// }
+  if (!isApiConfigured.getOrDefault(false)) {
+    return Routes.apiConfigSetting;
+  }
+
+  // no need to redirect at all
+  return null;
+}
