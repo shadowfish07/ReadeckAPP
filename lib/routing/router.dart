@@ -65,7 +65,8 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
                   path: Routes.settings,
                   builder: (context, state) {
                     return ChangeNotifierProvider(
-                      create: (context) => SettingsViewModel(context.read()),
+                      create: (context) =>
+                          SettingsViewModel(context.read(), context.read()),
                       child: Consumer<SettingsViewModel>(
                         builder: (context, viewModel, child) {
                           return SettingsScreen(viewModel: viewModel);

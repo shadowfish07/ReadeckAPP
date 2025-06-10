@@ -12,6 +12,10 @@ class CelebrationOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
     return // 庆祝内容
         Center(
       child: Padding(
@@ -20,21 +24,19 @@ class CelebrationOverlay extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // 庆祝文字
-            const Text(
+            Text(
               '🎉 恭喜完成今日阅读！',
-              style: TextStyle(
-                fontSize: 24,
+              style: textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: colorScheme.onSurface,
               ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               '您已经完成了今天的所有阅读任务\n坚持阅读，收获知识！',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.white70,
+              style: textTheme.bodyLarge?.copyWith(
+                color: colorScheme.onSurfaceVariant,
               ),
               textAlign: TextAlign.center,
             ),
@@ -45,14 +47,13 @@ class CelebrationOverlay extends StatelessWidget {
               icon: const Icon(Icons.refresh),
               label: const Text('再来一组'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Colors.white,
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 32,
                   vertical: 16,
                 ),
-                textStyle: const TextStyle(
-                  fontSize: 18,
+                textStyle: textTheme.labelLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),

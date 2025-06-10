@@ -44,13 +44,6 @@ class MainLayout extends StatelessWidget {
             },
           ),
           ListTile(
-            title: const Text('个人资料'),
-            onTap: () {
-              context.pop();
-              context.go('/profile');
-            },
-          ),
-          ListTile(
             title: const Text('设置'),
             onTap: () {
               context.pop();

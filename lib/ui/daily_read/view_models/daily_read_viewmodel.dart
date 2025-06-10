@@ -24,8 +24,6 @@ class DailyReadViewModel extends ChangeNotifier {
 
   late Command load;
   late Command openUrl;
-  final Command isApiConfigured =
-      Command.createSync((value) => value, initialValue: false);
 
   final List<Bookmark> _bookmarks = [];
   List<Bookmark> get bookmarks => _bookmarks;
@@ -94,10 +92,50 @@ class DailyReadViewModel extends ChangeNotifier {
   }
 
   AsyncResult<void> toggleBookmarkArchived(Bookmark bookmark) async {
-    return _bookmarkOperationUseCases.toggleBookmarkArchived(bookmark);
+    final result =
+        await _bookmarkOperationUseCases.toggleBookmarkArchived(bookmark);
+
+    if (result.isError()) {
+      _log.severe(
+          "Failed to toggle bookmark archived", result.exceptionOrNull()!);
+      return result;
+    }
+
+    // 乐观更新
+    final index = _bookmarks.indexWhere((item) => item.id == bookmark.id);
+    if (index != -1) {
+      _bookmarks[index] = bookmark.copyWith(isArchived: !bookmark.isArchived);
+    }
+    notifyListeners();
+
+    // 异步刷新
+    await _load(false);
+    notifyListeners();
+
+    return result;
   }
 
   AsyncResult<void> toggleBookmarkMarked(Bookmark bookmark) async {
-    return _bookmarkOperationUseCases.toggleBookmarkMarked(bookmark);
+    final result =
+        await _bookmarkOperationUseCases.toggleBookmarkMarked(bookmark);
+
+    if (result.isError()) {
+      _log.severe(
+          "Failed to toggle bookmark marked", result.exceptionOrNull()!);
+      return result;
+    }
+
+    // 乐观更新
+    final index = _bookmarks.indexWhere((item) => item.id == bookmark.id);
+    if (index != -1) {
+      _bookmarks[index] = bookmark.copyWith(isMarked: !bookmark.isMarked);
+    }
+    notifyListeners();
+
+    // 异步刷新
+    await _load(false);
+    notifyListeners();
+
+    return result;
   }
 }

@@ -2,16 +2,18 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_command/flutter_command.dart';
+import 'package:readeck_app/data/repository/daily_read_history/daily_read_history_repository.dart';
 import 'package:readeck_app/data/repository/theme/theme_repository.dart';
 import 'package:result_dart/result_dart.dart';
 
 class SettingsViewModel extends ChangeNotifier {
-  SettingsViewModel(this._themeRepository) {
+  SettingsViewModel(this._themeRepository, this._dailyReadHistoryRepository) {
     // 主题切换时整个页面都会重建，这里就不用监听了
     _initializeThemeMode();
     setThemeMode = Command.createAsyncNoResult<ThemeMode>(_setThemeMode);
   }
   final ThemeRepository _themeRepository;
+  final DailyReadHistoryRepository _dailyReadHistoryRepository;
 
   ThemeMode _themeMode = ThemeMode.system;
 
@@ -34,5 +36,9 @@ class SettingsViewModel extends ChangeNotifier {
     } on Exception catch (e) {
       return Failure(e);
     }
+  }
+
+  AsyncResult<void> clearAllDataForDebug() async {
+    return _dailyReadHistoryRepository.clearAllDataForDebug();
   }
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:readeck_app/routing/routes.dart';
@@ -49,7 +50,7 @@ class SettingsScreen extends StatelessWidget {
             subtitle: const Text('配置 Readeck 服务器连接'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () async {
-              context.go(Routes.apiConfigSetting);
+              context.push(Routes.apiConfigSetting);
             },
           ),
           const Divider(),
@@ -72,6 +73,18 @@ class SettingsScreen extends StatelessWidget {
               context.push(Routes.about);
             },
           ),
+          if (kDebugMode) ...[
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.dangerous),
+              title: const Text('清空Sqlite数据'),
+              subtitle: const Text('Dev only'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                viewModel.clearAllDataForDebug();
+              },
+            ),
+          ],
         ],
       ),
     );

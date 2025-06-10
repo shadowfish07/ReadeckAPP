@@ -5,6 +5,7 @@ import 'package:path/path.dart';
 import 'package:readeck_app/domain/models/daily_read_history/daily_read_history.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common/sqflite_logger.dart';
 
 class DatabaseService {
   DatabaseService() {
@@ -24,20 +25,25 @@ class DatabaseService {
   }
 
   Future<void> open() async {
-    _database = await openDatabase(
-      join(await getDatabasesPath(), 'app_database.db'),
-      onCreate: (db, version) {
-        return db.execute(
-          '''CREATE TABLE $_kTableDailyReadHistory (
+    var factoryWithLogs = SqfliteDatabaseFactoryLogger(databaseFactory,
+        options:
+            SqfliteLoggerOptions(type: SqfliteDatabaseFactoryLoggerType.all));
+
+    _database = await factoryWithLogs.openDatabase(
+        join(await getDatabasesPath(), 'app_database.db'),
+        options: OpenDatabaseOptions(
+          onCreate: (db, version) {
+            return db.execute(
+              '''CREATE TABLE $_kTableDailyReadHistory (
     $_kColumnId INTEGER PRIMARY KEY AUTOINCREMENT,
     $_kColumnCreatedDate TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
     $_kColumnBookmarkIds TEXT NOT NULL CHECK (json_valid($_kColumnBookmarkIds))
 );
 ''',
-        );
-      },
-      version: 1,
-    );
+            );
+          },
+          version: 1,
+        ));
   }
 
   AsyncResult<int> insertDailyReadHistory(List<String> bookmarkIds) async {
@@ -58,6 +64,29 @@ class DatabaseService {
     } catch (e) {
       _log.severe(
           "Failed to insert daily read history. bookmarkIds: $bookmarkIds", e);
+      return Failure(Exception(e));
+    }
+  }
+
+  AsyncResult<int> updateDailyReadHistory(DailyReadHistory obj) async {
+    if (_database == null) {
+      return Failure(Exception("Database is not open"));
+    }
+
+    try {
+      final count = await _database!.update(
+        _kTableDailyReadHistory,
+        obj.toJson(),
+        where: '$_kColumnId = ?',
+        whereArgs: [obj.id],
+      );
+      _log.fine("Updated daily read history with id: ${obj.id}. data: $obj");
+      return Success(count);
+    } on Exception catch (e) {
+      _log.severe("Failed to update daily read history. data: $obj", e);
+      return Failure(e);
+    } catch (e) {
+      _log.severe("Failed to update daily read history. data: $obj", e);
       return Failure(Exception(e));
     }
   }
@@ -100,6 +129,26 @@ class DatabaseService {
       return Failure(e);
     } catch (e) {
       _log.severe("Failed to get daily read histories", e);
+      return Failure(Exception(e));
+    }
+  }
+
+  /// 清空所有数据库表的数据
+  AsyncResult<void> clearAllData() async {
+    if (_database == null) {
+      return Failure(Exception("Database is not open"));
+    }
+
+    try {
+      // 清空每日阅读历史表
+      await _database!.delete(_kTableDailyReadHistory);
+      _log.info("Cleared all data from database");
+      return const Success(unit);
+    } on Exception catch (e) {
+      _log.severe("Failed to clear all data from database", e);
+      return Failure(e);
+    } catch (e) {
+      _log.severe("Failed to clear all data from database", e);
       return Failure(Exception(e));
     }
   }

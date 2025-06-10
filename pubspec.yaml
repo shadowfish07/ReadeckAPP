@@ -23,6 +23,7 @@ dependencies:
   path: ^1.9.1
   result_dart: ^2.1.0
   flutter_command: ^7.2.2
+  sqflite_common: ^2.5.5
 
 dev_dependencies:
   flutter_test:

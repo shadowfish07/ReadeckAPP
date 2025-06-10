@@ -10,6 +10,7 @@ import 'main_viewmodel.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   Logger.root.level = Level.ALL;
   Logger.root.onRecord.listen((record) {
     // ignore: avoid_print

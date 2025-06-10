@@ -36,7 +36,24 @@ class DailyReadHistoryRepository {
       await _database.open();
     }
 
-    return _database.insertDailyReadHistory(
-        bookmarks.map((bookmark) => bookmark.id).toList());
+    final today = await getTodayDailyReadHistory();
+    if (today.isError()) {
+      _log.severe("获取今日阅读历史失败: ${today.exceptionOrNull()?.toString()}");
+      return Failure(Exception(today.exceptionOrNull()));
+    }
+
+    switch (today.getOrNull()!) {
+      case Some some:
+        return _database.updateDailyReadHistory(some.value.copyWith(
+            bookmarkIds: some.value.bookmarkIds +
+                bookmarks.map((bookmark) => bookmark.id).toList()));
+      case None():
+        return _database.insertDailyReadHistory(
+            bookmarks.map((bookmark) => bookmark.id).toList());
+    }
+  }
+
+  AsyncResult<void> clearAllDataForDebug() {
+    return _database.clearAllData();
   }
 }
