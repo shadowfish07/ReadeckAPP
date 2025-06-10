@@ -33,7 +33,8 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
       debugLogDiagnostics: true,
       redirect: _redirect,
       routes: [
-        ShellRoute(
+        // 缓存路由
+        StatefulShellRoute.indexedStack(
             builder: (context, state, child) {
               // 根据当前路由确定页面标题
               final title = _getTitleForRoute(state.matchedLocation);
@@ -42,34 +43,38 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
                 child: child,
               ); // 包含侧边菜单的布局
             },
-            routes: [
-              GoRoute(
-                path: Routes.dailyRead,
-                builder: (context, state) {
-                  return ChangeNotifierProvider(
-                    create: (context) => DailyReadViewModel(
-                        context.read(), context.read(), context.read()),
-                    child: Consumer<DailyReadViewModel>(
-                      builder: (context, viewModel, child) {
-                        return DailyReadScreen(viewModel: viewModel);
-                      },
-                    ),
-                  );
-                },
-              ),
-              GoRoute(
-                path: Routes.settings,
-                builder: (context, state) {
-                  return ChangeNotifierProvider(
-                    create: (context) => SettingsViewModel(context.read()),
-                    child: Consumer<SettingsViewModel>(
-                      builder: (context, viewModel, child) {
-                        return SettingsScreen(viewModel: viewModel);
-                      },
-                    ),
-                  );
-                },
-              ),
+            branches: [
+              StatefulShellBranch(routes: [
+                GoRoute(
+                  path: Routes.dailyRead,
+                  builder: (context, state) {
+                    return ChangeNotifierProvider(
+                      create: (context) => DailyReadViewModel(
+                          context.read(), context.read(), context.read()),
+                      child: Consumer<DailyReadViewModel>(
+                        builder: (context, viewModel, child) {
+                          return DailyReadScreen(viewModel: viewModel);
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ]),
+              StatefulShellBranch(routes: [
+                GoRoute(
+                  path: Routes.settings,
+                  builder: (context, state) {
+                    return ChangeNotifierProvider(
+                      create: (context) => SettingsViewModel(context.read()),
+                      child: Consumer<SettingsViewModel>(
+                        builder: (context, viewModel, child) {
+                          return SettingsScreen(viewModel: viewModel);
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ])
             ]),
         GoRoute(
             path: Routes.about,
