@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 /// 庆祝界面覆盖层组件
 /// 用于显示完成今日阅读任务后的庆祝动画和界面
@@ -23,7 +24,14 @@ class CelebrationOverlay extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // 庆祝文字
+            Text(
+              DateFormat('yyyy年MM月dd日').format(DateTime.now()),
+              style: textTheme.titleMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
             Text(
               '🎉 恭喜完成今日阅读！',
               style: textTheme.headlineMedium?.copyWith(
