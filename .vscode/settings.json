@@ -3,5 +3,11 @@
   "editor.codeActionsOnSave": {
     "source.fixAll": "always"
   },
-  "cSpell.words": ["AUTOINCREMENT", "localtime", "prefs", "viewmodel"]
+  "cSpell.words": [
+    "AUTOINCREMENT",
+    "localtime",
+    "prefs",
+    "Unarchived",
+    "viewmodel"
+  ]
 }

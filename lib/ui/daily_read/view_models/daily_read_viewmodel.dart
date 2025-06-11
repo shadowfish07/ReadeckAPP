@@ -17,6 +17,8 @@ class DailyReadViewModel extends ChangeNotifier {
     openUrl = Command.createAsyncNoResult<String>(_openUrl);
   }
 
+  VoidCallback? _onBookmarkArchivedCallback;
+
   final BookmarkRepository _bookmarkRepository;
   final DailyReadHistoryRepository _dailyReadHistoryRepository;
   final BookmarkOperationUseCases _bookmarkOperationUseCases;
@@ -26,6 +28,8 @@ class DailyReadViewModel extends ChangeNotifier {
   late Command openUrl;
 
   final List<Bookmark> _bookmarks = [];
+  bool _isNoMore = false;
+  bool get isNoMore => _isNoMore;
   List<Bookmark> get bookmarks => _bookmarks;
   List<Bookmark> get unArchivedBookmarks =>
       _bookmarks.where((bookmark) => !bookmark.isArchived).toList();
@@ -39,6 +43,7 @@ class DailyReadViewModel extends ChangeNotifier {
 
   Future<List<Bookmark>> _load(bool refresh) async {
     if (!refresh) {
+      // 尝试读取今天已刷新过的记录
       final todayBookmarksHistory =
           await _dailyReadHistoryRepository.getTodayDailyReadHistory();
 
@@ -61,16 +66,22 @@ class DailyReadViewModel extends ChangeNotifier {
               _bookmarks.addAll(result.getOrDefault([]));
               return unArchivedBookmarks;
             }
-            break;
+
+            _log.severe(
+                "Failed to get today bookmarks", result.exceptionOrNull()!);
+            throw result.exceptionOrNull()!;
           }
         default:
       }
     }
 
     // 今天没有访问过 or 强制刷新
-    final result = await _bookmarkRepository.getRandomUnreadBookmarks(5);
+    final result = await _bookmarkRepository.getRandomUnarchivedBookmarks(5);
     if (result.isSuccess()) {
-      _bookmarks.clear();
+      if (result.getOrDefault([]).isEmpty) {
+        _isNoMore = true;
+        return unArchivedBookmarks;
+      }
       _bookmarks.addAll(result.getOrDefault([]));
       //异步存到数据库
       _saveTodayBookmarks();
@@ -91,6 +102,10 @@ class DailyReadViewModel extends ChangeNotifier {
     }
   }
 
+  void setOnBookmarkArchivedCallback(VoidCallback? callback) {
+    _onBookmarkArchivedCallback = callback;
+  }
+
   AsyncResult<void> toggleBookmarkArchived(Bookmark bookmark) async {
     final result =
         await _bookmarkOperationUseCases.toggleBookmarkArchived(bookmark);
@@ -107,6 +122,7 @@ class DailyReadViewModel extends ChangeNotifier {
       _bookmarks[index] = bookmark.copyWith(isArchived: !bookmark.isArchived);
     }
     notifyListeners();
+    _onBookmarkArchivedCallback?.call();
 
     // 异步刷新
     await _load(false);
