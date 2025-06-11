@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_command/flutter_command.dart';
-import 'package:logging/logging.dart';
+import 'package:logger/logger.dart';
 import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
 import 'package:readeck_app/data/repository/daily_read_history/daily_read_history_repository.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
@@ -22,7 +22,7 @@ class DailyReadViewModel extends ChangeNotifier {
   final BookmarkRepository _bookmarkRepository;
   final DailyReadHistoryRepository _dailyReadHistoryRepository;
   final BookmarkOperationUseCases _bookmarkOperationUseCases;
-  final _log = Logger("DailyReadViewModel");
+  final _log = Logger();
 
   late Command load;
   late Command openUrl;
@@ -48,8 +48,8 @@ class DailyReadViewModel extends ChangeNotifier {
           await _dailyReadHistoryRepository.getTodayDailyReadHistory();
 
       if (todayBookmarksHistory.isError()) {
-        _log.severe("Failed to get today bookmarks",
-            todayBookmarksHistory.exceptionOrNull()!);
+        _log.e("Failed to get today bookmarks",
+            error: todayBookmarksHistory.exceptionOrNull()!);
         throw todayBookmarksHistory.exceptionOrNull()!;
       }
 
@@ -67,8 +67,8 @@ class DailyReadViewModel extends ChangeNotifier {
               return unArchivedBookmarks;
             }
 
-            _log.severe(
-                "Failed to get today bookmarks", result.exceptionOrNull()!);
+            _log.e("Failed to get today bookmarks",
+                error: result.exceptionOrNull()!);
             throw result.exceptionOrNull()!;
           }
         default:
@@ -88,7 +88,7 @@ class DailyReadViewModel extends ChangeNotifier {
       return unArchivedBookmarks;
     }
 
-    _log.severe("Failed to get random bookmarks", result.exceptionOrNull()!);
+    _log.e("Failed to get random bookmarks", error: result.exceptionOrNull()!);
     throw result.exceptionOrNull()!;
   }
 
@@ -96,9 +96,9 @@ class DailyReadViewModel extends ChangeNotifier {
     final id = await _dailyReadHistoryRepository.saveTodayBookmarks(bookmarks);
 
     if (id.isSuccess()) {
-      _log.fine("Saved today bookmarks with id: ${id.getOrNull()}");
+      _log.d("Saved today bookmarks with id: ${id.getOrNull()}");
     } else {
-      _log.severe("Failed to save today bookmarks", id.exceptionOrNull());
+      _log.e("Failed to save today bookmarks", error: id.exceptionOrNull());
     }
   }
 
@@ -111,8 +111,8 @@ class DailyReadViewModel extends ChangeNotifier {
         await _bookmarkOperationUseCases.toggleBookmarkArchived(bookmark);
 
     if (result.isError()) {
-      _log.severe(
-          "Failed to toggle bookmark archived", result.exceptionOrNull()!);
+      _log.e("Failed to toggle bookmark archived",
+          error: result.exceptionOrNull()!);
       return result;
     }
 
@@ -136,8 +136,8 @@ class DailyReadViewModel extends ChangeNotifier {
         await _bookmarkOperationUseCases.toggleBookmarkMarked(bookmark);
 
     if (result.isError()) {
-      _log.severe(
-          "Failed to toggle bookmark marked", result.exceptionOrNull()!);
+      _log.e("Failed to toggle bookmark marked",
+          error: result.exceptionOrNull()!);
       return result;
     }
 

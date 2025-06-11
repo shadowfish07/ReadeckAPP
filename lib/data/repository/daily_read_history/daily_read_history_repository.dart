@@ -1,4 +1,4 @@
-import 'package:logging/logging.dart';
+import 'package:logger/logger.dart';
 import 'package:readeck_app/data/service/database_service.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 import 'package:readeck_app/domain/models/daily_read_history/daily_read_history.dart';
@@ -10,7 +10,7 @@ class DailyReadHistoryRepository {
 
   final DatabaseService _database;
 
-  final _log = Logger("DailyReadHistoryRepository");
+  final _log = Logger();
 
   AsyncResult<OptionData<DailyReadHistory>> getTodayDailyReadHistory() async {
     if (!_database.isOpen()) {
@@ -21,7 +21,7 @@ class DailyReadHistoryRepository {
         where: "DATE(created_date) = DATE('now', 'localtime')");
 
     if (result.isError()) {
-      _log.severe("获取今日阅读历史失败: ${result.exceptionOrNull()?.toString()}");
+      _log.e("获取今日阅读历史失败: ${result.exceptionOrNull()?.toString()}");
       return Failure(Exception(result.exceptionOrNull()));
     }
 
@@ -38,7 +38,7 @@ class DailyReadHistoryRepository {
 
     final today = await getTodayDailyReadHistory();
     if (today.isError()) {
-      _log.severe("获取今日阅读历史失败: ${today.exceptionOrNull()?.toString()}");
+      _log.e("获取今日阅读历史失败: ${today.exceptionOrNull()?.toString()}");
       return Failure(Exception(today.exceptionOrNull()));
     }
 

@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:logging/logging.dart';
+import 'package:logger/logger.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 import 'package:http/http.dart' as http;
 import 'package:readeck_app/utils/api_not_configured_exception.dart';
@@ -11,7 +11,7 @@ class ReadeckApiClient {
 
   String? _host;
   String? _token;
-  final _log = Logger("ReadeckApiClient");
+  final _log = Logger();
 
   /// 更新API配置
   void updateConfig(String? host, String? token) {
@@ -129,7 +129,7 @@ class ReadeckApiClient {
       if (response.statusCode == 200) {
         // 检查响应体是否为空或无效
         if (response.body.isEmpty) {
-          _log.warning("服务器返回空响应。uri: $uri");
+          _log.w("服务器返回空响应。uri: $uri");
           return Failure(Exception("服务器返回空响应"));
         }
 
@@ -137,7 +137,7 @@ class ReadeckApiClient {
         try {
           data = json.decode(response.body);
         } catch (formatException) {
-          _log.warning("JSON解析失败。uri: $uri, 响应体: ${response.body}");
+          _log.w("JSON解析失败。uri: $uri, 响应体: ${response.body}");
           return Failure(Exception("JSON解析失败：$formatException"));
         }
 
@@ -147,7 +147,7 @@ class ReadeckApiClient {
           // 直接返回书签数组
           bookmarksJson = data;
         } else {
-          _log.warning("无效的响应格式。uri: $uri, 响应体: ${response.body}");
+          _log.w("无效的响应格式。uri: $uri, 响应体: ${response.body}");
           return Failure(Exception("无效的响应格式"));
         }
 
@@ -155,11 +155,11 @@ class ReadeckApiClient {
             bookmarksJson.map((json) => Bookmark.fromJson(json)).toList();
         return Success(result);
       } else {
-        _log.warning("获取书签失败。uri: $uri, 状态码: ${response.statusCode}");
+        _log.w("获取书签失败。uri: $uri, 状态码: ${response.statusCode}");
         return Failure(Exception('获取书签失败: ${response.statusCode}'));
       }
     } catch (e) {
-      _log.warning("网络请求失败。uri: $uri, 错误: $e");
+      _log.w("网络请求失败。uri: $uri, 错误: $e");
       return Failure(Exception('网络请求失败: $e'));
     }
   }
@@ -229,7 +229,7 @@ class ReadeckApiClient {
       if (response.statusCode == 200) {
         // 检查响应体是否为空或无效
         if (response.body.isEmpty) {
-          _log.warning("服务器返回空响应。uri: $uri");
+          _log.w("服务器返回空响应。uri: $uri");
           return Failure(Exception("服务器返回空响应"));
         }
 
@@ -237,7 +237,7 @@ class ReadeckApiClient {
         try {
           data = json.decode(response.body);
         } catch (formatException) {
-          _log.warning("JSON解析失败。uri: $uri, 响应体: ${response.body}");
+          _log.w("JSON解析失败。uri: $uri, 响应体: ${response.body}");
           return Failure(Exception("JSON解析失败：$formatException"));
         }
 
@@ -245,15 +245,15 @@ class ReadeckApiClient {
         if (data is Map<String, dynamic>) {
           return Success(data);
         } else {
-          _log.warning("无效的响应格式。uri: $uri, 响应体: ${response.body}");
+          _log.w("无效的响应格式。uri: $uri, 响应体: ${response.body}");
           return Failure(Exception("无效的响应格式"));
         }
       } else {
-        _log.warning("更新书签失败。uri: $uri, 状态码: ${response.statusCode}");
+        _log.w("更新书签失败。uri: $uri, 状态码: ${response.statusCode}");
         return Failure(Exception('更新书签失败: ${response.statusCode}'));
       }
     } catch (e) {
-      _log.warning("网络请求失败。uri: $uri, 错误: $e");
+      _log.w("网络请求失败。uri: $uri, 错误: $e");
       return Failure(Exception('网络请求失败: $e'));
     }
   }

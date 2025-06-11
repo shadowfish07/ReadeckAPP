@@ -1,4 +1,4 @@
-import 'package:logging/logging.dart';
+import 'package:logger/logger.dart';
 import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 import 'package:result_dart/result_dart.dart';
@@ -9,7 +9,7 @@ class BookmarkOperationUseCases {
 
   final BookmarkRepository _bookmarkRepository;
 
-  final _log = Logger("BookmarkOperationUseCases");
+  final _log = Logger();
 
   AsyncResult<void> toggleBookmarkMarked(Bookmark bookmark) async {
     return _bookmarkRepository.toggleMarked(bookmark);
@@ -32,7 +32,7 @@ class BookmarkOperationUseCases {
         }
       } catch (e) {
         // 外部应用启动失败，尝试其他模式
-        _log.info("外部应用启动失败，尝试其他模式", e);
+        _log.i("外部应用启动失败，尝试其他模式");
         launched = false;
       }
 
@@ -41,7 +41,7 @@ class BookmarkOperationUseCases {
         try {
           launched = await launchUrl(uri, mode: LaunchMode.platformDefault);
         } catch (e) {
-          _log.info("平台默认方式启动失败", e);
+          _log.i("平台默认方式启动失败");
           launched = false;
         }
       }
@@ -51,19 +51,19 @@ class BookmarkOperationUseCases {
         try {
           launched = await launchUrl(uri, mode: LaunchMode.inAppWebView);
         } catch (e) {
-          _log.warning("内置WebView启动失败", e);
+          _log.w("内置WebView启动失败");
           launched = false;
         }
       }
 
       if (!launched) {
-        _log.warning("无法打开链接：$url");
+        _log.w("无法打开链接：$url");
         return Failure(Exception("无法打开链接"));
       }
 
       return const Success(unit);
     } catch (e) {
-      _log.warning("打开链接时发生错误：$url", e);
+      _log.w("打开链接时发生错误：$url");
       return Failure(Exception("打开链接时发生错误"));
     }
   }

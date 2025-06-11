@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:logging/logging.dart';
+import 'package:logger/logger.dart';
 import 'package:path/path.dart';
 import 'package:readeck_app/domain/models/daily_read_history/daily_read_history.dart';
 import 'package:result_dart/result_dart.dart';
@@ -18,7 +18,7 @@ class DatabaseService {
   static const _kColumnBookmarkIds = 'bookmark_ids';
 
   Database? _database;
-  final _log = Logger("DatabaseService");
+  final _log = Logger();
 
   bool isOpen() {
     return _database?.isOpen ?? false;
@@ -54,16 +54,16 @@ class DatabaseService {
     try {
       final id = await _database!.insert(_kTableDailyReadHistory,
           {_kColumnBookmarkIds: jsonEncode(bookmarkIds)});
-      _log.fine(
+      _log.d(
           "Inserted daily read history with id: $id. bookmarkIds: $bookmarkIds");
       return Success(id);
     } on Exception catch (e) {
-      _log.severe(
-          "Failed to insert daily read history. bookmarkIds: $bookmarkIds", e);
+      _log.e("Failed to insert daily read history. bookmarkIds: $bookmarkIds",
+          error: e);
       return Failure(e);
     } catch (e) {
-      _log.severe(
-          "Failed to insert daily read history. bookmarkIds: $bookmarkIds", e);
+      _log.e("Failed to insert daily read history. bookmarkIds: $bookmarkIds",
+          error: e);
       return Failure(Exception(e));
     }
   }
@@ -80,13 +80,13 @@ class DatabaseService {
         where: '$_kColumnId = ?',
         whereArgs: [obj.id],
       );
-      _log.fine("Updated daily read history with id: ${obj.id}. data: $obj");
+      _log.d("Updated daily read history with id: ${obj.id}. data: $obj");
       return Success(count);
     } on Exception catch (e) {
-      _log.severe("Failed to update daily read history. data: $obj", e);
+      _log.e("Failed to update daily read history. data: $obj", error: e);
       return Failure(e);
     } catch (e) {
-      _log.severe("Failed to update daily read history. data: $obj", e);
+      _log.e("Failed to update daily read history. data: $obj", error: e);
       return Failure(Exception(e));
     }
   }
@@ -118,17 +118,17 @@ class DatabaseService {
         limit: limit,
         offset: offset,
       );
-      _log.fine("Retrieved ${maps.length} daily read histories. data: $maps");
+      _log.d("Retrieved ${maps.length} daily read histories. data: $maps");
       final List<DailyReadHistory> histories = [];
       for (final map in maps) {
         histories.add(DailyReadHistory.fromJson(map));
       }
       return Success(histories);
     } on Exception catch (e) {
-      _log.severe("Failed to get daily read histories", e);
+      _log.e("Failed to get daily read histories", error: e);
       return Failure(e);
     } catch (e) {
-      _log.severe("Failed to get daily read histories", e);
+      _log.e("Failed to get daily read histories", error: e);
       return Failure(Exception(e));
     }
   }
@@ -142,13 +142,13 @@ class DatabaseService {
     try {
       // 清空每日阅读历史表
       await _database!.delete(_kTableDailyReadHistory);
-      _log.info("Cleared all data from database");
+      _log.i("Cleared all data from database");
       return const Success(unit);
     } on Exception catch (e) {
-      _log.severe("Failed to clear all data from database", e);
+      _log.e("Failed to clear all data from database", error: e);
       return Failure(e);
     } catch (e) {
-      _log.severe("Failed to clear all data from database", e);
+      _log.e("Failed to clear all data from database", error: e);
       return Failure(Exception(e));
     }
   }

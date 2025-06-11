@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_command/flutter_command.dart';
-import 'package:logging/logging.dart';
+import 'package:logger/logger.dart';
 import 'package:result_dart/result_dart.dart';
 
 class AboutViewModel extends ChangeNotifier {
@@ -12,7 +12,7 @@ class AboutViewModel extends ChangeNotifier {
 
   String _version = 'Unknown';
   String get version => _version;
-  final _log = Logger('AboutViewModel');
+  final _log = Logger();
 
   AsyncResult<void> _loadVersion() async {
     try {
@@ -25,11 +25,11 @@ class AboutViewModel extends ChangeNotifier {
         return const Success(unit);
       }
       notifyListeners();
-      _log.warning("Wrong Version Format. pubspecContent: $pubspecContent");
+      _log.w("Wrong Version Format. pubspecContent: $pubspecContent");
       return Failure(Exception("Wrong Version Format"));
     } on Exception catch (e) {
       // 如果读取失败，保持默认版本号
-      _log.severe('Failed to load version: $e');
+      _log.e('Failed to load version: $e');
       notifyListeners();
       return Failure(e);
     }
