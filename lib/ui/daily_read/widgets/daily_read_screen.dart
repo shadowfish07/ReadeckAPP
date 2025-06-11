@@ -3,6 +3,8 @@ import 'dart:math';
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart' hide ErrorWidget;
 import 'package:flutter_command/flutter_command.dart';
+import 'package:logger/logger.dart';
+import 'package:provider/provider.dart';
 import 'package:readeck_app/ui/core/ui/bookmark_card.dart';
 import 'package:readeck_app/ui/core/ui/celebration_overlay.dart';
 import 'package:readeck_app/ui/core/ui/error_widget.dart';
@@ -41,6 +43,48 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
     super.dispose();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    widget.viewModel.load.errors.where((x) => x != null).listen((error, _) {
+      Logger().e(
+        '加载书签失败',
+        error: error,
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('加载书签失败'),
+        ),
+      );
+    });
+    widget.viewModel.toggleBookmarkArchived.errors
+        .where((x) => x != null)
+        .listen((error, _) {
+      Logger().e(
+        '切换书签归档状态失败',
+        error: error,
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('切换书签归档状态失败'),
+        ),
+      );
+    });
+    widget.viewModel.toggleBookmarkMarked.errors
+        .where((x) => x != null)
+        .listen((error, _) {
+      Logger().e(
+        '切换书签标记状态失败',
+        error: error,
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('切换书签标记状态失败'),
+        ),
+      );
+    });
+  }
+
   void _playConfetti() {
     _confettiController.play();
   }
@@ -58,20 +102,19 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
 
   @override
   Widget build(BuildContext rootContext) {
-    return ListenableBuilder(
-      listenable: widget.viewModel,
-      builder: (context, child) {
+    return Consumer<DailyReadViewModel>(
+      builder: (context, viewModel, child) {
         return CommandBuilder(
-          command: widget.viewModel.load,
+          command: viewModel.load,
           whileExecuting: (context, lastValue, param) =>
               const Loading(text: '正在加载今日推荐'),
           onError: (context, error, lastValue, param) => ErrorWidget(
             message: '每日推荐加载失败',
             error: error.toString(),
-            onRetry: () => widget.viewModel.load.execute(false),
+            onRetry: () => viewModel.load.execute(false),
           ),
           onData: (context, data, param) {
-            if (widget.viewModel.isNoMore) {
+            if (viewModel.isNoMore) {
               return Center(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -104,7 +147,7 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
                       ),
                       const SizedBox(height: 24),
                       ElevatedButton.icon(
-                        onPressed: () => widget.viewModel.load.execute(true),
+                        onPressed: () => viewModel.load.execute(true),
                         icon: const Icon(Icons.refresh),
                         label: const Text('刷新'),
                         style: ElevatedButton.styleFrom(
@@ -119,7 +162,7 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
                 ),
               );
             }
-            if (widget.viewModel.unArchivedBookmarks.isEmpty) {
+            if (viewModel.unArchivedBookmarks.isEmpty) {
               // 完成今日阅读，放烟花
               return Stack(
                 children: [
@@ -156,15 +199,15 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
 
             return ListView.builder(
               padding: const EdgeInsets.all(16),
-              itemCount: widget.viewModel.unArchivedBookmarks.length,
+              itemCount: viewModel.unArchivedBookmarks.length,
               itemBuilder: (context, index) {
                 return BookmarkCard(
-                  bookmark: widget.viewModel.unArchivedBookmarks[index],
-                  onOpenUrl: widget.viewModel.openUrl,
+                  bookmark: viewModel.unArchivedBookmarks[index],
+                  onOpenUrl: viewModel.openUrl,
                   onToggleMark: (bookmark) =>
-                      widget.viewModel.toggleBookmarkMarked(bookmark),
+                      viewModel.toggleBookmarkMarked(bookmark),
                   onToggleArchive: (bookmark) =>
-                      widget.viewModel.toggleBookmarkArchived(bookmark),
+                      viewModel.toggleBookmarkArchived(bookmark),
                 );
               },
             );

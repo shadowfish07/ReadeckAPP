@@ -7,7 +7,6 @@ import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 import 'package:readeck_app/domain/models/daily_read_history/daily_read_history.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_operation_use_cases.dart';
 import 'package:readeck_app/utils/option_data.dart';
-import 'package:result_dart/result_dart.dart';
 
 class DailyReadViewModel extends ChangeNotifier {
   DailyReadViewModel(this._bookmarkRepository, this._dailyReadHistoryRepository,
@@ -15,6 +14,10 @@ class DailyReadViewModel extends ChangeNotifier {
     load = Command.createAsync<bool, List<Bookmark>>(_load, initialValue: [])
       ..execute(false);
     openUrl = Command.createAsyncNoResult<String>(_openUrl);
+    toggleBookmarkArchived =
+        Command.createAsyncNoResult<Bookmark>(_toggleBookmarkArchived);
+    toggleBookmarkMarked =
+        Command.createAsyncNoResult<Bookmark>(_toggleBookmarkMarked);
   }
 
   VoidCallback? _onBookmarkArchivedCallback;
@@ -26,13 +29,24 @@ class DailyReadViewModel extends ChangeNotifier {
 
   late Command load;
   late Command openUrl;
+  late Command toggleBookmarkArchived;
+  late Command toggleBookmarkMarked;
 
-  final List<Bookmark> _bookmarks = [];
+  List<Bookmark> _bookmarks = [];
+  final Map<String, bool> _optimisticArchived = {};
+  final Map<String, bool> _optimisticMarked = {};
   bool _isNoMore = false;
   bool get isNoMore => _isNoMore;
-  List<Bookmark> get bookmarks => _bookmarks;
+  List<Bookmark> get bookmarks {
+    return _bookmarks
+        .map((item) => item.copyWith(
+            isArchived: _optimisticArchived[item.id] ?? item.isArchived,
+            isMarked: _optimisticMarked[item.id] ?? item.isMarked))
+        .toList();
+  }
+
   List<Bookmark> get unArchivedBookmarks =>
-      _bookmarks.where((bookmark) => !bookmark.isArchived).toList();
+      bookmarks.where((bookmark) => !bookmark.isArchived).toList();
 
   Future<void> _openUrl(String url) async {
     final result = await _bookmarkOperationUseCases.openUrl(url);
@@ -106,52 +120,42 @@ class DailyReadViewModel extends ChangeNotifier {
     _onBookmarkArchivedCallback = callback;
   }
 
-  AsyncResult<void> toggleBookmarkArchived(Bookmark bookmark) async {
+  Future<void> _toggleBookmarkArchived(Bookmark bookmark) async {
+    // 乐观更新
+    _optimisticArchived[bookmark.id] = !bookmark.isArchived;
+    notifyListeners();
+    _onBookmarkArchivedCallback?.call();
+
     final result =
         await _bookmarkOperationUseCases.toggleBookmarkArchived(bookmark);
 
     if (result.isError()) {
       _log.e("Failed to toggle bookmark archived",
           error: result.exceptionOrNull()!);
-      return result;
+      _optimisticArchived.remove(bookmark.id);
+      notifyListeners();
+      throw result.exceptionOrNull()!;
     }
 
-    // 乐观更新
-    final index = _bookmarks.indexWhere((item) => item.id == bookmark.id);
-    if (index != -1) {
-      _bookmarks[index] = bookmark.copyWith(isArchived: !bookmark.isArchived);
-    }
-    notifyListeners();
-    _onBookmarkArchivedCallback?.call();
-
-    // 异步刷新
-    await _load(false);
-    notifyListeners();
-
-    return result;
+    _bookmarks = bookmarks;
   }
 
-  AsyncResult<void> toggleBookmarkMarked(Bookmark bookmark) async {
+  Future<void> _toggleBookmarkMarked(Bookmark bookmark) async {
+    // 乐观更新
+    _optimisticMarked[bookmark.id] = !bookmark.isMarked;
+    notifyListeners();
+
     final result =
         await _bookmarkOperationUseCases.toggleBookmarkMarked(bookmark);
 
     if (result.isError()) {
       _log.e("Failed to toggle bookmark marked",
           error: result.exceptionOrNull()!);
-      return result;
+      _optimisticMarked.remove(bookmark.id);
+      notifyListeners();
+      throw result.exceptionOrNull()!;
     }
 
-    // 乐观更新
-    final index = _bookmarks.indexWhere((item) => item.id == bookmark.id);
-    if (index != -1) {
-      _bookmarks[index] = bookmark.copyWith(isMarked: !bookmark.isMarked);
-    }
-    notifyListeners();
-
-    // 异步刷新
-    await _load(false);
-    notifyListeners();
-
-    return result;
+    _bookmarks = bookmarks;
   }
 }
