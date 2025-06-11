@@ -36,3 +36,11 @@
 
 # Application classes that will be serialized/deserialized over Gson
 -keep class me.zqydev.readeck_app.** { *; }
+
+# Keep Google Play Core classes for Flutter
+-keep class com.google.android.play.core.** { *; }
+-dontwarn com.google.android.play.core.**
+
+# Keep Flutter deferred components classes
+-keep class io.flutter.embedding.engine.deferredcomponents.** { *; }
+-keep class io.flutter.embedding.android.FlutterPlayStoreSplitApplication { *; }
