@@ -71,7 +71,7 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add pubspec.yaml lib/pages/about_page.dart
+          git add pubspec.yaml
           git commit -m "chore: update version to ${{ steps.version.outputs.version }}" || exit 0
           git push origin HEAD:main || exit 0
 
