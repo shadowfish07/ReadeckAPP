@@ -11,7 +11,7 @@ import 'package:readeck_app/ui/settings/view_models/about_viewmodel.dart';
 import 'package:readeck_app/ui/settings/view_models/settings_viewmodel.dart';
 import 'package:readeck_app/ui/settings/widgets/about_page.dart';
 import 'package:readeck_app/ui/settings/widgets/settings_screen.dart';
-import 'package:readeck_app/ui/bookmarks/view_models/unarchived_viewmodel.dart';
+import 'package:readeck_app/ui/bookmarks/view_models/bookmarks_viewmodel.dart';
 import 'package:readeck_app/ui/bookmarks/widget/unarchived_screen.dart';
 
 import 'routes.dart';

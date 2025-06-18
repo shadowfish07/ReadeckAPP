@@ -4,9 +4,19 @@ import 'package:logger/logger.dart';
 import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_operation_use_cases.dart';
+import 'package:result_dart/result_dart.dart';
 
-class UnarchivedViewmodel extends ChangeNotifier {
+class UnarchivedViewmodel extends BaseBookmarksViewmodel {
   UnarchivedViewmodel(
+      super._bookmarkRepository, super._bookmarkOperationUseCases);
+
+  @override
+  Future<ResultDart<List<Bookmark>, Exception>> Function({int limit, int page})
+      get _loadBookmarks => _bookmarkRepository.getUnarchivedBookmarks;
+}
+
+abstract class BaseBookmarksViewmodel extends ChangeNotifier {
+  BaseBookmarksViewmodel(
       this._bookmarkRepository, this._bookmarkOperationUseCases) {
     load = Command.createAsync<int, List<Bookmark>>(_load,
         initialValue: [], includeLastResultInCommandResults: true)
@@ -45,11 +55,13 @@ class UnarchivedViewmodel extends ChangeNotifier {
   bool get hasMoreData => _hasMoreData;
   bool get isLoadingMore => loadMore.isExecuting.value;
 
+  Future<ResultDart<List<Bookmark>, Exception>> Function({int limit, int page})
+      get _loadBookmarks;
+
   Future<List<Bookmark>> _load(int page) async {
     var limit = 5;
     _currentPage = page;
-    final result = await _bookmarkRepository.getUnarchivedBookmarks(
-        limit: limit, page: page);
+    final result = await _loadBookmarks(limit: limit, page: page);
     final bookmarks = result.getOrThrow();
     _bookmarks = bookmarks;
     _hasMoreData = bookmarks.length == limit;
@@ -62,8 +74,7 @@ class UnarchivedViewmodel extends ChangeNotifier {
 
     var limit = 5;
     _currentPage = page;
-    final result = await _bookmarkRepository.getUnarchivedBookmarks(
-        limit: limit, page: page);
+    final result = await _loadBookmarks(limit: limit, page: page);
     final newBookmarks = result.getOrThrow();
 
     if (newBookmarks.isNotEmpty) {

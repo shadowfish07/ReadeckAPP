@@ -5,7 +5,7 @@ import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 import 'package:readeck_app/ui/core/ui/bookmark_card.dart';
 import 'package:readeck_app/ui/core/ui/error_widget.dart';
 import 'package:readeck_app/ui/core/ui/loading.dart';
-import 'package:readeck_app/ui/bookmarks/view_models/unarchived_viewmodel.dart';
+import 'package:readeck_app/ui/bookmarks/view_models/bookmarks_viewmodel.dart';
 
 class UnarchivedScreen extends StatefulWidget {
   const UnarchivedScreen({super.key, required this.viewModel});
