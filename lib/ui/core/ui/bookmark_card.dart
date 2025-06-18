@@ -28,11 +28,11 @@ class _BookmarkCardState extends State<BookmarkCard> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(error.toString()),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.error,
           duration: const Duration(seconds: 5),
           action: SnackBarAction(
             label: '复制链接',
-            textColor: Colors.white,
+            textColor: Theme.of(context).colorScheme.onError,
             onPressed: () async {
               await Clipboard.setData(ClipboardData(text: widget.bookmark.url));
               if (mounted) {
@@ -70,10 +70,9 @@ class _BookmarkCardState extends State<BookmarkCard> {
               // 标题
               Text(
                 widget.bookmark.title,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: Theme.of(rootContext).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -92,10 +91,12 @@ class _BookmarkCardState extends State<BookmarkCard> {
                     Expanded(
                       child: Text(
                         widget.bookmark.siteName!,
-                        style: TextStyle(
-                          color: Theme.of(rootContext).colorScheme.primary,
-                          fontSize: 14,
-                        ),
+                        style: Theme.of(rootContext)
+                            .textTheme
+                            .bodyMedium
+                            ?.copyWith(
+                              color: Theme.of(rootContext).colorScheme.primary,
+                            ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -103,10 +104,9 @@ class _BookmarkCardState extends State<BookmarkCard> {
                   const Spacer(),
                   Text(
                     _formatDate(widget.bookmark.created),
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 12,
-                    ),
+                    style: Theme.of(rootContext).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(rootContext).colorScheme.outline,
+                        ),
                   ),
                 ],
               ),
@@ -117,10 +117,9 @@ class _BookmarkCardState extends State<BookmarkCard> {
                 const SizedBox(height: 8),
                 Text(
                   widget.bookmark.description!,
-                  style: TextStyle(
-                    color: Colors.grey[700],
-                    fontSize: 14,
-                  ),
+                  style: Theme.of(rootContext).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(rootContext).colorScheme.outline,
+                      ),
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -136,10 +135,19 @@ class _BookmarkCardState extends State<BookmarkCard> {
                     return Chip(
                       label: Text(
                         label,
-                        style: const TextStyle(fontSize: 12),
+                        style: Theme.of(rootContext)
+                            .textTheme
+                            .labelSmall
+                            ?.copyWith(
+                              color: Theme.of(rootContext)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
                       ),
-                      backgroundColor:
-                          Theme.of(rootContext).colorScheme.primaryContainer,
+                      backgroundColor: Theme.of(rootContext)
+                          .colorScheme
+                          .surfaceContainerHighest,
+                      side: BorderSide.none,
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     );
@@ -163,8 +171,8 @@ class _BookmarkCardState extends State<BookmarkCard> {
                           : Icons.favorite_border,
                       size: 20,
                       color: widget.bookmark.isMarked
-                          ? Colors.red
-                          : Colors.grey[600],
+                          ? Theme.of(rootContext).colorScheme.error
+                          : Theme.of(rootContext).colorScheme.onSurfaceVariant,
                     ),
                     tooltip: '标记喜爱',
                     padding: EdgeInsets.zero,
@@ -195,8 +203,8 @@ class _BookmarkCardState extends State<BookmarkCard> {
                           : Icons.archive_outlined,
                       size: 20,
                       color: widget.bookmark.isArchived
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.onSurfaceVariant,
+                          ? Theme.of(rootContext).colorScheme.primary
+                          : Theme.of(rootContext).colorScheme.onSurfaceVariant,
                     ),
                     tooltip: widget.bookmark.isArchived ? '取消存档' : '存档',
                     padding: EdgeInsets.zero,
