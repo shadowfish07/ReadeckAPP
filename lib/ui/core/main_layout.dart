@@ -54,7 +54,7 @@ class MainLayout extends StatelessWidget {
             title: const Text('设置'),
             onTap: () {
               context.pop();
-              context.push(Routes.settings);
+              context.go(Routes.settings);
             },
           ),
         ],
