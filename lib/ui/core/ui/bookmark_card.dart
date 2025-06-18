@@ -187,14 +187,6 @@ class _BookmarkCardState extends State<BookmarkCard> {
                     onPressed: widget.onToggleArchive != null
                         ? () {
                             widget.onToggleArchive!(widget.bookmark);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(widget.bookmark.isArchived
-                                    ? '已取消存档'
-                                    : '已标记存档'),
-                                duration: const Duration(seconds: 2),
-                              ),
-                            );
                           }
                         : null,
                     icon: Icon(

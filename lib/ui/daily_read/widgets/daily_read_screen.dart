@@ -206,8 +206,15 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
                   onOpenUrl: viewModel.openUrl,
                   onToggleMark: (bookmark) =>
                       viewModel.toggleBookmarkMarked(bookmark),
-                  onToggleArchive: (bookmark) =>
-                      viewModel.toggleBookmarkArchived(bookmark),
+                  onToggleArchive: (bookmark) {
+                    viewModel.toggleBookmarkArchived(bookmark);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(bookmark.isArchived ? '已取消存档' : '已标记存档'),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  },
                 );
               },
             );
