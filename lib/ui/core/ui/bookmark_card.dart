@@ -177,14 +177,28 @@ class _BookmarkCardState extends State<BookmarkCard> {
                   // 存档按钮
                   IconButton(
                     onPressed: widget.onToggleArchive != null
-                        ? () => widget.onToggleArchive!(widget.bookmark)
+                        ? () {
+                            widget.onToggleArchive!(widget.bookmark);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(widget.bookmark.isArchived
+                                    ? '已取消存档'
+                                    : '已标记存档'),
+                                duration: const Duration(seconds: 2),
+                              ),
+                            );
+                          }
                         : null,
                     icon: Icon(
-                      Icons.archive_outlined,
+                      widget.bookmark.isArchived
+                          ? Icons.unarchive_outlined
+                          : Icons.archive_outlined,
                       size: 20,
-                      color: Colors.grey[600],
+                      color: widget.bookmark.isArchived
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
-                    tooltip: '存档',
+                    tooltip: widget.bookmark.isArchived ? '取消存档' : '存档',
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(
                       minWidth: 32,
