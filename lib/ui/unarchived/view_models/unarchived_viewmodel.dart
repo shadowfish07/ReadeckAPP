@@ -60,8 +60,6 @@ class UnarchivedViewmodel extends ChangeNotifier {
   Future<List<Bookmark>> _loadMore(int page) async {
     if (!_hasMoreData) return _bookmarks;
 
-    await Future.delayed(const Duration(seconds: 5));
-
     var limit = 5;
     _currentPage = page;
     final result = await _bookmarkRepository.getUnarchivedBookmarks(
