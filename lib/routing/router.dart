@@ -40,10 +40,26 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
             builder: (context, state, child) {
               // 根据当前路由确定页面标题
               final title = _getTitleForRoute(state.matchedLocation);
+
+              // 从设置页返回，跳转首页
+              if (state.matchedLocation == Routes.settings) {
+                return MainLayout(
+                  title: title,
+                  child: PopScope(
+                      canPop: false,
+                      onPopInvokedWithResult: (didPop, result) {
+                        if (!didPop) {
+                          context.go(Routes.dailyRead);
+                        }
+                      },
+                      child: child),
+                );
+              }
+
               return MainLayout(
                 title: title,
                 child: child,
-              ); // 包含侧边菜单的布局
+              );
             },
             branches: [
               StatefulShellBranch(routes: [
