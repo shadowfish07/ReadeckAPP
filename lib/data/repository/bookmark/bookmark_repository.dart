@@ -16,16 +16,20 @@ class BookmarkRepository {
     return _readeckApiClient.getBookmarks(ids: ids);
   }
 
-  AsyncResult<List<Bookmark>> getUnarchivedBookmarks(int limit) async {
+  AsyncResult<List<Bookmark>> getUnarchivedBookmarks({
+    int limit = 10,
+    int page = 1,
+  }) async {
     return _readeckApiClient.getBookmarks(
       isArchived: false,
       limit: limit,
+      offset: (page - 1) * limit,
     );
   }
 
   AsyncResult<List<Bookmark>> getRandomUnarchivedBookmarks(
       int randomCount) async {
-    final allBookmarks = await getUnarchivedBookmarks(100);
+    final allBookmarks = await getUnarchivedBookmarks(limit: 100);
 
     if (allBookmarks.isSuccess()) {
       // 随机打乱并取前5个

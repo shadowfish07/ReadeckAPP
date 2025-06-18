@@ -136,6 +136,7 @@ class ReadeckApiClient {
         dynamic data;
         try {
           data = json.decode(response.body);
+          _log.d('getBookmarks response.body: $data');
         } catch (formatException) {
           _log.w("JSON解析失败。uri: $uri, 响应体: ${response.body}");
           return Failure(Exception("JSON解析失败：$formatException"));

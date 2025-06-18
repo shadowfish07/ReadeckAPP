@@ -11,6 +11,8 @@ import 'package:readeck_app/ui/settings/view_models/about_viewmodel.dart';
 import 'package:readeck_app/ui/settings/view_models/settings_viewmodel.dart';
 import 'package:readeck_app/ui/settings/widgets/about_page.dart';
 import 'package:readeck_app/ui/settings/widgets/settings_screen.dart';
+import 'package:readeck_app/ui/unarchived/view_models/unarchived_viewmodel.dart';
+import 'package:readeck_app/ui/unarchived/widget/unarchived_screen.dart';
 
 import 'routes.dart';
 
@@ -20,7 +22,7 @@ final Map<String, String> _routeTitleMap = {
   Routes.about: '关于',
   Routes.apiConfigSetting: 'API 配置',
   Routes.dailyRead: '每日阅读',
-  Routes.unread: '未读',
+  Routes.unarchived: '未读',
 };
 
 // 根据路由获取标题
@@ -54,6 +56,22 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
                       child: Consumer<DailyReadViewModel>(
                         builder: (context, viewModel, child) {
                           return DailyReadScreen(viewModel: viewModel);
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ]),
+              StatefulShellBranch(routes: [
+                GoRoute(
+                  path: Routes.unarchived,
+                  builder: (context, state) {
+                    return ChangeNotifierProvider(
+                      create: (context) =>
+                          UnarchivedViewmodel(context.read(), context.read()),
+                      child: Consumer<UnarchivedViewmodel>(
+                        builder: (context, viewModel, child) {
+                          return UnarchivedScreen(viewModel: viewModel);
                         },
                       ),
                     );

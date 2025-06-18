@@ -44,10 +44,17 @@ class MainLayout extends StatelessWidget {
             },
           ),
           ListTile(
+            title: const Text('未读'),
+            onTap: () {
+              context.pop();
+              context.go(Routes.unarchived);
+            },
+          ),
+          ListTile(
             title: const Text('设置'),
             onTap: () {
               context.pop();
-              context.go(Routes.settings);
+              context.push(Routes.settings);
             },
           ),
         ],

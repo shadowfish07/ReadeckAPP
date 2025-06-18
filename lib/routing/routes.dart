@@ -8,7 +8,7 @@ abstract final class Routes {
   static const about = '/about';
   static const dailyRead = '/$dailyReadRelative';
   static const dailyReadRelative = 'daily-read';
-  static const unread = '/$unreadRelative';
-  static const unreadRelative = 'unread';
+  static const unarchived = '/$unarchivedRelative';
+  static const unarchivedRelative = 'unarchived';
   // static String bookingWithId(int id) => '$booking/$id';
 }
