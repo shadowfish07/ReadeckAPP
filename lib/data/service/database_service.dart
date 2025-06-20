@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:logger/logger.dart';
 import 'package:path/path.dart';
 import 'package:readeck_app/domain/models/daily_read_history/daily_read_history.dart';
@@ -32,7 +31,14 @@ class DatabaseService {
     _database = await factoryWithLogs.openDatabase(
         join(await getDatabasesPath(), 'app_database.db'),
         options: OpenDatabaseOptions(
-          onCreate: (db, version) {
+          onCreate: (db, version) async {
+            try {
+              final result = await db.rawQuery('SELECT sqlite_version()');
+              final version = result.first.values.first;
+              _log.i('Current SQLite version: $version');
+            } catch (e) {
+              _log.e('Failed to get SQLite version', error: e);
+            }
             return db.execute(
               '''CREATE TABLE $_kTableDailyReadHistory (
     $_kColumnId INTEGER PRIMARY KEY AUTOINCREMENT,
