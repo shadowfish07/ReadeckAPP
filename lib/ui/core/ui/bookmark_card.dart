@@ -8,6 +8,8 @@ class BookmarkCard extends StatefulWidget {
   final Command onOpenUrl;
   final Function(Bookmark bookmark)? onToggleMark;
   final Function(Bookmark bookmark)? onToggleArchive;
+  final Function(Bookmark bookmark, List<String> labels)? onUpdateLabels;
+  final List<String>? availableLabels;
 
   const BookmarkCard({
     super.key,
@@ -15,6 +17,8 @@ class BookmarkCard extends StatefulWidget {
     required this.onOpenUrl,
     this.onToggleMark,
     this.onToggleArchive,
+    this.onUpdateLabels,
+    this.availableLabels,
   });
 
   @override
@@ -182,6 +186,24 @@ class _BookmarkCardState extends State<BookmarkCard> {
                     ),
                   ),
                   const SizedBox(width: 8),
+                  // 标签编辑按钮
+                  IconButton(
+                    onPressed: widget.onUpdateLabels != null
+                        ? () => _showLabelEditDialog(rootContext)
+                        : null,
+                    icon: Icon(
+                      Icons.label_outline,
+                      size: 20,
+                      color: Theme.of(rootContext).colorScheme.onSurfaceVariant,
+                    ),
+                    tooltip: '编辑标签',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   // 存档按钮
                   IconButton(
                     onPressed: widget.onToggleArchive != null
@@ -227,5 +249,205 @@ class _BookmarkCardState extends State<BookmarkCard> {
     } else {
       return '刚刚';
     }
+  }
+
+  void _showLabelEditDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => _LabelEditDialog(
+        bookmark: widget.bookmark,
+        availableLabels: widget.availableLabels ?? [],
+        onUpdateLabels: widget.onUpdateLabels!,
+      ),
+    );
+  }
+}
+
+class _LabelEditDialog extends StatefulWidget {
+  final Bookmark bookmark;
+  final List<String> availableLabels;
+  final Function(Bookmark bookmark, List<String> labels) onUpdateLabels;
+
+  const _LabelEditDialog({
+    required this.bookmark,
+    required this.availableLabels,
+    required this.onUpdateLabels,
+  });
+
+  @override
+  State<_LabelEditDialog> createState() => _LabelEditDialogState();
+}
+
+class _LabelEditDialogState extends State<_LabelEditDialog> {
+  late List<String> _selectedLabels;
+  late List<String> _filteredLabels;
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedLabels = List.from(widget.bookmark.labels);
+    _filteredLabels = List.from(widget.availableLabels);
+    _searchController.addListener(_filterLabels);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _filterLabels() {
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      _filteredLabels = widget.availableLabels
+          .where((label) => label.toLowerCase().contains(query))
+          .toList();
+    });
+  }
+
+  void _toggleLabel(String label) {
+    setState(() {
+      if (_selectedLabels.contains(label)) {
+        _selectedLabels.remove(label);
+      } else {
+        _selectedLabels.add(label);
+      }
+    });
+  }
+
+  void _addNewLabel(String label) {
+    if (label.isNotEmpty && !_selectedLabels.contains(label)) {
+      setState(() {
+        _selectedLabels.add(label);
+        _searchController.clear();
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('编辑标签'),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 搜索或新增标签输入框
+            TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: '搜索或新增标签',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // 已选择的标签
+            if (_selectedLabels.isNotEmpty) ...[
+              Text(
+                '已选择的标签',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: _selectedLabels.map((label) {
+                  return Chip(
+                    label: Text(label),
+                    deleteIcon: const Icon(Icons.close, size: 18),
+                    onDeleted: () => _toggleLabel(label),
+                    backgroundColor:
+                        Theme.of(context).colorScheme.primaryContainer,
+                    labelStyle: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 16),
+            ],
+
+            // 可用标签列表
+            Text(
+              '可用标签',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 200,
+              child: SingleChildScrollView(
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: [
+                    // 显示当前输入的标签（如果不存在且不为空）
+                    if (_searchController.text.trim().isNotEmpty &&
+                        !widget.availableLabels
+                            .contains(_searchController.text.trim()) &&
+                        !_selectedLabels
+                            .contains(_searchController.text.trim()))
+                      ActionChip(
+                        label: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.add, size: 16),
+                            const SizedBox(width: 4),
+                            Text('新增 "${_searchController.text.trim()}"'),
+                          ],
+                        ),
+                        onPressed: () =>
+                            _addNewLabel(_searchController.text.trim()),
+                        backgroundColor:
+                            Theme.of(context).colorScheme.primaryContainer,
+                        labelStyle: TextStyle(
+                          color:
+                              Theme.of(context).colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                    // 显示过滤后的现有标签
+                    ..._filteredLabels
+                        .where((label) => !_selectedLabels.contains(label))
+                        .map((label) {
+                      return FilterChip(
+                        label: Text(label),
+                        selected: false,
+                        onSelected: (_) => _toggleLabel(label),
+                        backgroundColor: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerHighest,
+                      );
+                    }),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('取消'),
+        ),
+        FilledButton(
+          onPressed: () {
+            widget.onUpdateLabels(widget.bookmark, _selectedLabels);
+            Navigator.of(context).pop();
+          },
+          child: const Text('保存'),
+        ),
+      ],
+    );
   }
 }
