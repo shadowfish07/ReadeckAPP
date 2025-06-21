@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:logger/logger.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
+import 'package:readeck_app/domain/models/bookmark/label_info.dart';
 import 'package:http/http.dart' as http;
 import 'package:readeck_app/utils/api_not_configured_exception.dart';
 import 'package:result_dart/result_dart.dart';
@@ -252,6 +253,58 @@ class ReadeckApiClient {
       } else {
         _log.w("更新书签失败。uri: $uri, 状态码: ${response.statusCode}");
         return Failure(Exception('更新书签失败: ${response.statusCode}'));
+      }
+    } catch (e) {
+      _log.w("网络请求失败。uri: $uri, 错误: $e");
+      return Failure(Exception('网络请求失败: $e'));
+    }
+  }
+
+  /// 获取标签列表
+  ///
+  /// 返回当前用户与书签关联的所有标签
+  AsyncResult<List<LabelInfo>> getLabels() async {
+    if (!_isConfigured) {
+      return Failure(ApiNotConfiguredException());
+    }
+
+    final uri = Uri.parse('$_host/api/bookmarks/labels');
+
+    try {
+      final response = await http.get(uri, headers: _headers);
+
+      if (response.statusCode == 200) {
+        // 检查响应体是否为空或无效
+        if (response.body.isEmpty) {
+          _log.w("服务器返回空响应。uri: $uri");
+          return Failure(Exception("服务器返回空响应"));
+        }
+
+        dynamic data;
+        try {
+          data = json.decode(response.body);
+          _log.d('getLabels response.body: $data');
+        } catch (formatException) {
+          _log.w("JSON解析失败。uri: $uri, 响应体: ${response.body}");
+          return Failure(Exception("JSON解析失败：$formatException"));
+        }
+
+        // 检查返回的数据结构
+        List<dynamic> labelsJson;
+        if (data is List) {
+          // 直接返回标签数组
+          labelsJson = data;
+        } else {
+          _log.w("无效的响应格式。uri: $uri, 响应体: ${response.body}");
+          return Failure(Exception("无效的响应格式"));
+        }
+
+        final result =
+            labelsJson.map((json) => LabelInfo.fromJson(json)).toList();
+        return Success(result);
+      } else {
+        _log.w("获取标签列表失败。uri: $uri, 状态码: ${response.statusCode}");
+        return Failure(Exception('获取标签列表失败: ${response.statusCode}'));
       }
     } catch (e) {
       _log.w("网络请求失败。uri: $uri, 错误: $e");

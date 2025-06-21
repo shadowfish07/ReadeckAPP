@@ -4,6 +4,7 @@ import 'package:logger/logger.dart';
 import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
 import 'package:readeck_app/data/repository/daily_read_history/daily_read_history_repository.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
+import 'package:readeck_app/domain/models/bookmark/label_info.dart';
 import 'package:readeck_app/domain/models/daily_read_history/daily_read_history.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_operation_use_cases.dart';
 import 'package:readeck_app/utils/option_data.dart';
@@ -18,6 +19,7 @@ class DailyReadViewModel extends ChangeNotifier {
         Command.createAsyncNoResult<Bookmark>(_toggleBookmarkArchived);
     toggleBookmarkMarked =
         Command.createAsyncNoResult<Bookmark>(_toggleBookmarkMarked);
+    loadLabels = Command.createAsyncNoParam(_loadLabels, initialValue: []);
   }
 
   VoidCallback? _onBookmarkArchivedCallback;
@@ -31,11 +33,13 @@ class DailyReadViewModel extends ChangeNotifier {
   late Command openUrl;
   late Command toggleBookmarkArchived;
   late Command toggleBookmarkMarked;
+  late Command<void, List<String>> loadLabels;
 
   List<Bookmark> _bookmarks = [];
   final Map<String, bool> _optimisticArchived = {};
   final Map<String, bool> _optimisticMarked = {};
   bool _isNoMore = false;
+  List<LabelInfo> _labels = [];
   bool get isNoMore => _isNoMore;
   List<Bookmark> get bookmarks {
     return _bookmarks
@@ -47,6 +51,9 @@ class DailyReadViewModel extends ChangeNotifier {
 
   List<Bookmark> get unArchivedBookmarks =>
       bookmarks.where((bookmark) => !bookmark.isArchived).toList();
+
+  List<String> get availableLabels =>
+      _labels.map((label) => label.name).toList();
 
   Future<void> _openUrl(String url) async {
     final result = await _bookmarkOperationUseCases.openUrl(url);
@@ -157,5 +164,18 @@ class DailyReadViewModel extends ChangeNotifier {
     }
 
     _bookmarks = bookmarks;
+  }
+
+// 这里返回LabelInfo会更好
+  Future<List<String>> _loadLabels() async {
+    final result = await _bookmarkRepository.getLabels();
+    if (result.isSuccess()) {
+      _labels = result.getOrDefault([]);
+      notifyListeners();
+      return _labels.map((e) => e.name).toList();
+    }
+
+    _log.e("Failed to load labels", error: result.exceptionOrNull()!);
+    throw result.exceptionOrNull()!;
   }
 }

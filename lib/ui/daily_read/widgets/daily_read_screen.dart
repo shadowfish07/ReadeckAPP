@@ -206,6 +206,11 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
                   onOpenUrl: viewModel.openUrl,
                   onToggleMark: (bookmark) =>
                       viewModel.toggleBookmarkMarked(bookmark),
+                  onUpdateLabels: (bookmark, labels) {
+                    // TODO
+                  },
+                  availableLabels: viewModel.availableLabels,
+                  onLoadLabels: () => viewModel.loadLabels.executeWithFuture(),
                   onToggleArchive: (bookmark) {
                     viewModel.toggleBookmarkArchived(bookmark);
                     ScaffoldMessenger.of(context).showSnackBar(

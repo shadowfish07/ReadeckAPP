@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:logger/logger.dart';
 import 'package:readeck_app/data/service/readeck_api_client.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
+import 'package:readeck_app/domain/models/bookmark/label_info.dart';
 import 'package:result_dart/result_dart.dart';
 
 class BookmarkRepository {
@@ -55,5 +56,9 @@ class BookmarkRepository {
       bookmark.id,
       isArchived: !bookmark.isArchived,
     );
+  }
+
+  AsyncResult<List<LabelInfo>> getLabels() async {
+    return _readeckApiClient.getLabels();
   }
 }
