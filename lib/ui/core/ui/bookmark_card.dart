@@ -194,7 +194,7 @@ class _BookmarkCardState extends State<BookmarkCard> {
                         ? () => _showLabelEditDialog(rootContext)
                         : null,
                     icon: Icon(
-                      Icons.label_outline,
+                      Icons.local_offer_outlined,
                       size: 20,
                       color: Theme.of(rootContext).colorScheme.onSurfaceVariant,
                     ),
