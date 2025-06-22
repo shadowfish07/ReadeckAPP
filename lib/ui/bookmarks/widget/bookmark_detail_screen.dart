@@ -2,6 +2,7 @@ import 'package:flutter/material.dart' hide ErrorWidget;
 import 'package:flutter_command/flutter_command.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_html_all/flutter_html_all.dart';
+import 'package:photo_view/photo_view.dart';
 import 'package:provider/provider.dart';
 import 'package:readeck_app/ui/bookmarks/view_models/bookmark_detail_viewmodel.dart';
 import 'package:readeck_app/ui/core/ui/error_widget.dart';
@@ -148,13 +149,39 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
                     }
                   }
                 },
-                extensions: const [
-                  AudioHtmlExtension(),
-                  IframeHtmlExtension(),
-                  MathHtmlExtension(),
-                  SvgHtmlExtension(),
-                  TableHtmlExtension(),
-                  VideoHtmlExtension()
+                extensions: [
+                  const AudioHtmlExtension(),
+                  const IframeHtmlExtension(),
+                  const MathHtmlExtension(),
+                  const SvgHtmlExtension(),
+                  const TableHtmlExtension(),
+                  const VideoHtmlExtension(),
+                  TagExtension(
+                    tagsToExtend: {"img"},
+                    builder: (extensionContext) {
+                      final src = extensionContext
+                          .styledElement?.element?.attributes['src'];
+                      if (src != null) {
+                        return Builder(
+                          builder: (context) {
+                            return GestureDetector(
+                              onTap: () => _showImagePreview(context, src),
+                              child: Image.network(
+                                src,
+                                width: MediaQuery.of(context).size.width,
+                                fit: BoxFit.contain,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return const Icon(Icons.broken_image,
+                                      size: 64);
+                                },
+                              ),
+                            );
+                          },
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
                 ],
               ),
             ],
@@ -175,6 +202,40 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
             ),
           ),
       ],
+    );
+  }
+
+  void _showImagePreview(BuildContext context, String imageUrl) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => Scaffold(
+          backgroundColor: Colors.black,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            iconTheme: const IconThemeData(color: Colors.white),
+          ),
+          body: PhotoView(
+            imageProvider: NetworkImage(imageUrl),
+            minScale: PhotoViewComputedScale.contained,
+            maxScale: PhotoViewComputedScale.covered * 2.0,
+            initialScale: PhotoViewComputedScale.contained,
+            backgroundDecoration: const BoxDecoration(
+              color: Colors.black,
+            ),
+            loadingBuilder: (context, event) => const Center(
+              child: CircularProgressIndicator(color: Colors.white),
+            ),
+            errorBuilder: (context, error, stackTrace) => const Center(
+              child: Icon(
+                Icons.error,
+                color: Colors.white,
+                size: 64,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
