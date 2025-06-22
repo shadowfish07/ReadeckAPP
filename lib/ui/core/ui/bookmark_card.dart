@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_command/flutter_command.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
+import 'package:readeck_app/ui/core/ui/bookmark_labels_widget.dart';
 import 'package:readeck_app/ui/core/ui/label_edit_dialog.dart';
 import 'package:readeck_app/utils/reading_stats_calculator.dart';
 
@@ -172,30 +173,9 @@ class _BookmarkCardState extends State<BookmarkCard> {
                 // 标签
                 if (widget.bookmark.labels.isNotEmpty) ...[
                   const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 4,
-                    children: widget.bookmark.labels.map((label) {
-                      return Chip(
-                        label: Text(
-                          label,
-                          style: Theme.of(rootContext)
-                              .textTheme
-                              .labelSmall
-                              ?.copyWith(
-                                color: Theme.of(rootContext)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                              ),
-                        ),
-                        backgroundColor: Theme.of(rootContext)
-                            .colorScheme
-                            .surfaceContainerHighest,
-                        side: BorderSide.none,
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      );
-                    }).toList(),
+                  BookmarkLabelsWidget(
+                    labels: widget.bookmark.labels,
+                    isOnDarkBackground: false,
                   ),
                 ],
 

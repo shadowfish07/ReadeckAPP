@@ -6,6 +6,7 @@ import 'package:photo_view/photo_view.dart';
 import 'package:provider/provider.dart';
 
 import 'package:readeck_app/ui/bookmarks/view_models/bookmark_detail_viewmodel.dart';
+import 'package:readeck_app/ui/core/ui/bookmark_labels_widget.dart';
 import 'package:readeck_app/ui/core/ui/error_widget.dart';
 import 'package:readeck_app/ui/core/ui/label_edit_dialog.dart';
 import 'package:readeck_app/ui/core/ui/loading.dart';
@@ -241,6 +242,14 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
                             ),
                       ),
                       const SizedBox(height: 16),
+                      // 标签展示
+                      if (widget.viewModel.bookmark.labels.isNotEmpty) ...[
+                        BookmarkLabelsWidget(
+                          labels: widget.viewModel.bookmark.labels,
+                          isOnDarkBackground: true,
+                        ),
+                        const SizedBox(height: 16),
+                      ],
                       // 操作按钮区域
                       Row(
                         children: [
@@ -419,9 +428,6 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
       // 调用ViewModel中的存档方法
       await widget.viewModel.archiveBookmarkCommand.executeWithFuture();
 
-      // 存档成功后可能需要刷新UI
-      setState(() {});
-
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -465,6 +471,7 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
       builder: (BuildContext context) {
         return LabelEditDialog(
           bookmark: widget.viewModel.bookmark,
+          // TODO
           availableLabels: const [],
           onUpdateLabels: (bookmark, labels) async {
             try {

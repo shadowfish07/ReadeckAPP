@@ -18,7 +18,7 @@ import 'package:readeck_app/ui/bookmarks/widget/archived_screen.dart';
 import 'package:readeck_app/ui/bookmarks/widget/marked_screen.dart';
 import 'package:readeck_app/ui/bookmarks/view_models/bookmark_detail_viewmodel.dart';
 import 'package:readeck_app/ui/bookmarks/widget/bookmark_detail_screen.dart';
-import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
+import 'package:readeck_app/domain/use_cases/bookmark_use_cases.dart';
 
 import 'routes.dart';
 
@@ -171,9 +171,11 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
         GoRoute(
             path: '${Routes.bookmarkDetail}/:id',
             builder: (context, state) {
-              final extraData = state.extra as Map<String, dynamic>;
-              final bookmark = extraData['bookmark'] as Bookmark;
+              final bookmarkId = state.pathParameters['id']!;
+              final bookmarkUseCases = context.read<BookmarkUseCases>();
+              final bookmark = bookmarkUseCases.getBookmark(bookmarkId);
               final viewModel = BookmarkDetailViewModel(
+                context.read(),
                 context.read(),
                 context.read(),
                 bookmark,

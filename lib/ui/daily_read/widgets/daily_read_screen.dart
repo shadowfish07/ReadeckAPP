@@ -227,9 +227,6 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
                   onCardTap: (bookmark) {
                     context.push(
                       Routes.bookmarkDetailWithId(bookmark.id),
-                      extra: {
-                        'bookmark': bookmark,
-                      },
                     );
                   },
                   availableLabels: viewModel.availableLabels,

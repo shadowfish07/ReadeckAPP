@@ -4,10 +4,11 @@ import 'package:logger/logger.dart';
 import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_operation_use_cases.dart';
+import 'package:readeck_app/domain/use_cases/bookmark_use_cases.dart';
 
 class BookmarkDetailViewModel extends ChangeNotifier {
   BookmarkDetailViewModel(this._bookmarkRepository,
-      this._bookmarkOperationUseCases, this.bookmark) {
+      this._bookmarkOperationUseCases, this._bookmarkUseCases, this._bookmark) {
     loadArticleContent = Command.createAsync<void, String>(_loadArticleContent,
         initialValue: '', includeLastResultInCommandResults: true)
       ..execute();
@@ -29,9 +30,10 @@ class BookmarkDetailViewModel extends ChangeNotifier {
   }
 
   final _log = Logger();
+  final BookmarkUseCases _bookmarkUseCases;
   final BookmarkRepository _bookmarkRepository;
   final BookmarkOperationUseCases _bookmarkOperationUseCases;
-  final Bookmark bookmark;
+  Bookmark _bookmark;
 
   late Command<void, String> loadArticleContent;
   late Command<int, void> updateReadProgressCommand;
@@ -40,6 +42,7 @@ class BookmarkDetailViewModel extends ChangeNotifier {
   late Command<void, void> toggleMarkCommand;
   late Command<void, void> deleteBookmarkCommand;
 
+  Bookmark get bookmark => _bookmark;
   String get articleHtml => loadArticleContent.value;
   bool get isLoading => loadArticleContent.isExecuting.value;
   Exception? get error {
@@ -50,6 +53,11 @@ class BookmarkDetailViewModel extends ChangeNotifier {
       return Exception(commandError.toString());
     }
     return null;
+  }
+
+  void _reloadBookmark() {
+    _bookmark = _bookmarkUseCases.getBookmark(bookmark.id);
+    notifyListeners();
   }
 
   Future<String> _loadArticleContent(void _) async {
@@ -86,6 +94,8 @@ class BookmarkDetailViewModel extends ChangeNotifier {
       final result = await _bookmarkRepository.updateReadProgress(
           bookmark.id, readProgress);
 
+      _reloadBookmark();
+
       if (result.isSuccess()) {
         _log.d('Successfully updated read progress');
       } else {
@@ -114,6 +124,7 @@ class BookmarkDetailViewModel extends ChangeNotifier {
 
       final result =
           await _bookmarkOperationUseCases.toggleBookmarkArchived(bookmark);
+      _reloadBookmark();
 
       if (result.isSuccess()) {
         _log.d('Successfully archived bookmark');
@@ -134,6 +145,7 @@ class BookmarkDetailViewModel extends ChangeNotifier {
 
       final result =
           await _bookmarkOperationUseCases.toggleBookmarkMarked(bookmark);
+      _reloadBookmark();
 
       if (result.isSuccess()) {
         _log.d('Successfully toggled bookmark marked');
@@ -174,6 +186,7 @@ class BookmarkDetailViewModel extends ChangeNotifier {
 
       final result = await _bookmarkOperationUseCases.updateBookmarkLabels(
           bookmark, labels);
+      _reloadBookmark();
 
       if (result.isSuccess()) {
         _log.d('Successfully updated bookmark labels');
