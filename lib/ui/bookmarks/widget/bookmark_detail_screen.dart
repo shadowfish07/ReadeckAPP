@@ -25,6 +25,7 @@ class BookmarkDetailScreen extends StatefulWidget {
 class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
   final ScrollController _scrollController = ScrollController();
   bool _isAutoScrolling = false; // 标记是否正在自动滚动
+  bool _isAutoScrolled = false;
   final GlobalKey _archiveCardKey = GlobalKey(); // 用于获取存档卡片高度
 
   @override
@@ -392,7 +393,7 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
   }
 
   void _scrollToProgress() {
-    if (!_scrollController.hasClients) return;
+    if (!_scrollController.hasClients || _isAutoScrolled) return;
 
     final readProgress = widget.viewModel.bookmark.readProgress;
     if (readProgress <= 0) return;
@@ -427,6 +428,7 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
 
     // 立即重置标志
     _isAutoScrolling = false;
+    _isAutoScrolled = true;
   }
 
   void _archiveBookmark() async {

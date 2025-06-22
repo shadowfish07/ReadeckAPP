@@ -109,6 +109,8 @@ class BookmarkDetailViewModel extends ChangeNotifier {
 
       final result = await _bookmarkRepository.updateReadProgress(
           bookmark.id, readProgress);
+      _bookmarkUseCases.insertOrUpdateBookmark(
+          bookmark.copyWith(readProgress: readProgress));
 
       _reloadBookmark();
 
