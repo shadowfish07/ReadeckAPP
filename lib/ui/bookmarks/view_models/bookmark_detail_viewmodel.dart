@@ -20,6 +20,9 @@ class BookmarkDetailViewModel extends ChangeNotifier {
       });
 
     openUrl = Command.createAsyncNoResult<String>(_openUrl);
+
+    archiveBookmarkCommand =
+        Command.createAsyncNoParamNoResult(_archiveBookmark);
   }
 
   final _log = Logger();
@@ -31,6 +34,7 @@ class BookmarkDetailViewModel extends ChangeNotifier {
   late Command<void, String> loadArticleContent;
   late Command<int, void> updateReadProgressCommand;
   late Command<String, void> openUrl;
+  late Command<void, void> archiveBookmarkCommand;
 
   String get articleHtml => loadArticleContent.value;
   bool get isLoading => loadArticleContent.isExecuting.value;
@@ -99,5 +103,30 @@ class BookmarkDetailViewModel extends ChangeNotifier {
       _log.e('Failed to open URL: $error');
       throw error ?? Exception('Failed to open URL');
     }
+  }
+
+  Future<void> _archiveBookmark() async {
+    try {
+      _log.d('Archiving bookmark: ${bookmark.id}');
+
+      final result =
+          await _bookmarkOperationUseCases.toggleBookmarkArchived(bookmark);
+
+      if (result.isSuccess()) {
+        _log.d('Successfully archived bookmark');
+        onBookmarkUpdated?.call();
+      } else {
+        final error = result.exceptionOrNull();
+        _log.e('Failed to archive bookmark: $error');
+        throw error ?? Exception('Failed to archive bookmark');
+      }
+    } catch (e) {
+      _log.e('Exception while archiving bookmark: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> archiveBookmark() async {
+    await _archiveBookmark();
   }
 }

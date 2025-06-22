@@ -20,6 +20,7 @@ class BookmarkDetailScreen extends StatefulWidget {
 class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
   final ScrollController _scrollController = ScrollController();
   bool _isAutoScrolling = false; // 标记是否正在自动滚动
+  final GlobalKey _archiveCardKey = GlobalKey(); // 用于获取存档卡片高度
 
   @override
   void initState() {
@@ -193,6 +194,68 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
                   ),
                 ],
               ),
+
+              // 存档提示区域
+              if (!widget.viewModel.bookmark.isArchived)
+                Container(
+                  key: _archiveCardKey,
+                  margin: const EdgeInsets.only(top: 32),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color:
+                        Theme.of(context).colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .outline
+                          .withValues(alpha: 0.2),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            '读完了！',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '标记已读，专注下一篇精彩内容。',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
+                      ),
+                      const SizedBox(height: 16),
+                      // TODO 添加标记、喜爱、删除入口
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          FilledButton.icon(
+                            onPressed: () => _archiveBookmark(),
+                            icon: const Icon(Icons.archive, size: 18),
+                            label: const Text('完成阅读'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+              // 底部间距
+              const SizedBox(height: 32),
             ],
           ),
         ),
@@ -227,11 +290,26 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
     final maxScrollExtent = _scrollController.position.maxScrollExtent;
     final currentOffset = _scrollController.offset;
 
+    // 获取存档卡片高度（如果存在且未存档）
+    double archiveCardHeight = 0;
+    if (!widget.viewModel.bookmark.isArchived &&
+        _archiveCardKey.currentContext != null) {
+      final RenderBox? renderBox =
+          _archiveCardKey.currentContext!.findRenderObject() as RenderBox?;
+      if (renderBox != null) {
+        archiveCardHeight = renderBox.size.height;
+      }
+    }
+
+    // 计算有效的可滚动高度（排除存档卡片）
+    final effectiveMaxScrollExtent = maxScrollExtent - archiveCardHeight;
+
     // 计算阅读进度百分比（0-100）
     int readProgress = 0;
-    if (maxScrollExtent > 0) {
-      readProgress =
-          ((currentOffset / maxScrollExtent) * 100).round().clamp(0, 100);
+    if (effectiveMaxScrollExtent > 0) {
+      readProgress = ((currentOffset / effectiveMaxScrollExtent) * 100)
+          .round()
+          .clamp(0, 100);
     }
 
     // 使用Command更新阅读进度到服务器（带防抖功能）
@@ -247,8 +325,24 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
     // 获取可滚动的最大距离
     final maxScrollExtent = _scrollController.position.maxScrollExtent;
 
-    // 根据阅读进度计算滚动位置（0-100转换为0-maxScrollExtent）
-    final targetOffset = (readProgress / 100.0) * maxScrollExtent;
+    // 获取存档卡片高度（如果存在且未存档）
+    double archiveCardHeight = 0;
+    if (!widget.viewModel.bookmark.isArchived &&
+        _archiveCardKey.currentContext != null) {
+      final RenderBox? renderBox =
+          _archiveCardKey.currentContext!.findRenderObject() as RenderBox?;
+      if (renderBox != null) {
+        archiveCardHeight = renderBox.size.height;
+      }
+    }
+
+    // 计算有效的可滚动高度（排除存档卡片）
+    final effectiveMaxScrollExtent = maxScrollExtent - archiveCardHeight;
+
+    // 根据阅读进度计算滚动位置（0-100转换为0-effectiveMaxScrollExtent）
+    final targetOffset = readProgress == 100.0
+        ? maxScrollExtent
+        : (readProgress / 100.0) * effectiveMaxScrollExtent;
 
     // 设置自动滚动标志
     _isAutoScrolling = true;
@@ -258,6 +352,38 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
 
     // 立即重置标志
     _isAutoScrolling = false;
+  }
+
+  void _archiveBookmark() async {
+    try {
+      // 调用ViewModel中的存档方法
+      await widget.viewModel.archiveBookmark();
+
+      // 存档成功后可能需要刷新UI
+      setState(() {});
+
+      // 显示成功提示
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('已成功存档'),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      // 显示错误提示
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('存档失败: ${e.toString()}'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   void _showImagePreview(BuildContext context, String imageUrl) {
