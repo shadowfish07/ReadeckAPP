@@ -7,7 +7,6 @@ import 'package:provider/provider.dart';
 import 'package:readeck_app/ui/bookmarks/view_models/bookmark_detail_viewmodel.dart';
 import 'package:readeck_app/ui/core/ui/error_widget.dart';
 import 'package:readeck_app/ui/core/ui/loading.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class BookmarkDetailScreen extends StatefulWidget {
   const BookmarkDetailScreen({super.key, required this.viewModel});
@@ -47,12 +46,8 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.open_in_browser),
-            onPressed: () async {
-              // TODO 使用usecase的
-              final url = Uri.parse(widget.viewModel.bookmark.url);
-              if (await canLaunchUrl(url)) {
-                await launchUrl(url, mode: LaunchMode.externalApplication);
-              }
+            onPressed: () {
+              widget.viewModel.openUrl(widget.viewModel.bookmark.url);
             },
             tooltip: '在浏览器中打开',
           ),
@@ -161,14 +156,7 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
                   ),
                 },
                 onLinkTap: (url, attributes, element) async {
-                  if (url != null) {
-                    // TODO 替换
-                    final uri = Uri.parse(url);
-                    if (await canLaunchUrl(uri)) {
-                      await launchUrl(uri,
-                          mode: LaunchMode.externalApplication);
-                    }
-                  }
+                  widget.viewModel.openUrl(widget.viewModel.bookmark.url);
                 },
                 extensions: [
                   const AudioHtmlExtension(),
