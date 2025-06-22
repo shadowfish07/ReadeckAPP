@@ -56,6 +56,11 @@ class BookmarkUseCases {
     return ids.map((id) => getBookmark(id)).toList();
   }
 
+  void deleteBookmark(String id) {
+    _bookmarks.removeWhere((b) => b.id == id);
+    _notifyListeners();
+  }
+
   /// 释放资源，清空所有监听器
   void dispose() {
     _listeners.clear();

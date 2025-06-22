@@ -350,4 +350,33 @@ class ReadeckApiClient {
       return Failure(Exception('网络请求失败: $e'));
     }
   }
+
+  /// 删除书签
+  ///
+  /// 删除保存的书签
+  /// [bookmarkId]: 要删除的书签ID
+  /// 返回删除操作的结果
+  AsyncResult<void> deleteBookmark(String bookmarkId) async {
+    if (!_isConfigured) {
+      return Failure(ApiNotConfiguredException());
+    }
+
+    final uri =
+        Uri.parse('$_host/api/bookmarks/${Uri.encodeComponent(bookmarkId)}');
+
+    try {
+      final response = await http.delete(uri, headers: _headers);
+
+      if (response.statusCode == 204) {
+        _log.d('deleteBookmark success for bookmark: $bookmarkId');
+        return const Success(());
+      } else {
+        _log.w("删除书签失败。uri: $uri, 状态码: ${response.statusCode}");
+        return Failure(Exception('删除书签失败: ${response.statusCode}'));
+      }
+    } catch (e) {
+      _log.w("网络请求失败。uri: $uri, 错误: $e");
+      return Failure(Exception('网络请求失败: $e'));
+    }
+  }
 }

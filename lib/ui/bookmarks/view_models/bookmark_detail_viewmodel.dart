@@ -22,6 +22,10 @@ class BookmarkDetailViewModel extends ChangeNotifier {
 
     archiveBookmarkCommand =
         Command.createAsyncNoParamNoResult(_archiveBookmark);
+
+    toggleMarkCommand =
+        Command.createAsyncNoParamNoResult(_toggleBookmarkMarked);
+    deleteBookmarkCommand = Command.createAsyncNoParamNoResult(_deleteBookmark);
   }
 
   final _log = Logger();
@@ -33,6 +37,8 @@ class BookmarkDetailViewModel extends ChangeNotifier {
   late Command<int, void> updateReadProgressCommand;
   late Command<String, void> openUrl;
   late Command<void, void> archiveBookmarkCommand;
+  late Command<void, void> toggleMarkCommand;
+  late Command<void, void> deleteBookmarkCommand;
 
   String get articleHtml => loadArticleContent.value;
   bool get isLoading => loadArticleContent.isExecuting.value;
@@ -122,7 +128,63 @@ class BookmarkDetailViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> archiveBookmark() async {
-    await _archiveBookmark();
+  Future<void> _toggleBookmarkMarked() async {
+    try {
+      _log.d('Toggling bookmark marked: ${bookmark.id}');
+
+      final result =
+          await _bookmarkOperationUseCases.toggleBookmarkMarked(bookmark);
+
+      if (result.isSuccess()) {
+        _log.d('Successfully toggled bookmark marked');
+      } else {
+        final error = result.exceptionOrNull();
+        _log.e('Failed to toggle bookmark marked: $error');
+        throw error ?? Exception('Failed to toggle bookmark marked');
+      }
+    } catch (e) {
+      _log.e('Exception while toggling bookmark marked: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> _deleteBookmark() async {
+    try {
+      _log.d('Deleting bookmark: ${bookmark.id}');
+
+      final result =
+          await _bookmarkOperationUseCases.deleteBookmark(bookmark.id);
+
+      if (result.isSuccess()) {
+        _log.d('Successfully deleted bookmark');
+      } else {
+        final error = result.exceptionOrNull();
+        _log.e('Failed to delete bookmark: $error');
+        throw error ?? Exception('Failed to delete bookmark');
+      }
+    } catch (e) {
+      _log.e('Exception while deleting bookmark: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> updateBookmarkLabels(List<String> labels) async {
+    try {
+      _log.d('Updating bookmark labels: ${bookmark.id}');
+
+      final result = await _bookmarkOperationUseCases.updateBookmarkLabels(
+          bookmark, labels);
+
+      if (result.isSuccess()) {
+        _log.d('Successfully updated bookmark labels');
+      } else {
+        final error = result.exceptionOrNull();
+        _log.e('Failed to update bookmark labels: $error');
+        throw error ?? Exception('Failed to update bookmark labels');
+      }
+    } catch (e) {
+      _log.e('Exception while updating bookmark labels: $e');
+      rethrow;
+    }
   }
 }

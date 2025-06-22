@@ -4,8 +4,10 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_html_all/flutter_html_all.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:provider/provider.dart';
+
 import 'package:readeck_app/ui/bookmarks/view_models/bookmark_detail_viewmodel.dart';
 import 'package:readeck_app/ui/core/ui/error_widget.dart';
+import 'package:readeck_app/ui/core/ui/label_edit_dialog.dart';
 import 'package:readeck_app/ui/core/ui/loading.dart';
 
 class BookmarkDetailScreen extends StatefulWidget {
@@ -239,10 +241,68 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
                             ),
                       ),
                       const SizedBox(height: 16),
-                      // TODO 添加标记、喜爱、删除入口
+                      // 操作按钮区域
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
                         children: [
+                          // 标记喜爱按钮
+                          IconButton(
+                            onPressed: () => _toggleBookmarkMarked(),
+                            style: IconButton.styleFrom(
+                              minimumSize: const Size(40, 40),
+                              maximumSize: const Size(40, 40),
+                              padding: EdgeInsets.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            icon: Icon(
+                              widget.viewModel.bookmark.isMarked
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              size: 20,
+                              color: widget.viewModel.bookmark.isMarked
+                                  ? Theme.of(context).colorScheme.error
+                                  : Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                            ),
+                            tooltip: '标记喜爱',
+                          ),
+                          const SizedBox(width: 8),
+                          // 标签编辑按钮
+                          IconButton(
+                            onPressed: () => _showLabelEditDialog(),
+                            icon: Icon(
+                              Icons.local_offer_outlined,
+                              size: 20,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
+                            style: IconButton.styleFrom(
+                              minimumSize: const Size(40, 40),
+                              maximumSize: const Size(40, 40),
+                              padding: EdgeInsets.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            tooltip: '编辑标签',
+                          ),
+                          const SizedBox(width: 8),
+                          // 删除按钮
+                          IconButton(
+                            onPressed: () => _showDeleteConfirmDialog(),
+                            icon: Icon(
+                              Icons.delete_outline,
+                              size: 20,
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                            style: IconButton.styleFrom(
+                              minimumSize: const Size(40, 40),
+                              maximumSize: const Size(40, 40),
+                              padding: EdgeInsets.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            tooltip: '删除书签',
+                          ),
+                          const Spacer(),
                           FilledButton.icon(
                             onPressed: () => _archiveBookmark(),
                             icon: const Icon(Icons.archive, size: 18),
@@ -357,7 +417,7 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
   void _archiveBookmark() async {
     try {
       // 调用ViewModel中的存档方法
-      await widget.viewModel.archiveBookmark();
+      await widget.viewModel.archiveBookmarkCommand.executeWithFuture();
 
       // 存档成功后可能需要刷新UI
       setState(() {});
@@ -382,6 +442,94 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
             backgroundColor: Theme.of(context).colorScheme.error,
             behavior: SnackBarBehavior.floating,
           ),
+        );
+      }
+    }
+  }
+
+  void _toggleBookmarkMarked() async {
+    try {
+      await widget.viewModel.toggleMarkCommand.executeWithFuture();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('操作失败: $e')),
+        );
+      }
+    }
+  }
+
+  void _showLabelEditDialog() {
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return LabelEditDialog(
+          bookmark: widget.viewModel.bookmark,
+          availableLabels: const [],
+          onUpdateLabels: (bookmark, labels) async {
+            try {
+              await widget.viewModel.updateBookmarkLabels(labels);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('标签已更新')),
+                );
+              }
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('更新标签失败: $e')),
+                );
+              }
+            }
+          },
+        );
+      },
+    );
+  }
+
+  void _showDeleteConfirmDialog() {
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('确认删除'),
+          content: const Text('确定要删除这个书签吗？此操作无法撤销。'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('取消'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.error,
+              ),
+              child: const Text('删除'),
+              onPressed: () async {
+                Navigator.of(context).pop();
+                _deleteBookmark();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _deleteBookmark() async {
+    try {
+      await widget.viewModel.deleteBookmarkCommand.executeWithFuture();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('书签已删除')),
+        );
+        Navigator.of(context).pop(); // 删除成功后返回上一页
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('删除失败: $e')),
         );
       }
     }

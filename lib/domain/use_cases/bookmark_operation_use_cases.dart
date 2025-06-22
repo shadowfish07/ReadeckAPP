@@ -47,6 +47,14 @@ class BookmarkOperationUseCases {
     return result;
   }
 
+  AsyncResult<void> deleteBookmark(String bookmarkId) async {
+    final result = await _bookmarkRepository.deleteBookmark(bookmarkId);
+    if (result.isSuccess()) {
+      _bookmarkUseCases.deleteBookmark(bookmarkId);
+    }
+    return result;
+  }
+
   AsyncResult<void> openUrl(String url) async {
     try {
       final uri = Uri.parse(url);

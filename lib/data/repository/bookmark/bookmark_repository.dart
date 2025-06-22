@@ -115,4 +115,9 @@ class BookmarkRepository {
   AsyncResult<String> getBookmarkArticle(String bookmarkId) async {
     return _readeckApiClient.getBookmarkArticle(bookmarkId);
   }
+
+  /// 删除书签
+  AsyncResult<void> deleteBookmark(String bookmarkId) async {
+    return _readeckApiClient.deleteBookmark(bookmarkId);
+  }
 }
