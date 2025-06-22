@@ -175,6 +175,23 @@ class _UnarchivedScreenState extends State<UnarchivedScreen> {
           return BookmarkCard(
             bookmark: bookmarks[index],
             onOpenUrl: widget.viewModel.openUrl,
+            onToggleMark: (bookmark) =>
+                widget.viewModel.toggleBookmarkMarked(bookmark),
+            onUpdateLabels: (bookmark, labels) {
+              widget.viewModel
+                  .updateBookmarkLabels(bookmark, labels)
+                  .catchError((error) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('更新标签失败: $error'),
+                      duration: const Duration(seconds: 3),
+                    ),
+                  );
+                }
+              });
+            },
+            readingStats: widget.viewModel.getReadingStats(bookmarks[index].id),
             onCardTap: (bookmark) {
               context.push(
                 Routes.bookmarkDetailWithId(bookmark.id),
@@ -187,10 +204,17 @@ class _UnarchivedScreenState extends State<UnarchivedScreen> {
                 },
               );
             },
-            onToggleMark: (bookmark) =>
-                widget.viewModel.toggleBookmarkMarked(bookmark),
-            onToggleArchive: (bookmark) =>
-                widget.viewModel.toggleBookmarkArchived(bookmark),
+            availableLabels: widget.viewModel.availableLabels,
+            onLoadLabels: () => widget.viewModel.loadLabels.executeWithFuture(),
+            onToggleArchive: (bookmark) {
+              widget.viewModel.toggleBookmarkArchived(bookmark);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(bookmark.isArchived ? '已取消存档' : '已标记存档'),
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            },
           );
         },
       ),
