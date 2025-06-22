@@ -7,6 +7,7 @@ import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 import 'package:readeck_app/domain/models/bookmark/label_info.dart';
 import 'package:readeck_app/domain/models/daily_read_history/daily_read_history.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_operation_use_cases.dart';
+import 'package:readeck_app/domain/use_cases/bookmark_use_cases.dart';
 import 'package:readeck_app/utils/option_data.dart';
 import 'package:readeck_app/utils/reading_stats_calculator.dart';
 
@@ -15,6 +16,7 @@ class DailyReadViewModel extends ChangeNotifier {
     this._bookmarkRepository,
     this._dailyReadHistoryRepository,
     this._bookmarkOperationUseCases,
+    this._bookmarkUseCases,
   ) {
     load = Command.createAsync<bool, List<Bookmark>>(_load, initialValue: [])
       ..execute(false);
@@ -24,6 +26,9 @@ class DailyReadViewModel extends ChangeNotifier {
     toggleBookmarkMarked =
         Command.createAsyncNoResult<Bookmark>(_toggleBookmarkMarked);
     loadLabels = Command.createAsyncNoParam(_loadLabels, initialValue: []);
+
+    // 注册书签数据变化监听器
+    _bookmarkUseCases.addListener(_onBookmarksChanged);
   }
 
   VoidCallback? _onBookmarkArchivedCallback;
@@ -31,6 +36,7 @@ class DailyReadViewModel extends ChangeNotifier {
   final BookmarkRepository _bookmarkRepository;
   final DailyReadHistoryRepository _dailyReadHistoryRepository;
   final BookmarkOperationUseCases _bookmarkOperationUseCases;
+  final BookmarkUseCases _bookmarkUseCases;
   final _log = Logger();
 
   late Command load;
@@ -39,10 +45,11 @@ class DailyReadViewModel extends ChangeNotifier {
   late Command toggleBookmarkMarked;
   late Command<void, List<String>> loadLabels;
 
-  List<Bookmark> _bookmarks = [];
   final Map<String, bool> _optimisticArchived = {};
   final Map<String, bool> _optimisticMarked = {};
   final Map<String, ReadingStats> _readingStats = {};
+  final List<String> _bookmarkIds = [];
+  List<Bookmark> get _bookmarks => _bookmarkUseCases.getBookmarks(_bookmarkIds);
   bool _isNoMore = false;
   List<LabelInfo> _labels = [];
   bool get isNoMore => _isNoMore;
@@ -72,6 +79,12 @@ class DailyReadViewModel extends ChangeNotifier {
     }
   }
 
+  void _clearAndSetBookmarks(List<Bookmark> bookmarks) {
+    _bookmarkIds.clear();
+    _bookmarkIds.addAll(bookmarks.map((e) => e.id));
+    _bookmarkUseCases.insertOrUpdateBookmarks(bookmarks);
+  }
+
   Future<List<Bookmark>> _load(bool refresh) async {
     if (!refresh) {
       // 尝试读取今天已刷新过的记录
@@ -93,8 +106,8 @@ class DailyReadViewModel extends ChangeNotifier {
             final result =
                 await _bookmarkRepository.getBookmarksByIds(todayBookmarks);
             if (result.isSuccess()) {
-              _bookmarks.clear();
-              _bookmarks.addAll(result.getOrDefault([]));
+              _clearAndSetBookmarks(result.getOrDefault([]));
+
               // 加载阅读统计数据
               final stats = await _bookmarkOperationUseCases
                   .loadReadingStatsForBookmarks(_bookmarks);
@@ -118,7 +131,8 @@ class DailyReadViewModel extends ChangeNotifier {
         return unArchivedBookmarks;
       }
       final newBookmarks = result.getOrDefault([]);
-      _bookmarks.addAll(newBookmarks);
+      _clearAndSetBookmarks(newBookmarks);
+
       // 加载阅读统计数据
       final stats = await _bookmarkOperationUseCases
           .loadReadingStatsForBookmarks(newBookmarks);
@@ -163,7 +177,7 @@ class DailyReadViewModel extends ChangeNotifier {
       throw result.exceptionOrNull()!;
     }
 
-    _bookmarks = bookmarks;
+    _bookmarkUseCases.insertOrUpdateBookmarks(bookmarks);
   }
 
   Future<void> _toggleBookmarkMarked(Bookmark bookmark) async {
@@ -182,7 +196,7 @@ class DailyReadViewModel extends ChangeNotifier {
       throw result.exceptionOrNull()!;
     }
 
-    _bookmarks = bookmarks;
+    _bookmarkUseCases.insertOrUpdateBookmarks(bookmarks);
   }
 
 // 这里返回LabelInfo会更好
@@ -210,10 +224,19 @@ class DailyReadViewModel extends ChangeNotifier {
     }
 
     // 更新本地书签数据
-    final index = _bookmarks.indexWhere((b) => b.id == bookmark.id);
-    if (index != -1) {
-      _bookmarks[index] = _bookmarks[index].copyWith(labels: labels);
-      notifyListeners();
-    }
+    _bookmarkUseCases.insertOrUpdateBookmark(bookmark.copyWith(labels: labels));
+    notifyListeners();
+  }
+
+  /// 书签数据变化回调
+  void _onBookmarksChanged() {
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    // 移除书签数据变化监听器
+    _bookmarkUseCases.removeListener(_onBookmarksChanged);
+    super.dispose();
   }
 }

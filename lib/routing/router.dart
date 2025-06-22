@@ -74,7 +74,7 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
                     return ChangeNotifierProvider(
                       create: (context) {
                         Logger().d("create DailyReadViewModel");
-                        return DailyReadViewModel(
+                        return DailyReadViewModel(context.read(),
                             context.read(), context.read(), context.read());
                       },
                       child: Consumer<DailyReadViewModel>(
@@ -92,8 +92,8 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
                   path: Routes.unarchived,
                   builder: (context, state) {
                     return ChangeNotifierProvider(
-                      create: (context) =>
-                          UnarchivedViewmodel(context.read(), context.read()),
+                      create: (context) => UnarchivedViewmodel(
+                          context.read(), context.read(), context.read()),
                       child: Consumer<UnarchivedViewmodel>(
                         builder: (context, viewModel, child) {
                           return UnarchivedScreen(viewModel: viewModel);
