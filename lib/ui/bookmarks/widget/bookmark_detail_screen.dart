@@ -253,17 +253,11 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
     // 设置自动滚动标志
     _isAutoScrolling = true;
 
-    // 平滑滚动到目标位置
-    _scrollController
-        .animateTo(
-      targetOffset,
-      duration: const Duration(milliseconds: 800),
-      curve: Curves.easeInOut,
-    )
-        .then((_) {
-      // 滚动完成后重置标志
-      _isAutoScrolling = false;
-    });
+    // 直接跳转到目标位置
+    _scrollController.jumpTo(targetOffset);
+
+    // 立即重置标志
+    _isAutoScrolling = false;
   }
 
   void _showImagePreview(BuildContext context, String imageUrl) {
