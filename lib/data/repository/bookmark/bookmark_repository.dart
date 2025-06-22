@@ -88,4 +88,9 @@ class BookmarkRepository {
 
     return Failure(result.exceptionOrNull()!);
   }
+
+  /// 获取书签的文章内容
+  AsyncResult<String> getBookmarkArticle(String bookmarkId) async {
+    return _readeckApiClient.getBookmarkArticle(bookmarkId);
+  }
 }

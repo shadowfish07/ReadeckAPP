@@ -141,7 +141,6 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
                   extraData['onBookmarkUpdated'] as VoidCallback?;
               final viewModel = BookmarkDetailViewModel(
                 context.read(),
-                context.read(),
                 bookmark,
                 onBookmarkUpdated: onBookmarkUpdated,
               );

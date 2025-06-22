@@ -2,12 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_command/flutter_command.dart';
 import 'package:logger/logger.dart';
 import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
-import 'package:readeck_app/data/service/readeck_api_client.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 
 class BookmarkDetailViewModel extends ChangeNotifier {
-  BookmarkDetailViewModel(
-      this._readeckApiClient, this._bookmarkRepository, this.bookmark,
+  BookmarkDetailViewModel(this._bookmarkRepository, this.bookmark,
       {this.onBookmarkUpdated}) {
     loadArticleContent = Command.createAsync<void, String>(_loadArticleContent,
         initialValue: '', includeLastResultInCommandResults: true)
@@ -21,7 +19,6 @@ class BookmarkDetailViewModel extends ChangeNotifier {
   }
 
   final _log = Logger();
-  final ReadeckApiClient _readeckApiClient;
   final BookmarkRepository _bookmarkRepository;
   final Bookmark bookmark;
   final VoidCallback? onBookmarkUpdated;
@@ -45,7 +42,7 @@ class BookmarkDetailViewModel extends ChangeNotifier {
     try {
       _log.d('Loading article content for bookmark: ${bookmark.id}');
 
-      final result = await _readeckApiClient.getBookmarkArticle(bookmark.id);
+      final result = await _bookmarkRepository.getBookmarkArticle(bookmark.id);
 
       if (result.isSuccess()) {
         final htmlContent = result.getOrThrow();

@@ -8,10 +8,14 @@ import 'package:readeck_app/domain/models/bookmark/label_info.dart';
 import 'package:readeck_app/domain/models/daily_read_history/daily_read_history.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_operation_use_cases.dart';
 import 'package:readeck_app/utils/option_data.dart';
+import 'package:readeck_app/utils/reading_stats_calculator.dart';
 
 class DailyReadViewModel extends ChangeNotifier {
-  DailyReadViewModel(this._bookmarkRepository, this._dailyReadHistoryRepository,
-      this._bookmarkOperationUseCases) {
+  DailyReadViewModel(
+    this._bookmarkRepository,
+    this._dailyReadHistoryRepository,
+    this._bookmarkOperationUseCases,
+  ) {
     load = Command.createAsync<bool, List<Bookmark>>(_load, initialValue: [])
       ..execute(false);
     openUrl = Command.createAsyncNoResult<String>(_openUrl);
@@ -38,6 +42,7 @@ class DailyReadViewModel extends ChangeNotifier {
   List<Bookmark> _bookmarks = [];
   final Map<String, bool> _optimisticArchived = {};
   final Map<String, bool> _optimisticMarked = {};
+  final Map<String, ReadingStats> _readingStats = {};
   bool _isNoMore = false;
   List<LabelInfo> _labels = [];
   bool get isNoMore => _isNoMore;
@@ -54,6 +59,11 @@ class DailyReadViewModel extends ChangeNotifier {
 
   List<String> get availableLabels =>
       _labels.map((label) => label.name).toList();
+
+  /// 获取书签的阅读统计数据
+  ReadingStats? getReadingStats(String bookmarkId) {
+    return _readingStats[bookmarkId];
+  }
 
   Future<void> _openUrl(String url) async {
     final result = await _bookmarkOperationUseCases.openUrl(url);
@@ -85,6 +95,10 @@ class DailyReadViewModel extends ChangeNotifier {
             if (result.isSuccess()) {
               _bookmarks.clear();
               _bookmarks.addAll(result.getOrDefault([]));
+              // 加载阅读统计数据
+              final stats = await _bookmarkOperationUseCases
+                  .loadReadingStatsForBookmarks(_bookmarks);
+              _readingStats.addAll(stats);
               return unArchivedBookmarks;
             }
 
@@ -103,7 +117,12 @@ class DailyReadViewModel extends ChangeNotifier {
         _isNoMore = true;
         return unArchivedBookmarks;
       }
-      _bookmarks.addAll(result.getOrDefault([]));
+      final newBookmarks = result.getOrDefault([]);
+      _bookmarks.addAll(newBookmarks);
+      // 加载阅读统计数据
+      final stats = await _bookmarkOperationUseCases
+          .loadReadingStatsForBookmarks(newBookmarks);
+      _readingStats.addAll(stats);
       //异步存到数据库
       _saveTodayBookmarks();
       return unArchivedBookmarks;

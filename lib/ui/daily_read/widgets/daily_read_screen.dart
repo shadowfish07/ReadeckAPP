@@ -12,7 +12,6 @@ import 'package:readeck_app/ui/core/ui/celebration_overlay.dart';
 import 'package:readeck_app/ui/core/ui/error_widget.dart';
 import 'package:readeck_app/ui/core/ui/loading.dart';
 import 'package:readeck_app/ui/daily_read/view_models/daily_read_viewmodel.dart';
-import 'package:readeck_app/utils/reading_stats_calculator.dart';
 
 class DailyReadScreen extends StatefulWidget {
   const DailyReadScreen({super.key, required this.viewModel});
@@ -204,13 +203,10 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
               padding: const EdgeInsets.all(16),
               itemCount: viewModel.unArchivedBookmarks.length,
               itemBuilder: (context, index) {
+                final bookmark = viewModel.unArchivedBookmarks[index];
                 return BookmarkCard(
-                  bookmark: viewModel.unArchivedBookmarks[index],
+                  bookmark: bookmark,
                   onOpenUrl: viewModel.openUrl,
-                  readingStats: const ReadingStats(
-                    readableCharCount: 1500,
-                    estimatedReadingTimeMinutes: 3.5,
-                  ),
                   onToggleMark: (bookmark) =>
                       viewModel.toggleBookmarkMarked(bookmark),
                   onUpdateLabels: (bookmark, labels) {
@@ -227,6 +223,7 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
                       }
                     });
                   },
+                  readingStats: viewModel.getReadingStats(bookmark.id),
                   onCardTap: (bookmark) {
                     context.push(
                       Routes.bookmarkDetailWithId(bookmark.id),
