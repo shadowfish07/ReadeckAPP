@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:confetti/confetti.dart';
-import 'package:flutter/material.dart' hide ErrorWidget;
+import 'package:flutter/material.dart';
 import 'package:flutter_command/flutter_command.dart';
 import 'package:go_router/go_router.dart';
 import 'package:logger/logger.dart';
@@ -9,9 +9,10 @@ import 'package:provider/provider.dart';
 import 'package:readeck_app/routing/routes.dart';
 import 'package:readeck_app/ui/core/ui/bookmark_card.dart';
 import 'package:readeck_app/ui/core/ui/celebration_overlay.dart';
-import 'package:readeck_app/ui/core/ui/error_widget.dart';
+import 'package:readeck_app/ui/core/ui/error_page.dart';
 import 'package:readeck_app/ui/core/ui/loading.dart';
 import 'package:readeck_app/ui/daily_read/view_models/daily_read_viewmodel.dart';
+import 'package:readeck_app/utils/network_error_exception.dart';
 
 class DailyReadScreen extends StatefulWidget {
   const DailyReadScreen({super.key, required this.viewModel});
@@ -110,11 +111,17 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
           command: viewModel.load,
           whileExecuting: (context, lastValue, param) =>
               const Loading(text: '正在加载今日推荐'),
-          onError: (context, error, lastValue, param) => ErrorWidget(
-            message: '每日推荐加载失败',
-            error: error.toString(),
-            onRetry: () => viewModel.load.execute(false),
-          ),
+          onError: (context, error, lastValue, param) {
+            switch (error) {
+              case NetworkErrorException _:
+                return ErrorPage.networkError(
+                  error: error,
+                  onBack: () => viewModel.load.execute(false),
+                );
+              default:
+                return ErrorPage.unknownError(error: Exception(error));
+            }
+          },
           onData: (context, data, param) {
             if (viewModel.isNoMore) {
               return Center(

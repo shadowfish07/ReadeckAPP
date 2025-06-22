@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart' hide ErrorWidget;
+import 'package:flutter/material.dart';
 import 'package:flutter_command/flutter_command.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_html_all/flutter_html_all.dart';
@@ -8,9 +8,9 @@ import 'package:provider/provider.dart';
 import 'package:readeck_app/ui/bookmarks/view_models/bookmark_detail_viewmodel.dart';
 import 'package:readeck_app/ui/core/ui/bookmark_labels_widget.dart';
 import 'package:readeck_app/ui/core/ui/error_page.dart';
-import 'package:readeck_app/ui/core/ui/error_widget.dart';
 import 'package:readeck_app/ui/core/ui/label_edit_dialog.dart';
 import 'package:readeck_app/ui/core/ui/loading.dart';
+import 'package:readeck_app/utils/network_error_exception.dart';
 import 'package:readeck_app/utils/resource_not_found_exception.dart';
 
 class BookmarkDetailScreen extends StatefulWidget {
@@ -77,17 +77,17 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
               return _buildContent(context, data);
             },
             onError: (context, error, _, __) {
-              if (error is ResourceNotFoundException) {
-                return ErrorPage.bookmarkNotFound();
+              switch (error) {
+                case ResourceNotFoundException _:
+                  return ErrorPage.bookmarkNotFound();
+                case NetworkErrorException _:
+                  return ErrorPage.networkError(
+                    error: error,
+                    onBack: () => viewModel.retry(),
+                  );
+                default:
+                  return ErrorPage.unknownError(error: Exception(error));
               }
-
-              return Center(
-                child: ErrorWidget(
-                  message: '加载失败',
-                  error: error.toString(),
-                  onRetry: () => viewModel.retry(),
-                ),
-              );
             },
           );
         },

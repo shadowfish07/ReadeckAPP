@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:logger/logger.dart';
 
 /// 通用错误页面组件
 /// 用于显示资源不存在、已删除等错误状态
 class ErrorPage extends StatelessWidget {
-  /// 页面标题
-  final String title;
-
   /// 错误图标
   final IconData icon;
 
@@ -24,7 +22,6 @@ class ErrorPage extends StatelessWidget {
 
   const ErrorPage({
     super.key,
-    required this.title,
     required this.icon,
     required this.message,
     this.description,
@@ -39,7 +36,6 @@ class ErrorPage extends StatelessWidget {
   }) {
     return ErrorPage(
       key: key,
-      title: '书签详情',
       icon: Icons.bookmark_remove_outlined,
       message: '书签不存在',
       description: '该书签可能已被删除或不存在',
@@ -57,11 +53,49 @@ class ErrorPage extends StatelessWidget {
   }) {
     return ErrorPage(
       key: key,
-      title: title,
       icon: Icons.error_outline,
       message: '$resourceName不存在',
       description: '该$resourceName可能已被删除或不存在',
       buttonText: '返回',
+      onBack: onBack,
+    );
+  }
+
+  factory ErrorPage.networkError({
+    Key? key,
+    String message = '网络开小差啦',
+    String description = '请检查你的API凭据是否正确，确保Readeck服务正常运行',
+    required VoidCallback onBack,
+    required Exception? error,
+  }) {
+    Logger().w("网络错误: $error");
+
+    return ErrorPage(
+      key: key,
+      icon: Icons.error_outline,
+      message: message,
+      description: description,
+      buttonText: '重试',
+      onBack: onBack,
+    );
+  }
+
+  factory ErrorPage.unknownError({
+    Key? key,
+    String message = '未知错误',
+    String description = '程序似乎出了问题，请联系开发者获取帮助 readeck@zqydev.me',
+    String? buttonText,
+    VoidCallback? onBack,
+    required Exception? error,
+  }) {
+    Logger().w("未知错误: $error");
+
+    return ErrorPage(
+      key: key,
+      icon: Icons.error_outline,
+      message: message,
+      description: description,
+      buttonText: buttonText,
       onBack: onBack,
     );
   }
@@ -93,10 +127,12 @@ class ErrorPage extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 24),
-          FilledButton(
-            onPressed: onBack ?? () => context.pop(),
-            child: Text(buttonText ?? '返回'),
-          ),
+          if (buttonText != null) ...[
+            FilledButton(
+              onPressed: onBack ?? () => context.pop(),
+              child: Text(buttonText!),
+            ),
+          ]
         ],
       ),
     );

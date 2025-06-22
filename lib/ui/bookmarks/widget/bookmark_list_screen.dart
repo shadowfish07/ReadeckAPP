@@ -1,13 +1,14 @@
-import 'package:flutter/material.dart' hide ErrorWidget;
+import 'package:flutter/material.dart';
 import 'package:flutter_command/flutter_command.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 import 'package:readeck_app/routing/routes.dart';
 import 'package:readeck_app/ui/core/ui/bookmark_card.dart';
-import 'package:readeck_app/ui/core/ui/error_widget.dart';
+import 'package:readeck_app/ui/core/ui/error_page.dart';
 import 'package:readeck_app/ui/core/ui/loading.dart';
 import 'package:readeck_app/ui/bookmarks/view_models/bookmarks_viewmodel.dart';
+import 'package:readeck_app/utils/network_error_exception.dart';
 
 /// 书签列表页面的文案配置
 class BookmarkListTexts {
@@ -88,11 +89,17 @@ class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
             }
             return _buildList(lastValue);
           },
-          onError: (context, error, lastValue, param) => ErrorWidget(
-            message: widget.texts.errorMessage,
-            error: error.toString(),
-            onRetry: () => widget.viewModel.load.execute(1),
-          ),
+          onError: (context, error, lastValue, param) {
+            switch (error) {
+              case NetworkErrorException _:
+                return ErrorPage.networkError(
+                  error: error,
+                  onBack: () => widget.viewModel.load.execute(1),
+                );
+              default:
+                return ErrorPage.unknownError(error: Exception(error));
+            }
+          },
           onData: (context, data, param) {
             final bookmarks = widget.viewModel.bookmarks;
 

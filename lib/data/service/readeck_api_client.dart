@@ -5,6 +5,7 @@ import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 import 'package:readeck_app/domain/models/bookmark/label_info.dart';
 import 'package:http/http.dart' as http;
 import 'package:readeck_app/utils/api_not_configured_exception.dart';
+import 'package:readeck_app/utils/network_error_exception.dart';
 import 'package:readeck_app/utils/resource_not_found_exception.dart';
 import 'package:result_dart/result_dart.dart';
 
@@ -132,7 +133,7 @@ class ReadeckApiClient {
         // 检查响应体是否为空或无效
         if (response.body.isEmpty) {
           _log.w("服务器返回空响应。uri: $uri");
-          return Failure(Exception("服务器返回空响应"));
+          return Failure(NetworkErrorException("服务器返回空响应", uri));
         }
 
         dynamic data;
@@ -141,7 +142,8 @@ class ReadeckApiClient {
           _log.d('getBookmarks response.body: $data');
         } catch (formatException) {
           _log.w("JSON解析失败。uri: $uri, 响应体: ${response.body}");
-          return Failure(Exception("JSON解析失败：$formatException"));
+          return Failure(
+              NetworkErrorException("JSON解析失败：$formatException", uri));
         }
 
         // 检查返回的数据结构
@@ -151,7 +153,7 @@ class ReadeckApiClient {
           bookmarksJson = data;
         } else {
           _log.w("无效的响应格式。uri: $uri, 响应体: ${response.body}");
-          return Failure(Exception("无效的响应格式"));
+          return Failure(NetworkErrorException("无效的响应格式", uri));
         }
 
         final result =
@@ -159,11 +161,12 @@ class ReadeckApiClient {
         return Success(result);
       } else {
         _log.w("获取书签失败。uri: $uri, 状态码: ${response.statusCode}");
-        return Failure(Exception('获取书签失败: ${response.statusCode}'));
+        return Failure(
+            NetworkErrorException('获取书签失败', uri, response.statusCode));
       }
     } catch (e) {
       _log.w("网络请求失败。uri: $uri, 错误: $e");
-      return Failure(Exception('网络请求失败: $e'));
+      return Failure(NetworkErrorException('网络请求失败', uri));
     }
   }
 
@@ -233,7 +236,7 @@ class ReadeckApiClient {
         // 检查响应体是否为空或无效
         if (response.body.isEmpty) {
           _log.w("服务器返回空响应。uri: $uri");
-          return Failure(Exception("服务器返回空响应"));
+          return Failure(NetworkErrorException("服务器返回空响应", uri));
         }
 
         dynamic data;
@@ -241,7 +244,8 @@ class ReadeckApiClient {
           data = json.decode(response.body);
         } catch (formatException) {
           _log.w("JSON解析失败。uri: $uri, 响应体: ${response.body}");
-          return Failure(Exception("JSON解析失败：$formatException"));
+          return Failure(
+              NetworkErrorException("JSON解析失败：$formatException", uri));
         }
 
         // 返回更新结果
@@ -249,15 +253,16 @@ class ReadeckApiClient {
           return Success(data);
         } else {
           _log.w("无效的响应格式。uri: $uri, 响应体: ${response.body}");
-          return Failure(Exception("无效的响应格式"));
+          return Failure(NetworkErrorException("无效的响应格式", uri));
         }
       } else {
         _log.w("更新书签失败。uri: $uri, 状态码: ${response.statusCode}");
-        return Failure(Exception('更新书签失败: ${response.statusCode}'));
+        return Failure(
+            NetworkErrorException('更新书签失败', uri, response.statusCode));
       }
     } catch (e) {
       _log.w("网络请求失败。uri: $uri, 错误: $e");
-      return Failure(Exception('网络请求失败: $e'));
+      return Failure(NetworkErrorException('网络请求失败', uri));
     }
   }
 
@@ -278,7 +283,7 @@ class ReadeckApiClient {
         // 检查响应体是否为空或无效
         if (response.body.isEmpty) {
           _log.w("服务器返回空响应。uri: $uri");
-          return Failure(Exception("服务器返回空响应"));
+          return Failure(NetworkErrorException("服务器返回空响应", uri));
         }
 
         dynamic data;
@@ -287,7 +292,8 @@ class ReadeckApiClient {
           _log.d('getLabels response.body: $data');
         } catch (formatException) {
           _log.w("JSON解析失败。uri: $uri, 响应体: ${response.body}");
-          return Failure(Exception("JSON解析失败：$formatException"));
+          return Failure(
+              NetworkErrorException("JSON解析失败：$formatException", uri));
         }
 
         // 检查返回的数据结构
@@ -297,7 +303,7 @@ class ReadeckApiClient {
           labelsJson = data;
         } else {
           _log.w("无效的响应格式。uri: $uri, 响应体: ${response.body}");
-          return Failure(Exception("无效的响应格式"));
+          return Failure(NetworkErrorException("无效的响应格式", uri));
         }
 
         final result =
@@ -305,11 +311,12 @@ class ReadeckApiClient {
         return Success(result);
       } else {
         _log.w("获取标签列表失败。uri: $uri, 状态码: ${response.statusCode}");
-        return Failure(Exception('获取标签列表失败: ${response.statusCode}'));
+        return Failure(
+            NetworkErrorException('获取标签列表失败', uri, response.statusCode));
       }
     } catch (e) {
       _log.w("网络请求失败。uri: $uri, 错误: $e");
-      return Failure(Exception('网络请求失败: $e'));
+      return Failure(NetworkErrorException('网络请求失败', uri));
     }
   }
 
@@ -336,7 +343,7 @@ class ReadeckApiClient {
         // 检查响应体是否为空
         if (response.body.isEmpty) {
           _log.w("服务器返回空响应。uri: $uri");
-          return Failure(Exception("服务器返回空响应"));
+          return Failure(NetworkErrorException("服务器返回空响应", uri));
         }
 
         _log.d(
@@ -344,14 +351,19 @@ class ReadeckApiClient {
         return Success(response.body);
       } else if (response.statusCode == 404) {
         _log.w("书签不存在。uri: $uri, 状态码: ${response.statusCode}");
-        return const Failure(ResourceNotFoundException("书签不存在"));
+        return Failure(
+            ResourceNotFoundException("书签不存在", uri, response.statusCode));
       } else {
         _log.w("获取书签文章失败。uri: $uri, 状态码: ${response.statusCode}");
-        return Failure(Exception('获取书签文章失败: ${response.statusCode}'));
+        return Failure(
+            NetworkErrorException('获取书签文章失败', uri, response.statusCode));
       }
     } catch (e) {
       _log.w("网络请求失败。uri: $uri, 错误: $e");
-      return Failure(Exception('网络请求失败: $e'));
+      return Failure(NetworkErrorException(
+        '获取书签文章失败',
+        uri,
+      ));
     }
   }
 
@@ -376,11 +388,12 @@ class ReadeckApiClient {
         return const Success(());
       } else {
         _log.w("删除书签失败。uri: $uri, 状态码: ${response.statusCode}");
-        return Failure(Exception('删除书签失败: ${response.statusCode}'));
+        return Failure(
+            NetworkErrorException('删除书签失败', uri, response.statusCode));
       }
     } catch (e) {
       _log.w("网络请求失败。uri: $uri, 错误: $e");
-      return Failure(Exception('网络请求失败: $e'));
+      return Failure(NetworkErrorException('网络请求失败', uri));
     }
   }
 }

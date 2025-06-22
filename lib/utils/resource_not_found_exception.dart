@@ -1,11 +1,5 @@
-class ResourceNotFoundException implements Exception {
-  final String message;
+import 'package:readeck_app/utils/network_error_exception.dart';
 
-  const ResourceNotFoundException(this.message);
-
-  @override
-  String toString() {
-    Object? message = this.message;
-    return "Exception: $message";
-  }
+class ResourceNotFoundException extends NetworkErrorException {
+  const ResourceNotFoundException(super.message, super.uri, super.statusCode);
 }
