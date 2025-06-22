@@ -1,6 +1,7 @@
 import 'package:logger/logger.dart';
 import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
+import 'package:readeck_app/utils/reading_stats_calculator.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -8,6 +9,8 @@ class BookmarkOperationUseCases {
   BookmarkOperationUseCases(this._bookmarkRepository);
 
   final BookmarkRepository _bookmarkRepository;
+  final ReadingStatsCalculator _readingStatsCalculator =
+      const ReadingStatsCalculator();
 
   final _log = Logger();
 
@@ -71,5 +74,13 @@ class BookmarkOperationUseCases {
       _log.w("打开链接时发生错误：$url");
       return Failure(Exception("打开链接时发生错误"));
     }
+  }
+
+  /// 计算HTML内容的可阅读字符数量和预计阅读时间
+  ///
+  /// [htmlContent] HTML内容字符串
+  /// 返回包含可阅读字符数量和预计阅读时间的结果
+  Result<ReadingStats> calculateReadingStats(String htmlContent) {
+    return _readingStatsCalculator.calculateReadingStats(htmlContent);
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_command/flutter_command.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
+import 'package:readeck_app/utils/reading_stats_calculator.dart';
 
 class BookmarkCard extends StatefulWidget {
   final Bookmark bookmark;
@@ -12,6 +13,7 @@ class BookmarkCard extends StatefulWidget {
   final Function(Bookmark bookmark, List<String> labels)? onUpdateLabels;
   final List<String>? availableLabels;
   final Future<List<String>> Function()? onLoadLabels;
+  final ReadingStats? readingStats;
 
   const BookmarkCard({
     super.key,
@@ -23,6 +25,7 @@ class BookmarkCard extends StatefulWidget {
     this.onUpdateLabels,
     this.availableLabels,
     this.onLoadLabels,
+    this.readingStats,
   });
 
   @override
@@ -173,7 +176,50 @@ class _BookmarkCardState extends State<BookmarkCard> {
               // 底部操作栏
               const SizedBox(height: 12),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  // 阅读统计信息
+                  if (widget.readingStats != null) ...[
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.schedule_outlined,
+                          size: 14,
+                          color: Theme.of(rootContext).colorScheme.outline,
+                        ),
+                        const SizedBox(width: 2),
+                        Text(
+                          '${widget.readingStats!.estimatedReadingTimeMinutes.round()}分钟',
+                          style: Theme.of(rootContext)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(
+                                color:
+                                    Theme.of(rootContext).colorScheme.outline,
+                              ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.text_fields_outlined,
+                          size: 14,
+                          color: Theme.of(rootContext).colorScheme.outline,
+                        ),
+                        const SizedBox(width: 2),
+                        Text(
+                          '${widget.readingStats!.readableCharCount}字',
+                          style: Theme.of(rootContext)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(
+                                color:
+                                    Theme.of(rootContext).colorScheme.outline,
+                              ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(width: 12),
+                  ],
                   // 阅读进度指示器
                   if (widget.bookmark.readProgress > 0) ...[
                     Row(
@@ -200,8 +246,7 @@ class _BookmarkCardState extends State<BookmarkCard> {
                               .bodySmall
                               ?.copyWith(
                                 color:
-                                    Theme.of(rootContext).colorScheme.onSurface,
-                                fontWeight: FontWeight.w500,
+                                    Theme.of(rootContext).colorScheme.outline,
                               ),
                         ),
                       ],
@@ -213,6 +258,12 @@ class _BookmarkCardState extends State<BookmarkCard> {
                     onPressed: widget.onToggleMark != null
                         ? () => widget.onToggleMark!(widget.bookmark)
                         : null,
+                    style: IconButton.styleFrom(
+                      minimumSize: const Size(32, 32),
+                      maximumSize: const Size(32, 32),
+                      padding: EdgeInsets.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
                     icon: Icon(
                       widget.bookmark.isMarked
                           ? Icons.favorite
@@ -240,6 +291,12 @@ class _BookmarkCardState extends State<BookmarkCard> {
                       size: 20,
                       color: Theme.of(rootContext).colorScheme.onSurfaceVariant,
                     ),
+                    style: IconButton.styleFrom(
+                      minimumSize: const Size(32, 32),
+                      maximumSize: const Size(32, 32),
+                      padding: EdgeInsets.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
                     tooltip: '编辑标签',
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(
@@ -255,6 +312,12 @@ class _BookmarkCardState extends State<BookmarkCard> {
                             widget.onToggleArchive!(widget.bookmark);
                           }
                         : null,
+                    style: IconButton.styleFrom(
+                      minimumSize: const Size(32, 32),
+                      maximumSize: const Size(32, 32),
+                      padding: EdgeInsets.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
                     icon: Icon(
                       widget.bookmark.isArchived
                           ? Icons.unarchive_outlined
