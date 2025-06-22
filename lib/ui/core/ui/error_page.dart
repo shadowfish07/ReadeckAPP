@@ -83,12 +83,12 @@ class ErrorPage extends StatelessWidget {
   factory ErrorPage.unknownError({
     Key? key,
     String message = '未知错误',
-    String description = '程序似乎出了问题，请联系开发者获取帮助 readeck@zqydev.me',
+    String description = '程序似乎出了问题，请联系开发者获取帮助: readeck@zqydev.me',
     String? buttonText,
     VoidCallback? onBack,
     required Exception? error,
   }) {
-    Logger().w("未知错误: $error");
+    Logger().e("未知错误: $error");
 
     return ErrorPage(
       key: key,
