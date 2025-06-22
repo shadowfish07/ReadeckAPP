@@ -311,4 +311,43 @@ class ReadeckApiClient {
       return Failure(Exception('网络请求失败: $e'));
     }
   }
+
+  /// 获取书签文章内容
+  ///
+  /// 返回书签的文章正文（如果存在）
+  /// [bookmarkId]: 书签ID
+  /// 返回包含文章正文的 HTML 内容
+  AsyncResult<String> getBookmarkArticle(String bookmarkId) async {
+    if (!_isConfigured) {
+      return Failure(ApiNotConfiguredException());
+    }
+
+    final uri = Uri.parse(
+        '$_host/api/bookmarks/${Uri.encodeComponent(bookmarkId)}/article');
+
+    try {
+      final response = await http.get(uri, headers: {
+        'Authorization': 'Bearer $_token',
+        'Accept': 'text/html',
+      });
+
+      if (response.statusCode == 200) {
+        // 检查响应体是否为空
+        if (response.body.isEmpty) {
+          _log.w("服务器返回空响应。uri: $uri");
+          return Failure(Exception("服务器返回空响应"));
+        }
+
+        _log.d(
+            'getBookmarkArticle response received for bookmark: $bookmarkId');
+        return Success(response.body);
+      } else {
+        _log.w("获取书签文章失败。uri: $uri, 状态码: ${response.statusCode}");
+        return Failure(Exception('获取书签文章失败: ${response.statusCode}'));
+      }
+    } catch (e) {
+      _log.w("网络请求失败。uri: $uri, 错误: $e");
+      return Failure(Exception('网络请求失败: $e'));
+    }
+  }
 }
