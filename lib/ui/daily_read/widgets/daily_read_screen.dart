@@ -229,9 +229,6 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
                       Routes.bookmarkDetailWithId(bookmark.id),
                       extra: {
                         'bookmark': bookmark,
-                        'onBookmarkUpdated': () {
-                          viewModel.load.execute(false);
-                        },
                       },
                     );
                   },

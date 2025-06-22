@@ -6,9 +6,8 @@ import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_operation_use_cases.dart';
 
 class BookmarkDetailViewModel extends ChangeNotifier {
-  BookmarkDetailViewModel(
-      this._bookmarkRepository, this._bookmarkOperationUseCases, this.bookmark,
-      {this.onBookmarkUpdated}) {
+  BookmarkDetailViewModel(this._bookmarkRepository,
+      this._bookmarkOperationUseCases, this.bookmark) {
     loadArticleContent = Command.createAsync<void, String>(_loadArticleContent,
         initialValue: '', includeLastResultInCommandResults: true)
       ..execute();
@@ -29,7 +28,6 @@ class BookmarkDetailViewModel extends ChangeNotifier {
   final BookmarkRepository _bookmarkRepository;
   final BookmarkOperationUseCases _bookmarkOperationUseCases;
   final Bookmark bookmark;
-  final VoidCallback? onBookmarkUpdated;
 
   late Command<void, String> loadArticleContent;
   late Command<int, void> updateReadProgressCommand;
@@ -84,7 +82,6 @@ class BookmarkDetailViewModel extends ChangeNotifier {
 
       if (result.isSuccess()) {
         _log.d('Successfully updated read progress');
-        onBookmarkUpdated?.call();
       } else {
         final error = result.exceptionOrNull();
         _log.e('Failed to update read progress: $error');
@@ -114,7 +111,6 @@ class BookmarkDetailViewModel extends ChangeNotifier {
 
       if (result.isSuccess()) {
         _log.d('Successfully archived bookmark');
-        onBookmarkUpdated?.call();
       } else {
         final error = result.exceptionOrNull();
         _log.e('Failed to archive bookmark: $error');

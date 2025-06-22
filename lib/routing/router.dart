@@ -173,13 +173,10 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
             builder: (context, state) {
               final extraData = state.extra as Map<String, dynamic>;
               final bookmark = extraData['bookmark'] as Bookmark;
-              final onBookmarkUpdated =
-                  extraData['onBookmarkUpdated'] as VoidCallback?;
               final viewModel = BookmarkDetailViewModel(
                 context.read(),
                 context.read(),
                 bookmark,
-                onBookmarkUpdated: onBookmarkUpdated,
               );
               return ChangeNotifierProvider.value(
                 value: viewModel,

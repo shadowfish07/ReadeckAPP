@@ -231,10 +231,6 @@ class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
                 Routes.bookmarkDetailWithId(bookmark.id),
                 extra: {
                   'bookmark': bookmark,
-                  'onBookmarkUpdated': () {
-                    // 隐式刷新，不显示loading
-                    widget.viewModel.load.execute(1);
-                  },
                 },
               );
             },

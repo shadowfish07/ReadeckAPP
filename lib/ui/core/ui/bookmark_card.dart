@@ -341,8 +341,8 @@ class _BookmarkCardState extends State<BookmarkCard> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(widget.bookmark.isArchived
-                                      ? '已取消存档'
-                                      : '已标记存档'),
+                                      ? '已取消归档'
+                                      : '已标记归档'),
                                   duration: const Duration(seconds: 2),
                                 ),
                               );
@@ -368,7 +368,7 @@ class _BookmarkCardState extends State<BookmarkCard> {
                                 .colorScheme
                                 .onSurfaceVariant,
                       ),
-                      tooltip: widget.bookmark.isArchived ? '取消存档' : '存档',
+                      tooltip: widget.bookmark.isArchived ? '取消归档' : '归档',
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(
                         minWidth: 32,

@@ -29,10 +29,10 @@ List<SingleChildWidget> providers(String host, String token) {
     Provider(create: (context) => DatabaseService()),
     Provider(create: (context) => BookmarkRepository(context.read())),
     Provider(create: (context) => DailyReadHistoryRepository(context.read())),
-    Provider(
-        create: (context) =>
-            BookmarkOperationUseCases(context.read(), context.read())),
     Provider(create: (context) => BookmarkUseCases()),
+    Provider(
+        create: (context) => BookmarkOperationUseCases(
+            context.read(), context.read(), context.read())),
     Provider(
         create: (context) => SettingsRepository(context.read(), context.read()))
   ];

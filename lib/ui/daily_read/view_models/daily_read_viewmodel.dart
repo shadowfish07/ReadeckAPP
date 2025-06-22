@@ -176,8 +176,6 @@ class DailyReadViewModel extends ChangeNotifier {
       notifyListeners();
       throw result.exceptionOrNull()!;
     }
-
-    _bookmarkUseCases.insertOrUpdateBookmarks(bookmarks);
   }
 
   Future<void> _toggleBookmarkMarked(Bookmark bookmark) async {
@@ -195,10 +193,9 @@ class DailyReadViewModel extends ChangeNotifier {
       notifyListeners();
       throw result.exceptionOrNull()!;
     }
-
-    _bookmarkUseCases.insertOrUpdateBookmarks(bookmarks);
   }
 
+// TODO label似乎也可以中心化存储
 // 这里返回LabelInfo会更好
   Future<List<String>> _loadLabels() async {
     final result = await _bookmarkRepository.getLabels();
@@ -222,10 +219,6 @@ class DailyReadViewModel extends ChangeNotifier {
           error: result.exceptionOrNull()!);
       throw result.exceptionOrNull()!;
     }
-
-    // 更新本地书签数据
-    _bookmarkUseCases.insertOrUpdateBookmark(bookmark.copyWith(labels: labels));
-    notifyListeners();
   }
 
   /// 书签数据变化回调

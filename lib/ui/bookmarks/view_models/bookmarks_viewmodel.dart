@@ -198,8 +198,6 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
       notifyListeners();
       throw result.exceptionOrNull()!;
     }
-
-    _bookmarkUseCases.insertOrUpdateBookmarks(bookmarks);
   }
 
   Future<void> _toggleBookmarkArchived(Bookmark bookmark) async {
@@ -217,8 +215,6 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
       notifyListeners();
       throw result.exceptionOrNull()!;
     }
-
-    _bookmarkUseCases.insertOrUpdateBookmarks(bookmarks);
   }
 
   Future<List<String>> _loadLabels() async {
@@ -243,9 +239,6 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
           error: result.exceptionOrNull()!);
       throw result.exceptionOrNull()!;
     }
-
-    // 更新本地书签数据
-    _bookmarkUseCases.insertOrUpdateBookmark(bookmark.copyWith(labels: labels));
   }
 
   /// 书签数据变化回调

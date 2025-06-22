@@ -2,14 +2,16 @@ import 'package:logger/logger.dart';
 import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
 import 'package:readeck_app/data/service/shared_preference_service.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
+import 'package:readeck_app/domain/use_cases/bookmark_use_cases.dart';
 import 'package:readeck_app/utils/reading_stats_calculator.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class BookmarkOperationUseCases {
-  BookmarkOperationUseCases(
-      this._bookmarkRepository, this._sharedPreferencesService);
+  BookmarkOperationUseCases(this._bookmarkRepository,
+      this._sharedPreferencesService, this._bookmarkUseCases);
 
+  final BookmarkUseCases _bookmarkUseCases;
   final BookmarkRepository _bookmarkRepository;
   final SharedPreferencesService _sharedPreferencesService;
   final ReadingStatsCalculator _readingStatsCalculator =
@@ -18,16 +20,31 @@ class BookmarkOperationUseCases {
   final _log = Logger();
 
   AsyncResult<void> toggleBookmarkMarked(Bookmark bookmark) async {
-    return _bookmarkRepository.toggleMarked(bookmark);
+    final result = await _bookmarkRepository.toggleMarked(bookmark);
+    if (result.isSuccess()) {
+      _bookmarkUseCases.insertOrUpdateBookmark(
+          bookmark.copyWith(isMarked: !bookmark.isMarked));
+    }
+    return result;
   }
 
   AsyncResult<void> toggleBookmarkArchived(Bookmark bookmark) async {
-    return _bookmarkRepository.toggleArchived(bookmark);
+    final result = await _bookmarkRepository.toggleArchived(bookmark);
+    if (result.isSuccess()) {
+      _bookmarkUseCases.insertOrUpdateBookmark(
+          bookmark.copyWith(isArchived: !bookmark.isArchived));
+    }
+    return result;
   }
 
   AsyncResult<void> updateBookmarkLabels(
       Bookmark bookmark, List<String> labels) async {
-    return _bookmarkRepository.updateLabels(bookmark, labels);
+    final result = await _bookmarkRepository.updateLabels(bookmark, labels);
+    if (result.isSuccess()) {
+      _bookmarkUseCases
+          .insertOrUpdateBookmark(bookmark.copyWith(labels: labels));
+    }
+    return result;
   }
 
   AsyncResult<void> openUrl(String url) async {

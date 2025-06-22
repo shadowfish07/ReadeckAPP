@@ -362,22 +362,23 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
       // 存档成功后可能需要刷新UI
       setState(() {});
 
-      // 显示成功提示
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('已成功存档'),
+            content: const Text('已成功归档'),
             backgroundColor: Theme.of(context).colorScheme.primary,
             behavior: SnackBarBehavior.floating,
           ),
         );
+
+        Navigator.of(context).pop();
       }
     } catch (e) {
       // 显示错误提示
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('存档失败: ${e.toString()}'),
+            content: Text('归档失败: ${e.toString()}'),
             backgroundColor: Theme.of(context).colorScheme.error,
             behavior: SnackBarBehavior.floating,
           ),
