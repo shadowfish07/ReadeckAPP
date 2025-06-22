@@ -208,12 +208,6 @@ class _UnarchivedScreenState extends State<UnarchivedScreen> {
             onLoadLabels: () => widget.viewModel.loadLabels.executeWithFuture(),
             onToggleArchive: (bookmark) {
               widget.viewModel.toggleBookmarkArchived(bookmark);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(bookmark.isArchived ? '已取消存档' : '已标记存档'),
-                  duration: const Duration(seconds: 2),
-                ),
-              );
             },
           );
         },

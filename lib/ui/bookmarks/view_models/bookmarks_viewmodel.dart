@@ -70,6 +70,7 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
 
   List<Bookmark> get bookmarks {
     return _bookmarks
+        .where((bookmark) => !bookmark.isArchived)
         .map((item) => item.copyWith(
             isArchived: _optimisticArchived[item.id] ?? item.isArchived,
             isMarked: _optimisticMarked[item.id] ?? item.isMarked))
