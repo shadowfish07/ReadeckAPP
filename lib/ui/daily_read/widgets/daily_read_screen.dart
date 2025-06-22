@@ -3,8 +3,10 @@ import 'dart:math';
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart' hide ErrorWidget;
 import 'package:flutter_command/flutter_command.dart';
+import 'package:go_router/go_router.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
+import 'package:readeck_app/routing/routes.dart';
 import 'package:readeck_app/ui/core/ui/bookmark_card.dart';
 import 'package:readeck_app/ui/core/ui/celebration_overlay.dart';
 import 'package:readeck_app/ui/core/ui/error_widget.dart';
@@ -219,6 +221,12 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
                         );
                       }
                     });
+                  },
+                  onCardTap: (bookmark) {
+                    context.push(
+                      Routes.bookmarkDetailWithId(bookmark.id),
+                      extra: bookmark,
+                    );
                   },
                   availableLabels: viewModel.availableLabels,
                   onLoadLabels: () => viewModel.loadLabels.executeWithFuture(),

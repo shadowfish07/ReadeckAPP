@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart' hide ErrorWidget;
 import 'package:flutter_command/flutter_command.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
+import 'package:readeck_app/routing/routes.dart';
 import 'package:readeck_app/ui/core/ui/bookmark_card.dart';
 import 'package:readeck_app/ui/core/ui/error_widget.dart';
 import 'package:readeck_app/ui/core/ui/loading.dart';
@@ -173,6 +175,12 @@ class _UnarchivedScreenState extends State<UnarchivedScreen> {
           return BookmarkCard(
             bookmark: bookmarks[index],
             onOpenUrl: widget.viewModel.openUrl,
+            onCardTap: (bookmark) {
+              context.push(
+                Routes.bookmarkDetailWithId(bookmark.id),
+                extra: bookmark,
+              );
+            },
             onToggleMark: (bookmark) =>
                 widget.viewModel.toggleBookmarkMarked(bookmark),
             onToggleArchive: (bookmark) =>

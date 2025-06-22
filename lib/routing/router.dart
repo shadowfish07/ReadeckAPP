@@ -13,6 +13,9 @@ import 'package:readeck_app/ui/settings/widgets/about_page.dart';
 import 'package:readeck_app/ui/settings/widgets/settings_screen.dart';
 import 'package:readeck_app/ui/bookmarks/view_models/bookmarks_viewmodel.dart';
 import 'package:readeck_app/ui/bookmarks/widget/unarchived_screen.dart';
+import 'package:readeck_app/ui/bookmarks/view_models/bookmark_detail_viewmodel.dart';
+import 'package:readeck_app/ui/bookmarks/widget/bookmark_detail_screen.dart';
+import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 
 import 'routes.dart';
 
@@ -23,6 +26,7 @@ final Map<String, String> _routeTitleMap = {
   Routes.apiConfigSetting: 'API 配置',
   Routes.dailyRead: '每日阅读',
   Routes.unarchived: '未读',
+  Routes.bookmarkDetail: '书签详情',
 };
 
 // 根据路由获取标题
@@ -122,6 +126,23 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
             builder: (context, state) {
               final viewModel = ApiConfigViewModel(context.read());
               return ApiConfigPage(viewModel: viewModel);
+            }),
+        GoRoute(
+            path: '${Routes.bookmarkDetail}/:id',
+            builder: (context, state) {
+              final bookmark = state.extra as Bookmark;
+              final viewModel = BookmarkDetailViewModel(
+                context.read(),
+                bookmark,
+              );
+              return ChangeNotifierProvider.value(
+                value: viewModel,
+                child: Consumer<BookmarkDetailViewModel>(
+                  builder: (context, viewModel, child) {
+                    return BookmarkDetailScreen(viewModel: viewModel);
+                  },
+                ),
+              );
             }),
       ],
     );

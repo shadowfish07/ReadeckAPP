@@ -10,5 +10,7 @@ abstract final class Routes {
   static const dailyReadRelative = 'daily-read';
   static const unarchived = '/$unarchivedRelative';
   static const unarchivedRelative = 'unarchived';
-  // static String bookingWithId(int id) => '$booking/$id';
+  static const bookmarkDetail = '/$bookmarkDetailRelative';
+  static const bookmarkDetailRelative = 'bookmark-detail';
+  static String bookmarkDetailWithId(String id) => '$bookmarkDetail/$id';
 }
