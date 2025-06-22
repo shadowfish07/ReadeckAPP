@@ -19,6 +19,14 @@ class BookmarkDetailScreen extends StatefulWidget {
 }
 
 class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -53,6 +61,10 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
               return _buildContent(context, lastValue, isLoading: true);
             },
             onData: (context, data, _) {
+              // 内容加载完成后，延迟滚动到指定位置
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _scrollToProgress();
+              });
               return _buildContent(context, data);
             },
             onError: (context, error, _, __) {
@@ -84,6 +96,7 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
     return Stack(
       children: [
         SingleChildScrollView(
+          controller: _scrollController,
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -202,6 +215,26 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
             ),
           ),
       ],
+    );
+  }
+
+  void _scrollToProgress() {
+    if (!_scrollController.hasClients) return;
+
+    final readProgress = widget.viewModel.bookmark.readProgress;
+    if (readProgress <= 0) return;
+
+    // 获取可滚动的最大距离
+    final maxScrollExtent = _scrollController.position.maxScrollExtent;
+
+    // 根据阅读进度计算滚动位置（0-100转换为0-maxScrollExtent）
+    final targetOffset = (readProgress / 100.0) * maxScrollExtent;
+
+    // 平滑滚动到目标位置
+    _scrollController.animateTo(
+      targetOffset,
+      duration: const Duration(milliseconds: 800),
+      curve: Curves.easeInOut,
     );
   }
 
