@@ -7,7 +7,8 @@ import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 
 class BookmarkDetailViewModel extends ChangeNotifier {
   BookmarkDetailViewModel(
-      this._readeckApiClient, this._bookmarkRepository, this.bookmark) {
+      this._readeckApiClient, this._bookmarkRepository, this.bookmark,
+      {this.onBookmarkUpdated}) {
     loadArticleContent = Command.createAsync<void, String>(_loadArticleContent,
         initialValue: '', includeLastResultInCommandResults: true)
       ..execute();
@@ -23,6 +24,7 @@ class BookmarkDetailViewModel extends ChangeNotifier {
   final ReadeckApiClient _readeckApiClient;
   final BookmarkRepository _bookmarkRepository;
   final Bookmark bookmark;
+  final VoidCallback? onBookmarkUpdated;
 
   late Command<void, String> loadArticleContent;
   late Command<int, void> updateReadProgressCommand;
@@ -75,6 +77,7 @@ class BookmarkDetailViewModel extends ChangeNotifier {
 
       if (result.isSuccess()) {
         _log.d('Successfully updated read progress');
+        onBookmarkUpdated?.call();
       } else {
         final error = result.exceptionOrNull();
         _log.e('Failed to update read progress: $error');

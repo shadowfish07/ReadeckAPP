@@ -178,7 +178,13 @@ class _UnarchivedScreenState extends State<UnarchivedScreen> {
             onCardTap: (bookmark) {
               context.push(
                 Routes.bookmarkDetailWithId(bookmark.id),
-                extra: bookmark,
+                extra: {
+                  'bookmark': bookmark,
+                  'onBookmarkUpdated': () {
+                    // 隐式刷新，不显示loading
+                    widget.viewModel.load.execute(1);
+                  },
+                },
               );
             },
             onToggleMark: (bookmark) =>
