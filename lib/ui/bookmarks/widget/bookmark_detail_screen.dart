@@ -471,8 +471,7 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
       builder: (BuildContext context) {
         return LabelEditDialog(
           bookmark: widget.viewModel.bookmark,
-          // TODO
-          availableLabels: const [],
+          availableLabels: widget.viewModel.availableLabels,
           onUpdateLabels: (bookmark, labels) async {
             try {
               await widget.viewModel.updateBookmarkLabels(labels);
@@ -489,6 +488,7 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
               }
             }
           },
+          onLoadLabels: () => widget.viewModel.loadLabels.executeWithFuture(),
         );
       },
     );

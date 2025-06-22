@@ -182,6 +182,7 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
                 context.read(),
                 context.read(),
                 context.read(),
+                context.read(),
                 bookmark,
               );
               return ChangeNotifierProvider.value(

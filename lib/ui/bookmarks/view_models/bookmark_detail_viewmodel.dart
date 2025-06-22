@@ -5,10 +5,17 @@ import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_operation_use_cases.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_use_cases.dart';
+import 'package:readeck_app/domain/use_cases/label_use_cases.dart';
 
 class BookmarkDetailViewModel extends ChangeNotifier {
-  BookmarkDetailViewModel(this._bookmarkRepository,
-      this._bookmarkOperationUseCases, this._bookmarkUseCases, this._bookmark) {
+  BookmarkDetailViewModel(
+      this._bookmarkRepository,
+      this._bookmarkOperationUseCases,
+      this._bookmarkUseCases,
+      this._labelUseCases,
+      this._bookmark) {
+    // 注册标签数据变化监听器
+    _labelUseCases.addListener(_onLabelsChanged);
     loadArticleContent = Command.createAsync<void, String>(_loadArticleContent,
         initialValue: '', includeLastResultInCommandResults: true)
       ..execute();
@@ -27,12 +34,15 @@ class BookmarkDetailViewModel extends ChangeNotifier {
     toggleMarkCommand =
         Command.createAsyncNoParamNoResult(_toggleBookmarkMarked);
     deleteBookmarkCommand = Command.createAsyncNoParamNoResult(_deleteBookmark);
+
+    loadLabels = Command.createAsyncNoParam(_loadLabels, initialValue: []);
   }
 
   final _log = Logger();
   final BookmarkUseCases _bookmarkUseCases;
   final BookmarkRepository _bookmarkRepository;
   final BookmarkOperationUseCases _bookmarkOperationUseCases;
+  final LabelUseCases _labelUseCases;
   Bookmark _bookmark;
 
   late Command<void, String> loadArticleContent;
@@ -41,10 +51,14 @@ class BookmarkDetailViewModel extends ChangeNotifier {
   late Command<void, void> archiveBookmarkCommand;
   late Command<void, void> toggleMarkCommand;
   late Command<void, void> deleteBookmarkCommand;
+  late Command<void, List<String>> loadLabels;
 
   Bookmark get bookmark => _bookmark;
   String get articleHtml => loadArticleContent.value;
   bool get isLoading => loadArticleContent.isExecuting.value;
+
+  /// 获取可用的标签名称列表
+  List<String> get availableLabels => _labelUseCases.labelNames;
   Exception? get error {
     final commandError = loadArticleContent.errors.value?.error;
     if (commandError is Exception) {
@@ -199,5 +213,28 @@ class BookmarkDetailViewModel extends ChangeNotifier {
       _log.e('Exception while updating bookmark labels: $e');
       rethrow;
     }
+  }
+
+  Future<List<String>> _loadLabels() async {
+    final result = await _bookmarkRepository.getLabels();
+    if (result.isSuccess()) {
+      _labelUseCases.insertOrUpdateLabels(result.getOrDefault([]));
+      return _labelUseCases.labelNames;
+    }
+
+    _log.e("Failed to load labels", error: result.exceptionOrNull()!);
+    throw result.exceptionOrNull()!;
+  }
+
+  /// 标签数据变化回调
+  void _onLabelsChanged() {
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    // 移除标签数据变化监听器
+    _labelUseCases.removeListener(_onLabelsChanged);
+    super.dispose();
   }
 }
