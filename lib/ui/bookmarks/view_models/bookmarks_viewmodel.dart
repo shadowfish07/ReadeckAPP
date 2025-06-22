@@ -16,6 +16,12 @@ class UnarchivedViewmodel extends BaseBookmarksViewmodel {
   @override
   Future<ResultDart<List<Bookmark>, Exception>> Function({int limit, int page})
       get _loadBookmarks => _bookmarkRepository.getUnarchivedBookmarks;
+
+  @override
+  bool Function(String) get _bookmarkIdFilter => (id) {
+        final bookmark = _bookmarkUseCases.getBookmark(id);
+        return !(_optimisticArchived[bookmark.id] ?? bookmark.isArchived);
+      };
 }
 
 abstract class BaseBookmarksViewmodel extends ChangeNotifier {
@@ -47,7 +53,8 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
   final Map<String, ReadingStats> _readingStats = {};
   List<LabelInfo> _labels = [];
   final List<String> _bookmarkIds = [];
-  List<Bookmark> get _bookmarks => _bookmarkUseCases.getBookmarks(_bookmarkIds);
+  List<Bookmark> get _bookmarks => _bookmarkUseCases
+      .getBookmarks(_bookmarkIds.where(_bookmarkIdFilter).toList());
   int _currentPage = 1;
   bool _hasMoreData = true;
   late Command<int, List<Bookmark>> load;
@@ -56,6 +63,8 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
   late Command<Bookmark, void> toggleBookmarkMarked;
   late Command<Bookmark, void> toggleBookmarkArchived;
   late Command<void, List<String>> loadLabels;
+
+  bool Function(String) get _bookmarkIdFilter => (v) => true;
 
   void _addBookmarkIds(List<Bookmark> bookmarks) {
     _bookmarkIds.addAll(bookmarks.map((e) => e.id));
@@ -70,7 +79,6 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
 
   List<Bookmark> get bookmarks {
     return _bookmarks
-        .where((bookmark) => !bookmark.isArchived)
         .map((item) => item.copyWith(
             isArchived: _optimisticArchived[item.id] ?? item.isArchived,
             isMarked: _optimisticMarked[item.id] ?? item.isMarked))
