@@ -64,287 +64,321 @@ class _BookmarkCardState extends State<BookmarkCard> {
 
   @override
   Widget build(BuildContext rootContext) {
+    final isArchived = widget.bookmark.isArchived;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
+      color: isArchived
+          ? Theme.of(rootContext).colorScheme.surfaceContainerLow
+          : null,
       child: InkWell(
         onTap: () {
           widget.onCardTap?.call(widget.bookmark);
         },
         borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 标题
-              Text(
-                widget.bookmark.title,
-                style: Theme.of(rootContext).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 8),
-
-              // 站点名称和创建时间
-              Row(
-                children: [
-                  if (widget.bookmark.siteName != null) ...[
-                    Icon(
-                      Icons.language,
-                      size: 16,
-                      color: Theme.of(rootContext).colorScheme.primary,
-                    ),
-                    const SizedBox(width: 4),
+        child: Opacity(
+          opacity: isArchived ? 0.7 : 1.0,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 标题
+                Row(
+                  children: [
                     Expanded(
-                      child: InkWell(
-                        onTap: () {
-                          final url = widget.bookmark.url;
-                          widget.onOpenUrl(url);
-                        },
-                        borderRadius: BorderRadius.circular(4),
-                        child: Text(
-                          widget.bookmark.siteName!,
-                          style: Theme.of(rootContext)
-                              .textTheme
-                              .bodyMedium
-                              ?.copyWith(
-                                color:
-                                    Theme.of(rootContext).colorScheme.primary,
-                              ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ),
-                  ],
-                  const Spacer(),
-                  Text(
-                    _formatDate(widget.bookmark.created),
-                    style: Theme.of(rootContext).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(rootContext).colorScheme.outline,
-                        ),
-                  ),
-                ],
-              ),
-
-              // 描述
-              if (widget.bookmark.description != null &&
-                  widget.bookmark.description!.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(
-                  widget.bookmark.description!,
-                  style: Theme.of(rootContext).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(rootContext).colorScheme.outline,
-                      ),
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-
-              // 标签
-              if (widget.bookmark.labels.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
-                  children: widget.bookmark.labels.map((label) {
-                    return Chip(
-                      label: Text(
-                        label,
+                      child: Text(
+                        widget.bookmark.title,
                         style: Theme.of(rootContext)
                             .textTheme
-                            .labelSmall
+                            .titleMedium
                             ?.copyWith(
-                              color: Theme.of(rootContext)
-                                  .colorScheme
-                                  .onSurfaceVariant,
+                              fontWeight: FontWeight.w500,
+                              color: widget.bookmark.isArchived
+                                  ? Theme.of(rootContext)
+                                      .colorScheme
+                                      .onSurface
+                                      .withValues(alpha: 0.7)
+                                  : null,
                             ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      backgroundColor: Theme.of(rootContext)
-                          .colorScheme
-                          .surfaceContainerHighest,
-                      side: BorderSide.none,
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    );
-                  }).toList(),
-                ),
-              ],
-
-              // 底部操作栏
-              const SizedBox(height: 12),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // 阅读统计信息
-                  if (widget.readingStats != null) ...[
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.schedule_outlined,
-                          size: 14,
-                          color: Theme.of(rootContext).colorScheme.outline,
-                        ),
-                        const SizedBox(width: 2),
-                        Text(
-                          '${widget.readingStats!.estimatedReadingTimeMinutes.round()}分钟',
-                          style: Theme.of(rootContext)
-                              .textTheme
-                              .bodySmall
-                              ?.copyWith(
-                                color:
-                                    Theme.of(rootContext).colorScheme.outline,
-                              ),
-                        ),
-                        const SizedBox(width: 8),
-                        Icon(
-                          Icons.text_fields_outlined,
-                          size: 14,
-                          color: Theme.of(rootContext).colorScheme.outline,
-                        ),
-                        const SizedBox(width: 2),
-                        Text(
-                          '${widget.readingStats!.readableCharCount}字',
-                          style: Theme.of(rootContext)
-                              .textTheme
-                              .bodySmall
-                              ?.copyWith(
-                                color:
-                                    Theme.of(rootContext).colorScheme.outline,
-                              ),
-                        ),
-                      ],
                     ),
-                    const SizedBox(width: 12),
                   ],
-                  // 阅读进度指示器
-                  if (widget.bookmark.readProgress > 0) ...[
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            value: widget.bookmark.readProgress / 100.0,
-                            strokeWidth: 2,
-                            color: Theme.of(rootContext).colorScheme.primary,
-                            backgroundColor: Theme.of(rootContext)
-                                .colorScheme
-                                .outline
-                                .withValues(alpha: 0.2),
+                ),
+                const SizedBox(height: 8),
+
+                // 站点名称和创建时间
+                Row(
+                  children: [
+                    if (widget.bookmark.siteName != null) ...[
+                      Icon(
+                        Icons.language,
+                        size: 16,
+                        color: Theme.of(rootContext).colorScheme.primary,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: InkWell(
+                          onTap: () {
+                            final url = widget.bookmark.url;
+                            widget.onOpenUrl(url);
+                          },
+                          borderRadius: BorderRadius.circular(4),
+                          child: Text(
+                            widget.bookmark.siteName!,
+                            style: Theme.of(rootContext)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(
+                                  color:
+                                      Theme.of(rootContext).colorScheme.primary,
+                                ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${widget.bookmark.readProgress}%',
-                          style: Theme.of(rootContext)
-                              .textTheme
-                              .bodySmall
-                              ?.copyWith(
-                                color:
-                                    Theme.of(rootContext).colorScheme.outline,
-                              ),
-                        ),
-                      ],
+                      ),
+                    ],
+                    const Spacer(),
+                    Text(
+                      _formatDate(widget.bookmark.created),
+                      style: Theme.of(rootContext)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(
+                            color: Theme.of(rootContext).colorScheme.outline,
+                          ),
                     ),
                   ],
-                  const Spacer(),
-                  // 标记喜爱按钮
-                  IconButton(
-                    onPressed: widget.onToggleMark != null
-                        ? () => widget.onToggleMark!(widget.bookmark)
-                        : null,
-                    style: IconButton.styleFrom(
-                      minimumSize: const Size(32, 32),
-                      maximumSize: const Size(32, 32),
-                      padding: EdgeInsets.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    icon: Icon(
-                      widget.bookmark.isMarked
-                          ? Icons.favorite
-                          : Icons.favorite_border,
-                      size: 20,
-                      color: widget.bookmark.isMarked
-                          ? Theme.of(rootContext).colorScheme.error
-                          : Theme.of(rootContext).colorScheme.onSurfaceVariant,
-                    ),
-                    tooltip: '标记喜爱',
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: 32,
-                      minHeight: 32,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  // 标签编辑按钮
-                  IconButton(
-                    onPressed: widget.onUpdateLabels != null
-                        ? () => _showLabelEditDialog(rootContext)
-                        : null,
-                    icon: Icon(
-                      Icons.local_offer_outlined,
-                      size: 20,
-                      color: Theme.of(rootContext).colorScheme.onSurfaceVariant,
-                    ),
-                    style: IconButton.styleFrom(
-                      minimumSize: const Size(32, 32),
-                      maximumSize: const Size(32, 32),
-                      padding: EdgeInsets.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    tooltip: '编辑标签',
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: 32,
-                      minHeight: 32,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  // 存档按钮
-                  IconButton(
-                    onPressed: widget.onToggleArchive != null
-                        ? () {
-                            widget.onToggleArchive!(widget.bookmark);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(widget.bookmark.isArchived
-                                    ? '已取消存档'
-                                    : '已标记存档'),
-                                duration: const Duration(seconds: 2),
-                              ),
-                            );
-                          }
-                        : null,
-                    style: IconButton.styleFrom(
-                      minimumSize: const Size(32, 32),
-                      maximumSize: const Size(32, 32),
-                      padding: EdgeInsets.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    icon: Icon(
-                      widget.bookmark.isArchived
-                          ? Icons.unarchive_outlined
-                          : Icons.archive_outlined,
-                      size: 20,
-                      color: widget.bookmark.isArchived
-                          ? Theme.of(rootContext).colorScheme.primary
-                          : Theme.of(rootContext).colorScheme.onSurfaceVariant,
-                    ),
-                    tooltip: widget.bookmark.isArchived ? '取消存档' : '存档',
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: 32,
-                      minHeight: 32,
-                    ),
+                ),
+
+                // 描述
+                if (widget.bookmark.description != null &&
+                    widget.bookmark.description!.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    widget.bookmark.description!,
+                    style: Theme.of(rootContext).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(rootContext).colorScheme.outline,
+                        ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
-              ),
-            ],
+
+                // 标签
+                if (widget.bookmark.labels.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: widget.bookmark.labels.map((label) {
+                      return Chip(
+                        label: Text(
+                          label,
+                          style: Theme.of(rootContext)
+                              .textTheme
+                              .labelSmall
+                              ?.copyWith(
+                                color: Theme.of(rootContext)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                              ),
+                        ),
+                        backgroundColor: Theme.of(rootContext)
+                            .colorScheme
+                            .surfaceContainerHighest,
+                        side: BorderSide.none,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      );
+                    }).toList(),
+                  ),
+                ],
+
+                // 底部操作栏
+                const SizedBox(height: 12),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // 阅读统计信息
+                    if (widget.readingStats != null) ...[
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.schedule_outlined,
+                            size: 14,
+                            color: Theme.of(rootContext).colorScheme.outline,
+                          ),
+                          const SizedBox(width: 2),
+                          Text(
+                            '${widget.readingStats!.estimatedReadingTimeMinutes.round()}分钟',
+                            style: Theme.of(rootContext)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(
+                                  color:
+                                      Theme.of(rootContext).colorScheme.outline,
+                                ),
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(
+                            Icons.text_fields_outlined,
+                            size: 14,
+                            color: Theme.of(rootContext).colorScheme.outline,
+                          ),
+                          const SizedBox(width: 2),
+                          Text(
+                            '${widget.readingStats!.readableCharCount}字',
+                            style: Theme.of(rootContext)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(
+                                  color:
+                                      Theme.of(rootContext).colorScheme.outline,
+                                ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(width: 12),
+                    ],
+                    // 阅读进度指示器
+                    if (widget.bookmark.readProgress > 0) ...[
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              value: widget.bookmark.readProgress / 100.0,
+                              strokeWidth: 2,
+                              color: Theme.of(rootContext).colorScheme.primary,
+                              backgroundColor: Theme.of(rootContext)
+                                  .colorScheme
+                                  .outline
+                                  .withValues(alpha: 0.2),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${widget.bookmark.readProgress}%',
+                            style: Theme.of(rootContext)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(
+                                  color:
+                                      Theme.of(rootContext).colorScheme.outline,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ],
+                    const Spacer(),
+                    // 标记喜爱按钮
+                    IconButton(
+                      onPressed: widget.onToggleMark != null
+                          ? () => widget.onToggleMark!(widget.bookmark)
+                          : null,
+                      style: IconButton.styleFrom(
+                        minimumSize: const Size(32, 32),
+                        maximumSize: const Size(32, 32),
+                        padding: EdgeInsets.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      icon: Icon(
+                        widget.bookmark.isMarked
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        size: 20,
+                        color: widget.bookmark.isMarked
+                            ? Theme.of(rootContext).colorScheme.error
+                            : Theme.of(rootContext)
+                                .colorScheme
+                                .onSurfaceVariant,
+                      ),
+                      tooltip: '标记喜爱',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(
+                        minWidth: 32,
+                        minHeight: 32,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // 标签编辑按钮
+                    IconButton(
+                      onPressed: widget.onUpdateLabels != null
+                          ? () => _showLabelEditDialog(rootContext)
+                          : null,
+                      icon: Icon(
+                        Icons.local_offer_outlined,
+                        size: 20,
+                        color:
+                            Theme.of(rootContext).colorScheme.onSurfaceVariant,
+                      ),
+                      style: IconButton.styleFrom(
+                        minimumSize: const Size(32, 32),
+                        maximumSize: const Size(32, 32),
+                        padding: EdgeInsets.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      tooltip: '编辑标签',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(
+                        minWidth: 32,
+                        minHeight: 32,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // 存档按钮
+                    IconButton(
+                      onPressed: widget.onToggleArchive != null
+                          ? () {
+                              widget.onToggleArchive!(widget.bookmark);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(widget.bookmark.isArchived
+                                      ? '已取消存档'
+                                      : '已标记存档'),
+                                  duration: const Duration(seconds: 2),
+                                ),
+                              );
+                            }
+                          : null,
+                      style: IconButton.styleFrom(
+                        minimumSize: const Size(32, 32),
+                        maximumSize: const Size(32, 32),
+                        padding: EdgeInsets.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      icon: Icon(
+                        widget.bookmark.isArchived
+                            ? Icons.unarchive
+                            : Icons.archive_outlined,
+                        size: 20,
+                        color: widget.bookmark.isArchived
+                            ? Theme.of(rootContext)
+                                .colorScheme
+                                .onSurfaceVariant
+                                .withValues(alpha: 0.7)
+                            : Theme.of(rootContext)
+                                .colorScheme
+                                .onSurfaceVariant,
+                      ),
+                      tooltip: widget.bookmark.isArchived ? '取消存档' : '存档',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(
+                        minWidth: 32,
+                        minHeight: 32,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
