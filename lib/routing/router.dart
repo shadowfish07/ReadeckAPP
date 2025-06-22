@@ -78,8 +78,12 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
                     return ChangeNotifierProvider(
                       create: (context) {
                         Logger().d("create DailyReadViewModel");
-                        return DailyReadViewModel(context.read(),
-                            context.read(), context.read(), context.read());
+                        return DailyReadViewModel(
+                            context.read(),
+                            context.read(),
+                            context.read(),
+                            context.read(),
+                            context.read());
                       },
                       child: Consumer<DailyReadViewModel>(
                         builder: (context, viewModel, child) {
@@ -96,7 +100,7 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
                   path: Routes.unarchived,
                   builder: (context, state) {
                     return ChangeNotifierProvider(
-                      create: (context) => UnarchivedViewmodel(
+                      create: (context) => UnarchivedViewmodel(context.read(),
                           context.read(), context.read(), context.read()),
                       child: Consumer<UnarchivedViewmodel>(
                         builder: (context, viewModel, child) {
@@ -112,7 +116,7 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
                   path: Routes.archived,
                   builder: (context, state) {
                     return ChangeNotifierProvider(
-                      create: (context) => ArchivedViewmodel(
+                      create: (context) => ArchivedViewmodel(context.read(),
                           context.read(), context.read(), context.read()),
                       child: Consumer<ArchivedViewmodel>(
                         builder: (context, viewModel, child) {
@@ -128,7 +132,7 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
                   path: Routes.marked,
                   builder: (context, state) {
                     return ChangeNotifierProvider(
-                      create: (context) => MarkedViewmodel(
+                      create: (context) => MarkedViewmodel(context.read(),
                           context.read(), context.read(), context.read()),
                       child: Consumer<MarkedViewmodel>(
                         builder: (context, viewModel, child) {

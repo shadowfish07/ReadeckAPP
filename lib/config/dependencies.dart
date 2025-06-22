@@ -7,6 +7,7 @@ import 'package:readeck_app/data/service/database_service.dart';
 import 'package:readeck_app/data/service/readeck_api_client.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_operation_use_cases.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_use_cases.dart';
+import 'package:readeck_app/domain/use_cases/label_use_cases.dart';
 
 import '../data/service/shared_preference_service.dart';
 import '../data/repository/theme/theme_repository.dart';
@@ -30,6 +31,7 @@ List<SingleChildWidget> providers(String host, String token) {
     Provider(create: (context) => BookmarkRepository(context.read())),
     Provider(create: (context) => DailyReadHistoryRepository(context.read())),
     Provider(create: (context) => BookmarkUseCases()),
+    Provider(create: (context) => LabelUseCases()),
     Provider(
         create: (context) => BookmarkOperationUseCases(
             context.read(), context.read(), context.read())),
