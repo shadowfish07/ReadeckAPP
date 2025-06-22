@@ -174,6 +174,39 @@ class _BookmarkCardState extends State<BookmarkCard> {
               const SizedBox(height: 12),
               Row(
                 children: [
+                  // 阅读进度指示器
+                  if (widget.bookmark.readProgress > 0) ...[
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            value: widget.bookmark.readProgress / 100.0,
+                            strokeWidth: 2,
+                            color: Theme.of(rootContext).colorScheme.primary,
+                            backgroundColor: Theme.of(rootContext)
+                                .colorScheme
+                                .outline
+                                .withValues(alpha: 0.2),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${widget.bookmark.readProgress}%',
+                          style: Theme.of(rootContext)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(
+                                color:
+                                    Theme.of(rootContext).colorScheme.onSurface,
+                                fontWeight: FontWeight.w500,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ],
                   const Spacer(),
                   // 标记喜爱按钮
                   IconButton(
