@@ -20,9 +20,17 @@ class BookmarkDetailScreen extends StatefulWidget {
 
 class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
   final ScrollController _scrollController = ScrollController();
+  bool _isAutoScrolling = false; // 标记是否正在自动滚动
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
 
   @override
   void dispose() {
+    _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
   }
@@ -218,6 +226,30 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
     );
   }
 
+  void _onScroll() {
+    // 如果正在自动滚动，不触发进度更新
+    if (!_isAutoScrolling) {
+      _updateReadProgress();
+    }
+  }
+
+  void _updateReadProgress() {
+    if (!_scrollController.hasClients) return;
+
+    final maxScrollExtent = _scrollController.position.maxScrollExtent;
+    final currentOffset = _scrollController.offset;
+
+    // 计算阅读进度百分比（0-100）
+    int readProgress = 0;
+    if (maxScrollExtent > 0) {
+      readProgress =
+          ((currentOffset / maxScrollExtent) * 100).round().clamp(0, 100);
+    }
+
+    // 使用Command更新阅读进度到服务器（带防抖功能）
+    widget.viewModel.updateReadProgressCommand.execute(readProgress);
+  }
+
   void _scrollToProgress() {
     if (!_scrollController.hasClients) return;
 
@@ -230,12 +262,20 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
     // 根据阅读进度计算滚动位置（0-100转换为0-maxScrollExtent）
     final targetOffset = (readProgress / 100.0) * maxScrollExtent;
 
+    // 设置自动滚动标志
+    _isAutoScrolling = true;
+
     // 平滑滚动到目标位置
-    _scrollController.animateTo(
+    _scrollController
+        .animateTo(
       targetOffset,
       duration: const Duration(milliseconds: 800),
       curve: Curves.easeInOut,
-    );
+    )
+        .then((_) {
+      // 滚动完成后重置标志
+      _isAutoScrolling = false;
+    });
   }
 
   void _showImagePreview(BuildContext context, String imageUrl) {

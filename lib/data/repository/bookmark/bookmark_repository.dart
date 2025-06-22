@@ -74,4 +74,18 @@ class BookmarkRepository {
 
     return Failure(result.exceptionOrNull()!);
   }
+
+  AsyncResult<void> updateReadProgress(
+      String bookmarkId, int readProgress) async {
+    final result = await _readeckApiClient.updateBookmark(
+      bookmarkId,
+      readProgress: readProgress,
+    );
+
+    if (result.isSuccess()) {
+      return const Success(unit);
+    }
+
+    return Failure(result.exceptionOrNull()!);
+  }
 }

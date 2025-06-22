@@ -133,6 +133,7 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
               final bookmark = state.extra as Bookmark;
               final viewModel = BookmarkDetailViewModel(
                 context.read(),
+                context.read(),
                 bookmark,
               );
               return ChangeNotifierProvider.value(

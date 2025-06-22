@@ -159,6 +159,7 @@ graph TD
 3. **使用 flutter_command 的 Command 类**
 4. **UI 状态使用 private setter + public getter**
 5. **在构造函数中初始化 Commands**
+6. **给 View 暴露的异步方法使用 Command 进行暴露**
 
 ---
 
