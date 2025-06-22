@@ -20,6 +20,9 @@ class MarkedViewmodel extends BaseBookmarksViewmodel {
   @override
   bool Function(String) get _bookmarkIdFilter => (id) {
         final bookmark = super._bookmarkUseCases.getBookmark(id);
+        if (bookmark == null) {
+          return false;
+        }
         return super._optimisticMarked[bookmark.id] ?? bookmark.isMarked;
       };
 }
@@ -35,6 +38,9 @@ class ArchivedViewmodel extends BaseBookmarksViewmodel {
   @override
   bool Function(String) get _bookmarkIdFilter => (id) {
         final bookmark = super._bookmarkUseCases.getBookmark(id);
+        if (bookmark == null) {
+          return false;
+        }
         return super._optimisticArchived[bookmark.id] ?? bookmark.isArchived;
       };
 }
@@ -52,7 +58,10 @@ class UnarchivedViewmodel extends BaseBookmarksViewmodel {
 
   @override
   bool Function(String) get _bookmarkIdFilter => (id) {
-        final bookmark = _bookmarkUseCases.getBookmark(id);
+        final bookmark = super._bookmarkUseCases.getBookmark(id);
+        if (bookmark == null) {
+          return false;
+        }
         return !(_optimisticArchived[bookmark.id] ?? bookmark.isArchived);
       };
 }
@@ -93,7 +102,9 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
   // 移除本地 _labels 变量，改用中心化存储
   final List<String> _bookmarkIds = [];
   List<Bookmark> get _bookmarks => _bookmarkUseCases
-      .getBookmarks(_bookmarkIds.where(_bookmarkIdFilter).toList());
+      .getBookmarks(_bookmarkIds.where(_bookmarkIdFilter).toList())
+      .whereType<Bookmark>()
+      .toList();
   int _currentPage = 1;
   bool _hasMoreData = true;
   late Command<int, List<Bookmark>> load;

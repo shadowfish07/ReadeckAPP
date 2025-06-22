@@ -53,7 +53,10 @@ class DailyReadViewModel extends ChangeNotifier {
   final Map<String, bool> _optimisticMarked = {};
   final Map<String, ReadingStats> _readingStats = {};
   final List<String> _bookmarkIds = [];
-  List<Bookmark> get _bookmarks => _bookmarkUseCases.getBookmarks(_bookmarkIds);
+  List<Bookmark> get _bookmarks => _bookmarkUseCases
+      .getBookmarks(_bookmarkIds)
+      .whereType<Bookmark>()
+      .toList();
   bool _isNoMore = false;
   // 移除本地 _labels 变量，改用中心化存储
   bool get isNoMore => _isNoMore;

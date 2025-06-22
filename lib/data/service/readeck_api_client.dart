@@ -5,6 +5,7 @@ import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 import 'package:readeck_app/domain/models/bookmark/label_info.dart';
 import 'package:http/http.dart' as http;
 import 'package:readeck_app/utils/api_not_configured_exception.dart';
+import 'package:readeck_app/utils/resource_not_found_exception.dart';
 import 'package:result_dart/result_dart.dart';
 
 class ReadeckApiClient {
@@ -341,6 +342,9 @@ class ReadeckApiClient {
         _log.d(
             'getBookmarkArticle response received for bookmark: $bookmarkId');
         return Success(response.body);
+      } else if (response.statusCode == 404) {
+        _log.w("书签不存在。uri: $uri, 状态码: ${response.statusCode}");
+        return const Failure(ResourceNotFoundException("书签不存在"));
       } else {
         _log.w("获取书签文章失败。uri: $uri, 状态码: ${response.statusCode}");
         return Failure(Exception('获取书签文章失败: ${response.statusCode}'));

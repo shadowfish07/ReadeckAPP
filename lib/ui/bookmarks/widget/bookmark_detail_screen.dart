@@ -7,9 +7,11 @@ import 'package:provider/provider.dart';
 
 import 'package:readeck_app/ui/bookmarks/view_models/bookmark_detail_viewmodel.dart';
 import 'package:readeck_app/ui/core/ui/bookmark_labels_widget.dart';
+import 'package:readeck_app/ui/core/ui/error_page.dart';
 import 'package:readeck_app/ui/core/ui/error_widget.dart';
 import 'package:readeck_app/ui/core/ui/label_edit_dialog.dart';
 import 'package:readeck_app/ui/core/ui/loading.dart';
+import 'package:readeck_app/utils/resource_not_found_exception.dart';
 
 class BookmarkDetailScreen extends StatefulWidget {
   const BookmarkDetailScreen({super.key, required this.viewModel});
@@ -75,6 +77,10 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
               return _buildContent(context, data);
             },
             onError: (context, error, _, __) {
+              if (error is ResourceNotFoundException) {
+                return ErrorPage.bookmarkNotFound();
+              }
+
               return Center(
                 child: ErrorWidget(
                   message: '加载失败',

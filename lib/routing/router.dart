@@ -6,6 +6,7 @@ import 'package:readeck_app/data/repository/settings/settings_repository.dart';
 import 'package:readeck_app/ui/api_config/view_models/api_config_viewmodel.dart';
 import 'package:readeck_app/ui/api_config/widgets/api_config_page.dart';
 import 'package:readeck_app/ui/core/main_layout.dart';
+import 'package:readeck_app/ui/core/ui/error_page.dart';
 import 'package:readeck_app/ui/daily_read/view_models/daily_read_viewmodel.dart';
 import 'package:readeck_app/ui/daily_read/widgets/daily_read_screen.dart';
 import 'package:readeck_app/ui/settings/view_models/about_viewmodel.dart';
@@ -178,6 +179,10 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
               final bookmarkId = state.pathParameters['id']!;
               final bookmarkUseCases = context.read<BookmarkUseCases>();
               final bookmark = bookmarkUseCases.getBookmark(bookmarkId);
+              if (bookmark == null) {
+                // 书签可能已被删除，显示友好的错误提示
+                return ErrorPage.bookmarkNotFound();
+              }
               final viewModel = BookmarkDetailViewModel(
                 context.read(),
                 context.read(),

@@ -1,4 +1,3 @@
-import 'package:logger/logger.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 
 /// 书签数据变化监听器类型定义
@@ -45,14 +44,11 @@ class BookmarkUseCases {
     }
   }
 
-  Bookmark getBookmark(String id) {
-    return _bookmarks.firstWhere((b) => b.id == id, orElse: () {
-      Logger().e('Bookmark $id not found');
-      throw ArgumentError('Bookmark not found');
-    });
+  Bookmark? getBookmark(String id) {
+    return _bookmarks.where((b) => b.id == id).firstOrNull;
   }
 
-  List<Bookmark> getBookmarks(List<String> ids) {
+  List<Bookmark?> getBookmarks(List<String> ids) {
     return ids.map((id) => getBookmark(id)).toList();
   }
 

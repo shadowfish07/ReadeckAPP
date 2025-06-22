@@ -70,8 +70,11 @@ class BookmarkDetailViewModel extends ChangeNotifier {
   }
 
   void _reloadBookmark() {
-    _bookmark = _bookmarkUseCases.getBookmark(bookmark.id);
-    notifyListeners();
+    final newBookmark = _bookmarkUseCases.getBookmark(bookmark.id);
+    if (newBookmark != null) {
+      _bookmark = newBookmark;
+      notifyListeners();
+    }
   }
 
   Future<String> _loadArticleContent(void _) async {
