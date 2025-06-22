@@ -51,6 +51,20 @@ class MainLayout extends StatelessWidget {
             },
           ),
           ListTile(
+            title: const Text('已归档'),
+            onTap: () {
+              context.pop();
+              context.go(Routes.archived);
+            },
+          ),
+          ListTile(
+            title: const Text('收藏'),
+            onTap: () {
+              context.pop();
+              context.go(Routes.marked);
+            },
+          ),
+          ListTile(
             title: const Text('设置'),
             onTap: () {
               context.pop();

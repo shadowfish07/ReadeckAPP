@@ -14,6 +14,8 @@ import 'package:readeck_app/ui/settings/widgets/about_page.dart';
 import 'package:readeck_app/ui/settings/widgets/settings_screen.dart';
 import 'package:readeck_app/ui/bookmarks/view_models/bookmarks_viewmodel.dart';
 import 'package:readeck_app/ui/bookmarks/widget/unarchived_screen.dart';
+import 'package:readeck_app/ui/bookmarks/widget/archived_screen.dart';
+import 'package:readeck_app/ui/bookmarks/widget/marked_screen.dart';
 import 'package:readeck_app/ui/bookmarks/view_models/bookmark_detail_viewmodel.dart';
 import 'package:readeck_app/ui/bookmarks/widget/bookmark_detail_screen.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
@@ -27,6 +29,8 @@ final Map<String, String> _routeTitleMap = {
   Routes.apiConfigSetting: 'API 配置',
   Routes.dailyRead: '每日阅读',
   Routes.unarchived: '未读',
+  Routes.archived: '已归档',
+  Routes.marked: '标记喜爱',
   Routes.bookmarkDetail: '书签详情',
 };
 
@@ -97,6 +101,38 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
                       child: Consumer<UnarchivedViewmodel>(
                         builder: (context, viewModel, child) {
                           return UnarchivedScreen(viewModel: viewModel);
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ]),
+              StatefulShellBranch(routes: [
+                GoRoute(
+                  path: Routes.archived,
+                  builder: (context, state) {
+                    return ChangeNotifierProvider(
+                      create: (context) => ArchivedViewmodel(
+                          context.read(), context.read(), context.read()),
+                      child: Consumer<ArchivedViewmodel>(
+                        builder: (context, viewModel, child) {
+                          return ArchivedScreen(viewModel: viewModel);
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ]),
+              StatefulShellBranch(routes: [
+                GoRoute(
+                  path: Routes.marked,
+                  builder: (context, state) {
+                    return ChangeNotifierProvider(
+                      create: (context) => MarkedViewmodel(
+                          context.read(), context.read(), context.read()),
+                      child: Consumer<MarkedViewmodel>(
+                        builder: (context, viewModel, child) {
+                          return MarkedScreen(viewModel: viewModel);
                         },
                       ),
                     );

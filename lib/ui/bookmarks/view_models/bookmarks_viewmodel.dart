@@ -9,6 +9,36 @@ import 'package:readeck_app/domain/use_cases/bookmark_use_cases.dart';
 import 'package:readeck_app/utils/reading_stats_calculator.dart';
 import 'package:result_dart/result_dart.dart';
 
+class MarkedViewmodel extends BaseBookmarksViewmodel {
+  MarkedViewmodel(super._bookmarkRepository, super._bookmarkOperationUseCases,
+      super._bookmarkUseCases);
+
+  @override
+  Future<ResultDart<List<Bookmark>, Exception>> Function({int limit, int page})
+      get _loadBookmarks => _bookmarkRepository.getMarkedBookmarks;
+
+  @override
+  bool Function(String) get _bookmarkIdFilter => (id) {
+        final bookmark = super._bookmarkUseCases.getBookmark(id);
+        return super._optimisticMarked[bookmark.id] ?? bookmark.isMarked;
+      };
+}
+
+class ArchivedViewmodel extends BaseBookmarksViewmodel {
+  ArchivedViewmodel(super._bookmarkRepository, super._bookmarkOperationUseCases,
+      super._bookmarkUseCases);
+
+  @override
+  Future<ResultDart<List<Bookmark>, Exception>> Function({int limit, int page})
+      get _loadBookmarks => _bookmarkRepository.getArchivedBookmarks;
+
+  @override
+  bool Function(String) get _bookmarkIdFilter => (id) {
+        final bookmark = super._bookmarkUseCases.getBookmark(id);
+        return super._optimisticArchived[bookmark.id] ?? bookmark.isArchived;
+      };
+}
+
 class UnarchivedViewmodel extends BaseBookmarksViewmodel {
   UnarchivedViewmodel(super._bookmarkRepository,
       super._bookmarkOperationUseCases, super._bookmarkUseCases);

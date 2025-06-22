@@ -28,6 +28,28 @@ class BookmarkRepository {
     );
   }
 
+  AsyncResult<List<Bookmark>> getArchivedBookmarks({
+    int limit = 10,
+    int page = 1,
+  }) async {
+    return _readeckApiClient.getBookmarks(
+      isArchived: true,
+      limit: limit,
+      offset: (page - 1) * limit,
+    );
+  }
+
+  AsyncResult<List<Bookmark>> getMarkedBookmarks({
+    int limit = 10,
+    int page = 1,
+  }) async {
+    return _readeckApiClient.getBookmarks(
+      isMarked: true,
+      limit: limit,
+      offset: (page - 1) * limit,
+    );
+  }
+
   AsyncResult<List<Bookmark>> getRandomUnarchivedBookmarks(
       int randomCount) async {
     final allBookmarks = await getUnarchivedBookmarks(limit: 100);
