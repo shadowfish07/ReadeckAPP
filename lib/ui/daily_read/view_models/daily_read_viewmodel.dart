@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_command/flutter_command.dart';
-import 'package:logger/logger.dart';
 import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
 import 'package:readeck_app/data/repository/daily_read_history/daily_read_history_repository.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
@@ -8,6 +7,7 @@ import 'package:readeck_app/domain/models/daily_read_history/daily_read_history.
 import 'package:readeck_app/domain/use_cases/bookmark_operation_use_cases.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_use_cases.dart';
 import 'package:readeck_app/domain/use_cases/label_use_cases.dart';
+import 'package:readeck_app/main.dart';
 import 'package:readeck_app/utils/option_data.dart';
 import 'package:readeck_app/utils/reading_stats_calculator.dart';
 
@@ -41,7 +41,6 @@ class DailyReadViewModel extends ChangeNotifier {
   final BookmarkOperationUseCases _bookmarkOperationUseCases;
   final BookmarkUseCases _bookmarkUseCases;
   final LabelUseCases _labelUseCases;
-  final _log = Logger();
 
   late Command load;
   late Command openUrl;
@@ -98,7 +97,7 @@ class DailyReadViewModel extends ChangeNotifier {
           await _dailyReadHistoryRepository.getTodayDailyReadHistory();
 
       if (todayBookmarksHistory.isError()) {
-        _log.e("Failed to get today bookmarks",
+        appLogger.e("Failed to get today bookmarks",
             error: todayBookmarksHistory.exceptionOrNull()!);
         throw todayBookmarksHistory.exceptionOrNull()!;
       }
@@ -121,7 +120,7 @@ class DailyReadViewModel extends ChangeNotifier {
               return unArchivedBookmarks;
             }
 
-            _log.e("Failed to get today bookmarks",
+            appLogger.e("Failed to get today bookmarks",
                 error: result.exceptionOrNull()!);
             throw result.exceptionOrNull()!;
           }
@@ -148,7 +147,8 @@ class DailyReadViewModel extends ChangeNotifier {
       return unArchivedBookmarks;
     }
 
-    _log.e("Failed to get random bookmarks", error: result.exceptionOrNull()!);
+    appLogger.e("Failed to get random bookmarks",
+        error: result.exceptionOrNull()!);
     throw result.exceptionOrNull()!;
   }
 
@@ -156,9 +156,10 @@ class DailyReadViewModel extends ChangeNotifier {
     final id = await _dailyReadHistoryRepository.saveTodayBookmarks(bookmarks);
 
     if (id.isSuccess()) {
-      _log.d("Saved today bookmarks with id: ${id.getOrNull()}");
+      appLogger.i("Saved today bookmarks with id: ${id.getOrNull()}");
     } else {
-      _log.e("Failed to save today bookmarks", error: id.exceptionOrNull());
+      appLogger.e("Failed to save today bookmarks",
+          error: id.exceptionOrNull());
     }
   }
 
@@ -176,7 +177,7 @@ class DailyReadViewModel extends ChangeNotifier {
         await _bookmarkOperationUseCases.toggleBookmarkArchived(bookmark);
 
     if (result.isError()) {
-      _log.e("Failed to toggle bookmark archived",
+      appLogger.e("Failed to toggle bookmark archived",
           error: result.exceptionOrNull()!);
       _optimisticArchived.remove(bookmark.id);
       notifyListeners();
@@ -193,7 +194,7 @@ class DailyReadViewModel extends ChangeNotifier {
         await _bookmarkOperationUseCases.toggleBookmarkMarked(bookmark);
 
     if (result.isError()) {
-      _log.e("Failed to toggle bookmark marked",
+      appLogger.e("Failed to toggle bookmark marked",
           error: result.exceptionOrNull()!);
       _optimisticMarked.remove(bookmark.id);
       notifyListeners();
@@ -208,7 +209,7 @@ class DailyReadViewModel extends ChangeNotifier {
       return _labelUseCases.labelNames;
     }
 
-    _log.e("Failed to load labels", error: result.exceptionOrNull()!);
+    appLogger.e("Failed to load labels", error: result.exceptionOrNull()!);
     throw result.exceptionOrNull()!;
   }
 
@@ -218,7 +219,7 @@ class DailyReadViewModel extends ChangeNotifier {
         await _bookmarkOperationUseCases.updateBookmarkLabels(bookmark, labels);
 
     if (result.isError()) {
-      _log.e("Failed to update bookmark labels",
+      appLogger.e("Failed to update bookmark labels",
           error: result.exceptionOrNull()!);
       throw result.exceptionOrNull()!;
     }

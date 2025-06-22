@@ -4,8 +4,8 @@ import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_command/flutter_command.dart';
 import 'package:go_router/go_router.dart';
-import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
+import 'package:readeck_app/main.dart';
 import 'package:readeck_app/routing/routes.dart';
 import 'package:readeck_app/ui/core/ui/bookmark_card.dart';
 import 'package:readeck_app/ui/core/ui/celebration_overlay.dart';
@@ -50,7 +50,7 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     widget.viewModel.load.errors.where((x) => x != null).listen((error, _) {
-      Logger().e(
+      appLogger.e(
         '加载书签失败',
         error: error,
       );
@@ -63,7 +63,7 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
     widget.viewModel.toggleBookmarkArchived.errors
         .where((x) => x != null)
         .listen((error, _) {
-      Logger().e(
+      appLogger.e(
         '切换书签归档状态失败',
         error: error,
       );
@@ -76,7 +76,7 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
     widget.viewModel.toggleBookmarkMarked.errors
         .where((x) => x != null)
         .listen((error, _) {
-      Logger().e(
+      appLogger.e(
         '切换书签标记状态失败',
         error: error,
       );

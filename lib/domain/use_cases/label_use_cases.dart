@@ -1,5 +1,5 @@
-import 'package:logger/logger.dart';
 import 'package:readeck_app/domain/models/bookmark/label_info.dart';
+import 'package:readeck_app/main.dart';
 
 /// 标签数据变化监听器类型定义
 typedef LabelChangeListener = void Function();
@@ -47,7 +47,7 @@ class LabelUseCases {
 
   LabelInfo getLabel(String name) {
     return _labels.firstWhere((l) => l.name == name, orElse: () {
-      Logger().e('Label $name not found');
+      appLogger.e('Label $name not found');
       throw ArgumentError('Label not found');
     });
   }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:readeck_app/routing/routes.dart';
 import 'package:readeck_app/ui/settings/view_models/settings_viewmodel.dart';
+import 'package:flutter_command/flutter_command.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key, required this.viewModel});
@@ -61,6 +62,27 @@ class SettingsScreen extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               _showThemeModeDialog(context);
+            },
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.file_download),
+            title: const Text('导出日志'),
+            subtitle: const Text('导出应用日志文件'),
+            trailing: CommandBuilder<void, void>(
+              command: viewModel.exportLogs,
+              whileExecuting: (context, _, __) => const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              onNullData: (context, _) => const Icon(Icons.chevron_right),
+              onData: (context, _, __) => const Icon(Icons.chevron_right),
+              onError: (context, error, _, __) =>
+                  const Icon(Icons.error, color: Colors.red),
+            ),
+            onTap: () {
+              viewModel.exportLogs.execute();
             },
           ),
           const Divider(),

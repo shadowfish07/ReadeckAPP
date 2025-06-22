@@ -1,11 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_command/flutter_command.dart';
-import 'package:logger/logger.dart';
 import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_operation_use_cases.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_use_cases.dart';
 import 'package:readeck_app/domain/use_cases/label_use_cases.dart';
+import 'package:readeck_app/main.dart';
 
 class BookmarkDetailViewModel extends ChangeNotifier {
   BookmarkDetailViewModel(
@@ -38,7 +38,6 @@ class BookmarkDetailViewModel extends ChangeNotifier {
     loadLabels = Command.createAsyncNoParam(_loadLabels, initialValue: []);
   }
 
-  final _log = Logger();
   final BookmarkUseCases _bookmarkUseCases;
   final BookmarkRepository _bookmarkRepository;
   final BookmarkOperationUseCases _bookmarkOperationUseCases;
@@ -79,22 +78,22 @@ class BookmarkDetailViewModel extends ChangeNotifier {
 
   Future<String> _loadArticleContent(void _) async {
     try {
-      _log.d('Loading article content for bookmark: ${bookmark.id}');
+      appLogger.i('Loading article content for bookmark: ${bookmark.id}');
 
       final result = await _bookmarkRepository.getBookmarkArticle(bookmark.id);
 
       if (result.isSuccess()) {
         final htmlContent = result.getOrThrow();
-        _log.d(
+        appLogger.i(
             'Successfully loaded article content, length: ${htmlContent.length}');
         return htmlContent;
       } else {
         final error = result.exceptionOrNull();
-        _log.e('Failed to load article content: $error');
+        appLogger.e('Failed to load article content: $error');
         throw error ?? Exception('Unknown error occurred');
       }
     } catch (e) {
-      _log.e('Exception while loading article content: $e');
+      appLogger.e('Exception while loading article content: $e');
       rethrow;
     }
   }
@@ -105,7 +104,7 @@ class BookmarkDetailViewModel extends ChangeNotifier {
 
   Future<void> _updateReadProgress(int readProgress) async {
     try {
-      _log.d(
+      appLogger.i(
           'Updating read progress for bookmark: ${bookmark.id}, progress: $readProgress');
 
       final result = await _bookmarkRepository.updateReadProgress(
@@ -114,14 +113,14 @@ class BookmarkDetailViewModel extends ChangeNotifier {
       _reloadBookmark();
 
       if (result.isSuccess()) {
-        _log.d('Successfully updated read progress');
+        appLogger.i('Successfully updated read progress');
       } else {
         final error = result.exceptionOrNull();
-        _log.e('Failed to update read progress: $error');
+        appLogger.e('Failed to update read progress: $error');
         throw error ?? Exception('Failed to update read progress');
       }
     } catch (e) {
-      _log.e('Exception while updating read progress: $e');
+      appLogger.e('Exception while updating read progress: $e');
       rethrow;
     }
   }
@@ -130,90 +129,90 @@ class BookmarkDetailViewModel extends ChangeNotifier {
     final result = await _bookmarkOperationUseCases.openUrl(url);
     if (result.isError()) {
       final error = result.exceptionOrNull();
-      _log.e('Failed to open URL: $error');
+      appLogger.e('Failed to open URL: $error');
       throw error ?? Exception('Failed to open URL');
     }
   }
 
   Future<void> _archiveBookmark() async {
     try {
-      _log.d('Archiving bookmark: ${bookmark.id}');
+      appLogger.i('Archiving bookmark: ${bookmark.id}');
 
       final result =
           await _bookmarkOperationUseCases.toggleBookmarkArchived(bookmark);
       _reloadBookmark();
 
       if (result.isSuccess()) {
-        _log.d('Successfully archived bookmark');
+        appLogger.i('Successfully archived bookmark');
       } else {
         final error = result.exceptionOrNull();
-        _log.e('Failed to archive bookmark: $error');
+        appLogger.e('Failed to archive bookmark: $error');
         throw error ?? Exception('Failed to archive bookmark');
       }
     } catch (e) {
-      _log.e('Exception while archiving bookmark: $e');
+      appLogger.e('Exception while archiving bookmark: $e');
       rethrow;
     }
   }
 
   Future<void> _toggleBookmarkMarked() async {
     try {
-      _log.d('Toggling bookmark marked: ${bookmark.id}');
+      appLogger.i('Toggling bookmark marked: ${bookmark.id}');
 
       final result =
           await _bookmarkOperationUseCases.toggleBookmarkMarked(bookmark);
       _reloadBookmark();
 
       if (result.isSuccess()) {
-        _log.d('Successfully toggled bookmark marked');
+        appLogger.i('Successfully toggled bookmark marked');
       } else {
         final error = result.exceptionOrNull();
-        _log.e('Failed to toggle bookmark marked: $error');
+        appLogger.e('Failed to toggle bookmark marked: $error');
         throw error ?? Exception('Failed to toggle bookmark marked');
       }
     } catch (e) {
-      _log.e('Exception while toggling bookmark marked: $e');
+      appLogger.e('Exception while toggling bookmark marked: $e');
       rethrow;
     }
   }
 
   Future<void> _deleteBookmark() async {
     try {
-      _log.d('Deleting bookmark: ${bookmark.id}');
+      appLogger.i('Deleting bookmark: ${bookmark.id}');
 
       final result =
           await _bookmarkOperationUseCases.deleteBookmark(bookmark.id);
 
       if (result.isSuccess()) {
-        _log.d('Successfully deleted bookmark');
+        appLogger.i('Successfully deleted bookmark');
       } else {
         final error = result.exceptionOrNull();
-        _log.e('Failed to delete bookmark: $error');
+        appLogger.e('Failed to delete bookmark: $error');
         throw error ?? Exception('Failed to delete bookmark');
       }
     } catch (e) {
-      _log.e('Exception while deleting bookmark: $e');
+      appLogger.e('Exception while deleting bookmark: $e');
       rethrow;
     }
   }
 
   Future<void> updateBookmarkLabels(List<String> labels) async {
     try {
-      _log.d('Updating bookmark labels: ${bookmark.id}');
+      appLogger.i('Updating bookmark labels: ${bookmark.id}');
 
       final result = await _bookmarkOperationUseCases.updateBookmarkLabels(
           bookmark, labels);
       _reloadBookmark();
 
       if (result.isSuccess()) {
-        _log.d('Successfully updated bookmark labels');
+        appLogger.i('Successfully updated bookmark labels');
       } else {
         final error = result.exceptionOrNull();
-        _log.e('Failed to update bookmark labels: $error');
+        appLogger.e('Failed to update bookmark labels: $error');
         throw error ?? Exception('Failed to update bookmark labels');
       }
     } catch (e) {
-      _log.e('Exception while updating bookmark labels: $e');
+      appLogger.e('Exception while updating bookmark labels: $e');
       rethrow;
     }
   }
@@ -225,7 +224,7 @@ class BookmarkDetailViewModel extends ChangeNotifier {
       return _labelUseCases.labelNames;
     }
 
-    _log.e("Failed to load labels", error: result.exceptionOrNull()!);
+    appLogger.e("Failed to load labels", error: result.exceptionOrNull()!);
     throw result.exceptionOrNull()!;
   }
 

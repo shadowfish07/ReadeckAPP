@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:readeck_app/data/repository/settings/settings_repository.dart';
 import 'package:readeck_app/ui/api_config/view_models/api_config_viewmodel.dart';
@@ -78,7 +77,6 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
                   builder: (context, state) {
                     return ChangeNotifierProvider(
                       create: (context) {
-                        Logger().d("create DailyReadViewModel");
                         return DailyReadViewModel(
                             context.read(),
                             context.read(),
@@ -88,7 +86,6 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
                       },
                       child: Consumer<DailyReadViewModel>(
                         builder: (context, viewModel, child) {
-                          Logger().d("build DailyReadScreen");
                           return DailyReadScreen(viewModel: viewModel);
                         },
                       ),

@@ -1,17 +1,15 @@
 import 'dart:math';
 
-import 'package:logger/logger.dart';
 import 'package:readeck_app/data/service/readeck_api_client.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 import 'package:readeck_app/domain/models/bookmark/label_info.dart';
+import 'package:readeck_app/main.dart';
 import 'package:result_dart/result_dart.dart';
 
 class BookmarkRepository {
   BookmarkRepository(this._readeckApiClient);
 
   final ReadeckApiClient _readeckApiClient;
-
-  final _log = Logger();
 
   AsyncResult<List<Bookmark>> getBookmarksByIds(List<String> ids) async {
     return _readeckApiClient.getBookmarks(ids: ids);
@@ -62,7 +60,7 @@ class BookmarkRepository {
       return Success(shuffled.take(5).toList());
     }
 
-    _log.w('获取所有未读书签失败: $allBookmarks');
+    appLogger.w('获取所有未读书签失败: $allBookmarks');
     return allBookmarks;
   }
 

@@ -1,11 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_command/flutter_command.dart';
-import 'package:logger/logger.dart';
 import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_operation_use_cases.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_use_cases.dart';
 import 'package:readeck_app/domain/use_cases/label_use_cases.dart';
+import 'package:readeck_app/main.dart';
 import 'package:readeck_app/utils/reading_stats_calculator.dart';
 import 'package:result_dart/result_dart.dart';
 
@@ -90,7 +90,6 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
     _labelUseCases.addListener(_onLabelsChanged);
   }
 
-  final _log = Logger();
   final BookmarkRepository _bookmarkRepository;
   final BookmarkOperationUseCases _bookmarkOperationUseCases;
   final BookmarkUseCases _bookmarkUseCases;
@@ -211,7 +210,7 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
         await _bookmarkOperationUseCases.toggleBookmarkMarked(bookmark);
 
     if (result.isError()) {
-      _log.e("Failed to toggle bookmark marked",
+      appLogger.e("Failed to toggle bookmark marked",
           error: result.exceptionOrNull()!);
       _optimisticMarked.remove(bookmark.id);
       notifyListeners();
@@ -228,7 +227,7 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
         await _bookmarkOperationUseCases.toggleBookmarkArchived(bookmark);
 
     if (result.isError()) {
-      _log.e("Failed to toggle bookmark archived",
+      appLogger.e("Failed to toggle bookmark archived",
           error: result.exceptionOrNull()!);
       _optimisticArchived.remove(bookmark.id);
       notifyListeners();
@@ -243,7 +242,7 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
       return _labelUseCases.labelNames;
     }
 
-    _log.e("Failed to load labels", error: result.exceptionOrNull()!);
+    appLogger.e("Failed to load labels", error: result.exceptionOrNull()!);
     throw result.exceptionOrNull()!;
   }
 
@@ -253,7 +252,7 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
         await _bookmarkOperationUseCases.updateBookmarkLabels(bookmark, labels);
 
     if (result.isError()) {
-      _log.e("Failed to update bookmark labels",
+      appLogger.e("Failed to update bookmark labels",
           error: result.exceptionOrNull()!);
       throw result.exceptionOrNull()!;
     }

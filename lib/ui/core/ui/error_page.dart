@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:logger/logger.dart';
+import 'package:readeck_app/main.dart';
 
 /// 通用错误页面组件
 /// 用于显示资源不存在、已删除等错误状态
@@ -68,7 +68,7 @@ class ErrorPage extends StatelessWidget {
     required VoidCallback onBack,
     required Exception? error,
   }) {
-    Logger().w("网络错误: $error");
+    appLogger.w("网络错误: $error");
 
     return ErrorPage(
       key: key,
@@ -88,7 +88,7 @@ class ErrorPage extends StatelessWidget {
     VoidCallback? onBack,
     required Exception? error,
   }) {
-    Logger().e("未知错误: $error");
+    appLogger.e("未知错误: $error");
 
     return ErrorPage(
       key: key,

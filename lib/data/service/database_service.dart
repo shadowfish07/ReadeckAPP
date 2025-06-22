@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'package:logger/logger.dart';
 import 'package:path/path.dart';
 import 'package:readeck_app/domain/models/daily_read_history/daily_read_history.dart';
+import 'package:readeck_app/main.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common/sqflite_logger.dart';
@@ -17,7 +17,6 @@ class DatabaseService {
   static const _kColumnBookmarkIds = 'bookmark_ids';
 
   Database? _database;
-  final _log = Logger();
 
   bool isOpen() {
     return _database?.isOpen ?? false;
@@ -35,9 +34,9 @@ class DatabaseService {
             try {
               final result = await db.rawQuery('SELECT sqlite_version()');
               final version = result.first.values.first;
-              _log.i('Current SQLite version: $version');
+              appLogger.i('Current SQLite version: $version');
             } catch (e) {
-              _log.e('Failed to get SQLite version', error: e);
+              appLogger.e('Failed to get SQLite version', error: e);
             }
             return db.execute(
               '''CREATE TABLE $_kTableDailyReadHistory (
@@ -60,15 +59,17 @@ class DatabaseService {
     try {
       final id = await _database!.insert(_kTableDailyReadHistory,
           {_kColumnBookmarkIds: jsonEncode(bookmarkIds)});
-      _log.d(
+      appLogger.i(
           "Inserted daily read history with id: $id. bookmarkIds: $bookmarkIds");
       return Success(id);
     } on Exception catch (e) {
-      _log.e("Failed to insert daily read history. bookmarkIds: $bookmarkIds",
+      appLogger.e(
+          "Failed to insert daily read history. bookmarkIds: $bookmarkIds",
           error: e);
       return Failure(e);
     } catch (e) {
-      _log.e("Failed to insert daily read history. bookmarkIds: $bookmarkIds",
+      appLogger.e(
+          "Failed to insert daily read history. bookmarkIds: $bookmarkIds",
           error: e);
       return Failure(Exception(e));
     }
@@ -86,13 +87,13 @@ class DatabaseService {
         where: '$_kColumnId = ?',
         whereArgs: [obj.id],
       );
-      _log.d("Updated daily read history with id: ${obj.id}. data: $obj");
+      appLogger.i("Updated daily read history with id: ${obj.id}. data: $obj");
       return Success(count);
     } on Exception catch (e) {
-      _log.e("Failed to update daily read history. data: $obj", error: e);
+      appLogger.e("Failed to update daily read history. data: $obj", error: e);
       return Failure(e);
     } catch (e) {
-      _log.e("Failed to update daily read history. data: $obj", error: e);
+      appLogger.e("Failed to update daily read history. data: $obj", error: e);
       return Failure(Exception(e));
     }
   }
@@ -124,17 +125,17 @@ class DatabaseService {
         limit: limit,
         offset: offset,
       );
-      _log.d("Retrieved ${maps.length} daily read histories. data: $maps");
+      appLogger.i("Retrieved ${maps.length} daily read histories. data: $maps");
       final List<DailyReadHistory> histories = [];
       for (final map in maps) {
         histories.add(DailyReadHistory.fromJson(map));
       }
       return Success(histories);
     } on Exception catch (e) {
-      _log.e("Failed to get daily read histories", error: e);
+      appLogger.e("Failed to get daily read histories", error: e);
       return Failure(e);
     } catch (e) {
-      _log.e("Failed to get daily read histories", error: e);
+      appLogger.e("Failed to get daily read histories", error: e);
       return Failure(Exception(e));
     }
   }
@@ -148,13 +149,13 @@ class DatabaseService {
     try {
       // 清空每日阅读历史表
       await _database!.delete(_kTableDailyReadHistory);
-      _log.i("Cleared all data from database");
+      appLogger.i("Cleared all data from database");
       return const Success(unit);
     } on Exception catch (e) {
-      _log.e("Failed to clear all data from database", error: e);
+      appLogger.e("Failed to clear all data from database", error: e);
       return Failure(e);
     } catch (e) {
-      _log.e("Failed to clear all data from database", error: e);
+      appLogger.e("Failed to clear all data from database", error: e);
       return Failure(Exception(e));
     }
   }
