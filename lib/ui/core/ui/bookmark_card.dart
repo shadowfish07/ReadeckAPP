@@ -149,7 +149,7 @@ class _BookmarkCardState extends State<BookmarkCard> {
                 Wrap(
                   spacing: 8,
                   runSpacing: 4,
-                  children: widget.bookmark.labels.take(3).map((label) {
+                  children: widget.bookmark.labels.map((label) {
                     return Chip(
                       label: Text(
                         label,
