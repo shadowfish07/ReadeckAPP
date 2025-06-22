@@ -148,7 +148,7 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
       get _loadBookmarks;
 
   Future<List<Bookmark>> _load(int page) async {
-    var limit = 5;
+    var limit = 10;
     _currentPage = page;
     final result = await _loadBookmarks(limit: limit, page: page);
     final bookmarks = result.getOrThrow();
