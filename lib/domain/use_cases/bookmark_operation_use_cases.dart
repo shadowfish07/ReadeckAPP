@@ -19,6 +19,11 @@ class BookmarkOperationUseCases {
     return _bookmarkRepository.toggleArchived(bookmark);
   }
 
+  AsyncResult<void> updateBookmarkLabels(
+      Bookmark bookmark, List<String> labels) async {
+    return _bookmarkRepository.updateLabels(bookmark, labels);
+  }
+
   AsyncResult<void> openUrl(String url) async {
     try {
       final uri = Uri.parse(url);

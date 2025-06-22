@@ -207,7 +207,18 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
                   onToggleMark: (bookmark) =>
                       viewModel.toggleBookmarkMarked(bookmark),
                   onUpdateLabels: (bookmark, labels) {
-                    // TODO
+                    viewModel
+                        .updateBookmarkLabels(bookmark, labels)
+                        .catchError((error) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('更新标签失败: $error'),
+                            duration: const Duration(seconds: 3),
+                          ),
+                        );
+                      }
+                    });
                   },
                   availableLabels: viewModel.availableLabels,
                   onLoadLabels: () => viewModel.loadLabels.executeWithFuture(),

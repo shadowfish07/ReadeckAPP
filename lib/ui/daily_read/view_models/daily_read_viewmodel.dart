@@ -178,4 +178,23 @@ class DailyReadViewModel extends ChangeNotifier {
     _log.e("Failed to load labels", error: result.exceptionOrNull()!);
     throw result.exceptionOrNull()!;
   }
+
+  Future<void> updateBookmarkLabels(
+      Bookmark bookmark, List<String> labels) async {
+    final result =
+        await _bookmarkOperationUseCases.updateBookmarkLabels(bookmark, labels);
+
+    if (result.isError()) {
+      _log.e("Failed to update bookmark labels",
+          error: result.exceptionOrNull()!);
+      throw result.exceptionOrNull()!;
+    }
+
+    // 更新本地书签数据
+    final index = _bookmarks.indexWhere((b) => b.id == bookmark.id);
+    if (index != -1) {
+      _bookmarks[index] = _bookmarks[index].copyWith(labels: labels);
+      notifyListeners();
+    }
+  }
 }

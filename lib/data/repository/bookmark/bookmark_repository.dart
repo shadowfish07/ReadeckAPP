@@ -61,4 +61,17 @@ class BookmarkRepository {
   AsyncResult<List<LabelInfo>> getLabels() async {
     return _readeckApiClient.getLabels();
   }
+
+  AsyncResult<void> updateLabels(Bookmark bookmark, List<String> labels) async {
+    final result = await _readeckApiClient.updateBookmark(
+      bookmark.id,
+      labels: labels,
+    );
+
+    if (result.isSuccess()) {
+      return const Success(unit);
+    }
+
+    return Failure(result.exceptionOrNull()!);
+  }
 }
