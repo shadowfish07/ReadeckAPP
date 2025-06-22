@@ -232,8 +232,8 @@ class _BookmarkCardState extends State<BookmarkCard> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           SizedBox(
-                            width: 16,
-                            height: 16,
+                            width: 12,
+                            height: 12,
                             child: CircularProgressIndicator(
                               value: widget.bookmark.readProgress / 100.0,
                               strokeWidth: 2,
