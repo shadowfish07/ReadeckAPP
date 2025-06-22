@@ -6,6 +6,7 @@ import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 class BookmarkCard extends StatefulWidget {
   final Bookmark bookmark;
   final Command onOpenUrl;
+  final Function(Bookmark bookmark)? onCardTap;
   final Function(Bookmark bookmark)? onToggleMark;
   final Function(Bookmark bookmark)? onToggleArchive;
   final Function(Bookmark bookmark, List<String> labels)? onUpdateLabels;
@@ -16,6 +17,7 @@ class BookmarkCard extends StatefulWidget {
     super.key,
     required this.bookmark,
     required this.onOpenUrl,
+    this.onCardTap,
     this.onToggleMark,
     this.onToggleArchive,
     this.onUpdateLabels,
@@ -63,9 +65,8 @@ class _BookmarkCardState extends State<BookmarkCard> {
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
       child: InkWell(
-        onTap: () async {
-          final url = widget.bookmark.url;
-          widget.onOpenUrl(url);
+        onTap: () {
+          widget.onCardTap?.call(widget.bookmark);
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
@@ -95,15 +96,23 @@ class _BookmarkCardState extends State<BookmarkCard> {
                     ),
                     const SizedBox(width: 4),
                     Expanded(
-                      child: Text(
-                        widget.bookmark.siteName!,
-                        style: Theme.of(rootContext)
-                            .textTheme
-                            .bodyMedium
-                            ?.copyWith(
-                              color: Theme.of(rootContext).colorScheme.primary,
-                            ),
-                        overflow: TextOverflow.ellipsis,
+                      child: InkWell(
+                        onTap: () {
+                          final url = widget.bookmark.url;
+                          widget.onOpenUrl(url);
+                        },
+                        borderRadius: BorderRadius.circular(4),
+                        child: Text(
+                          widget.bookmark.siteName!,
+                          style: Theme.of(rootContext)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(
+                                color:
+                                    Theme.of(rootContext).colorScheme.primary,
+                              ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ),
                   ],
