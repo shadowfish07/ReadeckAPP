@@ -43,3 +43,18 @@ app.*.map.json
 /android/app/release
 
 key.properties
+
+# Node.js related
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+
+# Semantic-release
+.nyc_output
+coverage/
+
+# Release files
+release-files/

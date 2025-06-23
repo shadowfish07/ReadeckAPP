@@ -1,0 +1,48 @@
+name: Sync Branches
+
+on:
+  workflow_run:
+    workflows: ["Release"]
+    types:
+      - completed
+    branches:
+      - main
+
+jobs:
+  sync:
+    name: Sync beta with main
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+    
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      
+      - name: Sync beta with main
+        run: |
+          # 切换到 beta 分支
+          git checkout beta
+          
+          # 合并 main 分支的更改
+          git merge main --no-edit -m "chore: sync beta with main [skip ci]"
+          
+          # 推送更改
+          git push origin beta
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Report sync status
+        run: |
+          echo "✅ Successfully synced beta branch with main"
+          echo "Beta branch is now up to date with the latest release"
