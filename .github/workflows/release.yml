@@ -45,6 +45,9 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
+      - name: Analyze code
+        run: flutter analyze
+
       - name: Run tests
         run: flutter test
 
@@ -119,12 +122,6 @@ jobs:
 
       - name: Get dependencies
         run: flutter pub get
-
-      - name: Run tests
-        run: flutter test
-
-      - name: Analyze code
-        run: flutter analyze
 
       - name: Cache Gradle dependencies
         uses: actions/cache@v3
