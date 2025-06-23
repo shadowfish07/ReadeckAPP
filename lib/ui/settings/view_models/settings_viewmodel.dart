@@ -9,6 +9,7 @@ import 'package:result_dart/result_dart.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
+import '../../../utils/log_manager.dart';
 
 class SettingsViewModel extends ChangeNotifier {
   SettingsViewModel(this._themeRepository, this._dailyReadHistoryRepository) {
@@ -16,6 +17,8 @@ class SettingsViewModel extends ChangeNotifier {
     _initializeThemeMode();
     setThemeMode = Command.createAsyncNoResult<ThemeMode>(_setThemeMode);
     exportLogs = Command.createAsyncNoResult<void>(_exportLogs);
+    clearOldLogs = Command.createAsyncNoResult<void>(_clearOldLogs);
+    clearAllLogs = Command.createAsyncNoResult<void>(_clearAllLogs);
   }
   final ThemeRepository _themeRepository;
   final DailyReadHistoryRepository _dailyReadHistoryRepository;
@@ -26,6 +29,8 @@ class SettingsViewModel extends ChangeNotifier {
 
   late Command setThemeMode;
   late Command exportLogs;
+  late Command clearOldLogs;
+  late Command clearAllLogs;
 
   Future<void> _initializeThemeMode() async {
     final result = await _themeRepository.getThemeMode();
@@ -52,13 +57,13 @@ class SettingsViewModel extends ChangeNotifier {
     try {
       // 获取应用文档目录
       final directory = await getApplicationDocumentsDirectory();
-      final originalLogFile = File('${directory.path}/readeck_app_logs.txt');
+      final logDir = Directory('${directory.path}/logs');
       final exportLogFile = File(
           '${directory.path}/readeck_app_export_${DateTime.now().millisecondsSinceEpoch}.txt');
 
       // 创建导出日志内容
       final logContent = StringBuffer();
-      logContent.writeln('ReadeckApp 日志导出');
+      logContent.writeln('ReadeckApp 日志导出（最近日志）');
       logContent.writeln('导出时间: ${DateTime.now().toIso8601String()}');
       logContent.writeln('=' * 50);
       logContent.writeln();
@@ -69,23 +74,49 @@ class SettingsViewModel extends ChangeNotifier {
       logContent.writeln('- 导出时间: ${DateTime.now()}');
       logContent.writeln();
 
-      // 读取并添加实际的日志文件内容
+      // 读取并添加轮转日志文件内容
       logContent.writeln('应用日志:');
       logContent.writeln('-' * 50);
 
-      if (await originalLogFile.exists()) {
-        try {
-          final logFileContent = await originalLogFile.readAsString();
-          if (logFileContent.isNotEmpty) {
-            logContent.writeln(logFileContent);
-          } else {
-            logContent.writeln('日志文件为空');
+      if (logDir.existsSync()) {
+        // 获取所有日志文件
+        final logFiles = logDir
+            .listSync()
+            .whereType<File>()
+            .where((f) => f.path.contains('readeck_app.log'))
+            .toList();
+
+        if (logFiles.isNotEmpty) {
+          // 按修改时间排序，取最新的2个文件
+          logFiles.sort(
+              (a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
+          final recentFiles = logFiles.take(2).toList();
+
+          for (final file in recentFiles) {
+            logContent.writeln('\n文件: ${file.path.split('/').last}');
+            logContent.writeln('修改时间: ${file.lastModifiedSync()}');
+            logContent.writeln(
+                '文件大小: ${(file.lengthSync() / 1024).toStringAsFixed(1)} KB');
+            logContent.writeln('-' * 30);
+
+            try {
+              final content = await file.readAsString();
+              if (content.isNotEmpty) {
+                // 过滤敏感信息
+                final filteredContent = _filterSensitiveInfo(content);
+                logContent.writeln(filteredContent);
+              } else {
+                logContent.writeln('文件为空');
+              }
+            } catch (e) {
+              logContent.writeln('读取文件失败: $e');
+            }
           }
-        } catch (e) {
-          logContent.writeln('读取日志文件失败: $e');
+        } else {
+          logContent.writeln('未找到日志文件');
         }
       } else {
-        logContent.writeln('日志文件不存在（可能是首次运行或调试模式）');
+        logContent.writeln('日志目录不存在（可能是首次运行或调试模式）');
         logContent.writeln('注意: 在调试模式下，日志只输出到控制台，不会保存到文件');
       }
 
@@ -108,6 +139,43 @@ class SettingsViewModel extends ChangeNotifier {
       appLogger.e('导出日志失败: $e');
       rethrow;
     }
+  }
+
+  /// 清理旧日志（保留30天）
+  AsyncResult<void> _clearOldLogs(void _) async {
+    final result = await LogManager.clearOldLogs(daysToKeep: 30);
+    return result.fold(
+      (success) => const Success(unit),
+      (failure) => Failure(failure),
+    );
+  }
+
+  /// 清理所有日志（调试用）
+  AsyncResult<void> _clearAllLogs(void _) async {
+    final result = await LogManager.clearAllLogs();
+    return result.fold(
+      (success) => const Success(unit),
+      (failure) => Failure(failure),
+    );
+  }
+
+  /// 过滤敏感信息
+  String _filterSensitiveInfo(String content) {
+    return content
+        .replaceAll(
+            RegExp(r'token["\s]*[:=]["\s]*[\w\-\.]+', caseSensitive: false),
+            'token: [FILTERED]')
+        .replaceAll(
+            RegExp(r'password["\s]*[:=]["\s]*\w+', caseSensitive: false),
+            'password: [FILTERED]')
+        .replaceAll(
+            RegExp(r'api[_\s]*key["\s]*[:=]["\s]*[\w\-\.]+',
+                caseSensitive: false),
+            'api_key: [FILTERED]')
+        .replaceAll(
+            RegExp(r'authorization["\s]*[:=]["\s]*[\w\-\.]+',
+                caseSensitive: false),
+            'authorization: [FILTERED]');
   }
 
   String _getThemeModeText(ThemeMode mode) {

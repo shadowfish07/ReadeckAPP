@@ -10,6 +10,7 @@ import 'data/service/shared_preference_service.dart';
 import 'routing/router.dart';
 import 'ui/core/theme.dart';
 import 'main_viewmodel.dart';
+import 'utils/rotating_file_output.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,12 +43,19 @@ Future<void> _configureLogger() async {
 
     try {
       final directory = await getApplicationDocumentsDirectory();
-      final logFile = File('${directory.path}/readeck_app_logs.txt');
+      final logDir = Directory('${directory.path}/logs');
+      if (!logDir.existsSync()) {
+        logDir.createSync(recursive: true);
+      }
 
       appLogger = Logger(
         output: MultiOutput([
           ConsoleOutput(), // 仍然输出到控制台（在某些情况下有用）
-          FileOutput(file: logFile), // 输出到文件
+          RotatingFileOutput(
+            basePath: logDir.path,
+            maxFileSize: 2 * 1024 * 1024, // 2MB per file
+            maxFiles: 5, // 保留5个文件
+          ),
         ]),
         filter: ProductionFilter(),
       );
@@ -59,24 +67,7 @@ Future<void> _configureLogger() async {
   }
 }
 
-/// 自定义文件输出器
-class FileOutput extends LogOutput {
-  final File file;
-
-  FileOutput({required this.file});
-
-  @override
-  void output(OutputEvent event) {
-    try {
-      final timestamp = DateTime.now().toIso8601String();
-      final logEntry =
-          event.lines.map((line) => '[$timestamp] $line').join('\n');
-      file.writeAsStringSync('$logEntry\n', mode: FileMode.append);
-    } catch (e) {
-      // 如果写入文件失败，忽略错误以避免影响应用运行
-    }
-  }
-}
+/// 轮转文件输出器
 
 class MainApp extends StatefulWidget {
   const MainApp({super.key});
