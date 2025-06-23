@@ -70,8 +70,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Cache npm dependencies
         uses: actions/cache@v3
@@ -155,17 +155,15 @@ jobs:
         continue-on-error: true
         run: flutter build appbundle --release
 
-
-
       - name: Prepare release assets
         run: |
           mkdir -p release-files
-          
+
           # Copy APK if exists
           if [ -f "build/app/outputs/flutter-apk/app-release.apk" ]; then
             cp build/app/outputs/flutter-apk/app-release.apk release-files/readeck-app.apk
           fi
-          
+
           # Copy AAB if exists
           if [ -f "build/app/outputs/bundle/release/app-release.aab" ]; then
             cp build/app/outputs/bundle/release/app-release.aab release-files/readeck-app.aab
