@@ -1,6 +1,6 @@
 # ReadeckApp
 
-**语言 / Language**: [English](./README.md) | [中文](./README_zh.md)
+[English](./README.md) | [中文](./README_zh.md)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Version](https://img.shields.io/github/v/release/shadowfish07/ReadeckApp)]()
