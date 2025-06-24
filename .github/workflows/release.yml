@@ -134,7 +134,26 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Setup signingQueue
+      - name: Run semantic-release (dry-run to get version)
+        id: semantic_release_dry
+        run: |
+          # Run semantic-release in dry-run mode to get the next version
+          NEXT_VERSION=$(npx semantic-release --dry-run --no-ci | grep -oP 'The next release version is \K[0-9]+\.[0-9]+\.[0-9]+' || echo "")
+          if [ -n "$NEXT_VERSION" ]; then
+            echo "next_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
+            echo "has_release=true" >> $GITHUB_OUTPUT
+            # Update pubspec.yaml with the new version
+            sed -i "s/^version: .*/version: $NEXT_VERSION/" pubspec.yaml
+            echo "Updated pubspec.yaml version to: $NEXT_VERSION"
+          else
+            echo "has_release=false" >> $GITHUB_OUTPUT
+            echo "No release will be created"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup signing
+        if: steps.semantic_release_dry.outputs.has_release == 'true'
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/release-key.jks
           echo "storeFile=release-key.jks" > key.properties
@@ -143,13 +162,16 @@ jobs:
           echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> key.properties
 
       - name: Build signed APK
+        if: steps.semantic_release_dry.outputs.has_release == 'true'
         run: flutter build apk --release
 
       - name: Build App Bundle
+        if: steps.semantic_release_dry.outputs.has_release == 'true'
         continue-on-error: true
         run: flutter build appbundle --release
 
       - name: Prepare release assets
+        if: steps.semantic_release_dry.outputs.has_release == 'true'
         run: |
           mkdir -p release-files
 
@@ -164,7 +186,7 @@ jobs:
           fi
 
       - name: Clean up signing files
-        if: env.KEYSTORE_BASE64 != ''
+        if: steps.semantic_release_dry.outputs.has_release == 'true' && env.KEYSTORE_BASE64 != ''
         run: |
           rm -f android/app/release-key.jks
           rm -f android/key.properties
@@ -172,6 +194,7 @@ jobs:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
 
       - name: Run semantic-release
+        if: steps.semantic_release_dry.outputs.has_release == 'true'
         run: npx semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
