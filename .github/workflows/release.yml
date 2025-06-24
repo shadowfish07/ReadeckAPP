@@ -174,15 +174,16 @@ jobs:
         if: steps.semantic_release_dry.outputs.has_release == 'true'
         run: |
           mkdir -p release-files
+          VERSION=${{ steps.semantic_release_dry.outputs.next_version }}
 
           # Copy APK if exists
           if [ -f "build/app/outputs/flutter-apk/app-release.apk" ]; then
-            cp build/app/outputs/flutter-apk/app-release.apk release-files/readeck-app.apk
+            cp build/app/outputs/flutter-apk/app-release.apk release-files/readeck-app-${VERSION}.apk
           fi
 
           # Copy AAB if exists
           if [ -f "build/app/outputs/bundle/release/app-release.aab" ]; then
-            cp build/app/outputs/bundle/release/app-release.aab release-files/readeck-app.aab
+            cp build/app/outputs/bundle/release/app-release.aab release-files/readeck-app-${VERSION}.aab
           fi
 
       - name: Clean up signing files

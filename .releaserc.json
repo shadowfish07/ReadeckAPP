@@ -66,8 +66,12 @@
       {
         "assets": [
           {
-            "path": "release-files/*",
-            "label": "Release Assets"
+            "path": "release-files/readeck-app-*.apk",
+            "label": "Android APK v${nextRelease.version}"
+          },
+          {
+            "path": "release-files/readeck-app-*.aab",
+            "label": "Android App Bundle v${nextRelease.version}"
           }
         ],
         "successComment": false,
