@@ -1,3 +1,10 @@
+## [0.3.1](https://github.com/shadowfish07/ReadeckApp/compare/v0.3.0...v0.3.1) (2025-06-24)
+
+
+### 🐛 Bug修复
+
+* test ([796fb8c](https://github.com/shadowfish07/ReadeckApp/commit/796fb8ce66f63c3c1517b9595c52a1fb623ac79f))
+
 ## [0.3.0](https://github.com/shadowfish07/ReadeckApp/compare/v0.2.1...v0.3.0) (2025-06-23)
 
 
