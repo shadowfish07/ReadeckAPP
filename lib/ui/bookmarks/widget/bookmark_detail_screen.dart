@@ -161,17 +161,10 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
               return _buildContent(context, data);
             },
             onError: (context, error, _, __) {
-              switch (error) {
-                case ResourceNotFoundException _:
-                  return ErrorPage.bookmarkNotFound();
-                case NetworkErrorException _:
-                  return ErrorPage.networkError(
-                    error: error,
-                    onBack: () => viewModel.retry(),
-                  );
-                default:
-                  return ErrorPage.unknownError(error: Exception(error));
-              }
+              return ErrorPage.fromException(
+                error,
+                networkErrorRetry: () => viewModel.retry(),
+              );
             },
           );
         },
