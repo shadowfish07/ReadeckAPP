@@ -51,12 +51,95 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
           overflow: TextOverflow.ellipsis,
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.open_in_browser),
-            onPressed: () {
-              widget.viewModel.openUrl(widget.viewModel.bookmark.url);
+          PopupMenuButton<String>(
+            onSelected: (String value) {
+              switch (value) {
+                case 'open_browser':
+                  widget.viewModel.openUrl(widget.viewModel.bookmark.url);
+                  break;
+                case 'toggle_mark':
+                  _toggleBookmarkMarked();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Text(widget.viewModel.bookmark.isMarked
+                            ? '已取消喜爱'
+                            : '已标记喜爱')),
+                  );
+                  break;
+                case 'edit_labels':
+                  _showLabelEditDialog();
+                  break;
+                case 'archive':
+                  if (!widget.viewModel.bookmark.isArchived) {
+                    _archiveBookmark();
+                  }
+                  break;
+                case 'delete':
+                  _showDeleteConfirmDialog();
+                  break;
+              }
             },
-            tooltip: '在浏览器中打开',
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              const PopupMenuItem<String>(
+                value: 'open_browser',
+                child: ListTile(
+                  leading: Icon(Icons.open_in_browser),
+                  title: Text('在浏览器中打开'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: 'toggle_mark',
+                child: ListTile(
+                  leading: Icon(
+                    widget.viewModel.bookmark.isMarked
+                        ? Icons.favorite
+                        : Icons.favorite_border,
+                    color: widget.viewModel.bookmark.isMarked
+                        ? Theme.of(context).colorScheme.error
+                        : null,
+                  ),
+                  title: Text(
+                    widget.viewModel.bookmark.isMarked ? '取消喜爱' : '标记喜爱',
+                  ),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              const PopupMenuItem<String>(
+                value: 'edit_labels',
+                child: ListTile(
+                  leading: Icon(Icons.local_offer_outlined),
+                  title: Text('编辑标签'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              if (!widget.viewModel.bookmark.isArchived)
+                const PopupMenuItem<String>(
+                  value: 'archive',
+                  child: ListTile(
+                    leading: Icon(Icons.archive),
+                    title: Text('完成阅读'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              const PopupMenuDivider(),
+              PopupMenuItem<String>(
+                value: 'delete',
+                child: ListTile(
+                  leading: Icon(
+                    Icons.delete_outline,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                  title: Text(
+                    '删除书签',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+            ],
           ),
         ],
       ),
