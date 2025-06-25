@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_command/flutter_command.dart';
 import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
+import 'package:readeck_app/data/service/openrouter_api_client.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_operation_use_cases.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_use_cases.dart';
@@ -13,6 +14,7 @@ class BookmarkDetailViewModel extends ChangeNotifier {
       this._bookmarkOperationUseCases,
       this._bookmarkUseCases,
       this._labelUseCases,
+      this._openRouterApiClient,
       this._bookmark) {
     // 注册标签数据变化监听器
     _labelUseCases.addListener(_onLabelsChanged);
@@ -36,13 +38,25 @@ class BookmarkDetailViewModel extends ChangeNotifier {
     deleteBookmarkCommand = Command.createAsyncNoParamNoResult(_deleteBookmark);
 
     loadLabels = Command.createAsyncNoParam(_loadLabels, initialValue: []);
+
+    translateContentCommand =
+        Command.createAsyncNoParamNoResult(_translateContent);
   }
 
   final BookmarkUseCases _bookmarkUseCases;
   final BookmarkRepository _bookmarkRepository;
   final BookmarkOperationUseCases _bookmarkOperationUseCases;
   final LabelUseCases _labelUseCases;
+  final OpenRouterApiClient _openRouterApiClient;
   Bookmark _bookmark;
+
+  // AI翻译相关状态
+  bool _isTranslating = false;
+  bool _isTranslated = false;
+  bool _isTranslateMode = false;
+  bool _isTranslateBannerVisible = true;
+  String _translatedContent = '';
+  String _originalContent = '';
 
   late Command<void, String> loadArticleContent;
   late Command<int, void> updateReadProgressCommand;
@@ -51,10 +65,18 @@ class BookmarkDetailViewModel extends ChangeNotifier {
   late Command<void, void> toggleMarkCommand;
   late Command<void, void> deleteBookmarkCommand;
   late Command<void, List<String>> loadLabels;
+  late Command<void, void> translateContentCommand;
 
   Bookmark get bookmark => _bookmark;
-  String get articleHtml => loadArticleContent.value;
+  String get articleHtml =>
+      _isTranslateMode ? _translatedContent : loadArticleContent.value;
   bool get isLoading => loadArticleContent.isExecuting.value;
+  bool get isTranslating => _isTranslating;
+  bool get isTranslated => _isTranslated;
+  bool get isTranslateMode => _isTranslateMode;
+  bool get isTranslateBannerVisible => _isTranslateBannerVisible;
+  bool get canStartTranslate =>
+      !_isTranslating && loadArticleContent.value.isNotEmpty && !_isTranslated;
 
   /// 获取可用的标签名称列表
   List<String> get availableLabels => _labelUseCases.labelNames;
@@ -228,6 +250,86 @@ class BookmarkDetailViewModel extends ChangeNotifier {
 
     appLogger.e("Failed to load labels", error: result.exceptionOrNull()!);
     throw result.exceptionOrNull()!;
+  }
+
+  /// AI翻译内容
+  Future<void> _translateContent() async {
+    try {
+      appLogger.i('开始AI翻译内容');
+
+      _isTranslateMode = true;
+      _isTranslating = true;
+      notifyListeners();
+
+      // 保存原始内容
+      _originalContent = loadArticleContent.value;
+
+      // 构建翻译提示
+      final messages = [
+        {
+          'role': 'system',
+          'content':
+              '你是一个专业的翻译助手。请将用户提供的HTML内容翻译成中文，保持HTML标签结构不变，只翻译文本内容。请确保翻译准确、流畅、符合中文表达习惯。'
+        },
+        {'role': 'user', 'content': _originalContent}
+      ];
+
+      // 使用流式API进行翻译
+      final translationStream = _openRouterApiClient.streamChatCompletion(
+        model: 'google/gemini-2.5-flash',
+        messages: messages,
+        temperature: 0.3,
+      );
+
+      _translatedContent = '';
+
+      await for (final result in translationStream) {
+        if (result.isSuccess()) {
+          final chunk = result.getOrThrow();
+          appLogger.d("AI翻译内容 chunk: $chunk");
+          _translatedContent += chunk;
+          notifyListeners();
+        } else {
+          final error = result.exceptionOrNull();
+          appLogger.e('AI翻译失败: $error');
+          throw error ?? Exception('AI翻译失败');
+        }
+      }
+
+      _isTranslated = true;
+      _isTranslating = false;
+      notifyListeners();
+
+      appLogger.i('AI翻译完成');
+    } catch (e) {
+      _isTranslating = false;
+      notifyListeners();
+      appLogger.e('AI翻译异常: $e');
+      rethrow;
+    }
+  }
+
+  /// 切换显示原文/译文
+  void toggleTranslation() {
+    _isTranslateMode = !_isTranslateMode;
+    notifyListeners();
+  }
+
+  /// 隐藏翻译横幅
+  void hideTranslateBanner() {
+    _isTranslateBannerVisible = false;
+    notifyListeners();
+  }
+
+  /// 重置翻译状态
+  void resetTranslation() {
+    _isTranslated = false;
+    _isTranslateMode = false;
+    _isTranslating = false;
+    _isTranslateBannerVisible = true;
+    _translatedContent = '';
+    _originalContent = '';
+    notifyListeners();
   }
 
   /// 标签数据变化回调

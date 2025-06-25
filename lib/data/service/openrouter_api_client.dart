@@ -21,10 +21,9 @@ class OpenRouterApiClient {
   Future<void> _initApiKey() async {
     if (_apiKey == null) {
       final result = await _sharedPreferencesService.getOpenRouterApiKey();
-      result.fold(
-        (success) => _apiKey = success,
-        (failure) => _apiKey = '',
-      );
+      if (result.isSuccess()) {
+        _apiKey = result.getOrNull();
+      }
     }
   }
 
@@ -71,6 +70,8 @@ class OpenRouterApiClient {
 
       request.headers.addAll(_headers);
 
+      appLogger.d('OpenRouter API headers: $_headers');
+
       final requestBody = {
         'model': model,
         'messages': messages,
@@ -91,8 +92,11 @@ class OpenRouterApiClient {
 
       if (streamedResponse.statusCode != 200) {
         appLogger.w('OpenRouter API 请求失败。状态码: ${streamedResponse.statusCode}');
+        // 读取错误响应的body内容
+        final responseBody = await streamedResponse.stream.bytesToString();
+        appLogger.w('响应body: $responseBody');
         yield Failure(NetworkErrorException(
-          'OpenRouter API 请求失败',
+          'OpenRouter API 请求失败: $responseBody',
           uri,
           streamedResponse.statusCode,
         ));

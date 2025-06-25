@@ -5,6 +5,7 @@ import 'package:readeck_app/data/repository/daily_read_history/daily_read_histor
 import 'package:readeck_app/data/repository/settings/settings_repository.dart';
 import 'package:readeck_app/data/service/database_service.dart';
 import 'package:readeck_app/data/service/readeck_api_client.dart';
+import 'package:readeck_app/data/service/openrouter_api_client.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_operation_use_cases.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_use_cases.dart';
 import 'package:readeck_app/domain/use_cases/label_use_cases.dart';
@@ -27,6 +28,9 @@ List<SingleChildWidget> providers(String host, String token) {
       ),
     ),
     Provider(create: (context) => ReadeckApiClient(host, token)),
+    Provider(
+        create: (context) =>
+            OpenRouterApiClient(context.read<SharedPreferencesService>())),
     Provider(create: (context) => DatabaseService()),
     Provider(create: (context) => BookmarkRepository(context.read())),
     Provider(create: (context) => DailyReadHistoryRepository(context.read())),
