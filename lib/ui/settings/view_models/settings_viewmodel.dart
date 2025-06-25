@@ -144,19 +144,21 @@ class SettingsViewModel extends ChangeNotifier {
   /// 清理旧日志（保留30天）
   AsyncResult<void> _clearOldLogs(void _) async {
     final result = await LogManager.clearOldLogs(daysToKeep: 30);
-    return result.fold(
-      (success) => const Success(unit),
-      (failure) => Failure(failure),
-    );
+    if (result.isSuccess()) {
+      return const Success(unit);
+    } else {
+      return Failure(result.exceptionOrNull()!);
+    }
   }
 
   /// 清理所有日志（调试用）
   AsyncResult<void> _clearAllLogs(void _) async {
     final result = await LogManager.clearAllLogs();
-    return result.fold(
-      (success) => const Success(unit),
-      (failure) => Failure(failure),
-    );
+    if (result.isSuccess()) {
+      return const Success(unit);
+    } else {
+      return Failure(result.exceptionOrNull()!);
+    }
   }
 
   /// 过滤敏感信息

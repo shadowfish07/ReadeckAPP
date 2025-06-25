@@ -293,6 +293,7 @@ test_resources/                    # 测试资源
 | **MVVM 模式**    | 每个页面都有对应的 View 和 ViewModel | `ReadingListScreen` + `ReadingListViewModel` |
 | **Command 模式** | 所有用户交互都通过 Command 执行      | `loadArticlesCommand.execute()`              |
 | **Result 模式**  | 所有可能失败的操作都返回 Result      | `Future<Result<List<Article>>>`              |
+| **Result 错误处理** | ViewModel 中使用 result_dart 工具函数处理错误，不使用 fold() | `result.isSuccess()`, `result.getOrNull()`, `result.exceptionOrNull()` |
 | **依赖注入**     | 使用 Provider 进行依赖管理           | 构造函数注入 Repository                      |
 | **不可变模型**   | 所有数据模型都使用 freezed           | `@freezed class Article`                     |
 
