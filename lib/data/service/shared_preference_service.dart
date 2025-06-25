@@ -8,6 +8,7 @@ class SharedPreferencesService {
   static const String _kThemeMode = 'themeMode';
   static const String _kReadeckApiHost = 'readeckApiHost';
   static const String _kReadeckApiToken = 'readeckApiToken';
+  static const String _kOpenRouterApiKey = 'openRouterApiKey';
   static const String _kReadingStatsPrefix = 'readingStats_';
 
   AsyncResult<void> setThemeMode(int value) async {
@@ -64,6 +65,26 @@ class SharedPreferencesService {
     final prefs = await SharedPreferences.getInstance();
     try {
       final value = prefs.getString(_kReadeckApiToken) ?? '';
+      return Success(value);
+    } on Exception catch (e) {
+      return Failure(e);
+    }
+  }
+
+  AsyncResult<void> setOpenRouterApiKey(String value) async {
+    final prefs = await SharedPreferences.getInstance();
+    try {
+      await prefs.setString(_kOpenRouterApiKey, value);
+      return const Success(unit);
+    } on Exception catch (e) {
+      return Failure(e);
+    }
+  }
+
+  AsyncResult<String> getOpenRouterApiKey() async {
+    final prefs = await SharedPreferences.getInstance();
+    try {
+      final value = prefs.getString(_kOpenRouterApiKey) ?? '';
       return Success(value);
     } on Exception catch (e) {
       return Failure(e);

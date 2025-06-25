@@ -9,8 +9,10 @@ import 'package:readeck_app/ui/core/ui/error_page.dart';
 import 'package:readeck_app/ui/daily_read/view_models/daily_read_viewmodel.dart';
 import 'package:readeck_app/ui/daily_read/widgets/daily_read_screen.dart';
 import 'package:readeck_app/ui/settings/view_models/about_viewmodel.dart';
+import 'package:readeck_app/ui/settings/view_models/ai_settings_viewmodel.dart';
 import 'package:readeck_app/ui/settings/view_models/settings_viewmodel.dart';
 import 'package:readeck_app/ui/settings/widgets/about_page.dart';
+import 'package:readeck_app/ui/settings/widgets/ai_settings_screen.dart';
 import 'package:readeck_app/ui/settings/widgets/settings_screen.dart';
 import 'package:readeck_app/ui/bookmarks/view_models/bookmarks_viewmodel.dart';
 import 'package:readeck_app/ui/bookmarks/widget/unarchived_screen.dart';
@@ -169,6 +171,12 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
             builder: (context, state) {
               final viewModel = ApiConfigViewModel(context.read());
               return ApiConfigPage(viewModel: viewModel);
+            }),
+        GoRoute(
+            path: Routes.aiSetting,
+            builder: (context, state) {
+              final viewModel = AiSettingsViewModel(context.read());
+              return AiSettingsScreen(viewModel: viewModel);
             }),
         GoRoute(
             path: '${Routes.bookmarkDetail}/:id',
