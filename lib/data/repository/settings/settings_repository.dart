@@ -51,6 +51,27 @@ class SettingsRepository {
       return Failure(Exception(token.exceptionOrNull()));
     }
 
-    return Success((host.getOrNull()!, token.getOrNull()!));
+    return Success((host.getOrThrow(), token.getOrThrow()));
+  }
+
+  /// 保存 OpenRouter API Key
+  AsyncResult<void> saveOpenRouterApiKey(String apiKey) async {
+    final result = await _prefsService.setOpenRouterApiKey(apiKey);
+    if (result.isError()) {
+      appLogger.e("保存OpenRouter API Key失败", error: result.exceptionOrNull());
+      return result;
+    }
+    return const Success(unit);
+  }
+
+  /// 获取 OpenRouter API Key
+  AsyncResult<String> getOpenRouterApiKey() async {
+    final result = await _prefsService.getOpenRouterApiKey();
+    if (result.isError()) {
+      appLogger.e("获取OpenRouter API Key失败", error: result.exceptionOrNull());
+      return Failure(Exception(result.exceptionOrNull()));
+    }
+
+    return Success(result.getOrThrow());
   }
 }

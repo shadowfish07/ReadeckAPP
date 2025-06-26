@@ -79,6 +79,26 @@ ReadeckApp 界面基于状态驱动：
 UI = f(State)
 ```
 
+### 5. 分层依赖原则（Layered Dependency Principle）
+
+ReadeckApp 严格遵循分层依赖原则：
+
+- **ViewModel 不得直接依赖 Service 层**
+- **ViewModel 只能通过 Repository 层获取数据**
+- **Repository 层作为 ViewModel 和 Service 层之间的中介**
+- **确保数据访问逻辑集中在 Repository 层**
+- **提高代码的可测试性和可维护性**
+
+**正确的依赖关系：**
+```
+ViewModel → Repository → Service
+```
+
+**错误的依赖关系：**
+```
+ViewModel → Service (❌ 禁止)
+```
+
 ---
 
 ## 分层架构设计

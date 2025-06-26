@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_command/flutter_command.dart';
 import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
-import 'package:readeck_app/data/service/openrouter_api_client.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_operation_use_cases.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_use_cases.dart';
@@ -14,7 +13,6 @@ class BookmarkDetailViewModel extends ChangeNotifier {
       this._bookmarkOperationUseCases,
       this._bookmarkUseCases,
       this._labelUseCases,
-      this._openRouterApiClient,
       this._bookmark) {
     // 注册标签数据变化监听器
     _labelUseCases.addListener(_onLabelsChanged);
@@ -47,7 +45,6 @@ class BookmarkDetailViewModel extends ChangeNotifier {
   final BookmarkRepository _bookmarkRepository;
   final BookmarkOperationUseCases _bookmarkOperationUseCases;
   final LabelUseCases _labelUseCases;
-  final OpenRouterApiClient _openRouterApiClient;
   Bookmark _bookmark;
 
   // AI翻译相关状态
@@ -252,59 +249,48 @@ class BookmarkDetailViewModel extends ChangeNotifier {
     throw result.exceptionOrNull()!;
   }
 
-  /// AI翻译内容
+  /// AI翻译内容（流式处理）
+  /// 通过Repository层进行翻译，优先从缓存获取翻译，如果缓存没有则使用AI翻译并写入缓存
   Future<void> _translateContent() async {
     try {
       appLogger.i('开始AI翻译内容');
 
       _isTranslateMode = true;
       _isTranslating = true;
+      _translatedContent = ''; // 清空之前的翻译内容
       notifyListeners();
 
       // 保存原始内容
       _originalContent = loadArticleContent.value;
 
-      // 构建翻译提示
-      final messages = [
-        {
-          'role': 'system',
-          'content':
-              '你是一个专业的翻译助手。请将用户提供的HTML内容翻译成中文，保持HTML标签结构不变，只翻译文本内容。请确保翻译准确、流畅、符合中文表达习惯。'
-        },
-        {'role': 'user', 'content': _originalContent}
-      ];
-
-      // 使用流式API进行翻译
-      final translationStream = _openRouterApiClient.streamChatCompletion(
-        model: 'google/gemini-2.5-flash',
-        messages: messages,
-        temperature: 0.3,
-      );
-
-      _translatedContent = '';
+      // 通过Repository进行流式翻译
+      final translationStream = _bookmarkRepository
+          .translateBookmarkContentStream(_bookmark.id, _originalContent);
 
       await for (final result in translationStream) {
         if (result.isSuccess()) {
-          final chunk = result.getOrThrow();
-          appLogger.d("AI翻译内容 chunk: $chunk");
-          _translatedContent += chunk;
+          _translatedContent = result.getOrThrow();
+          // 实时更新UI显示翻译进度
           notifyListeners();
+          appLogger.d('翻译进度更新: ${_translatedContent.length} 字符');
         } else {
+          _isTranslating = false;
+          notifyListeners();
           final error = result.exceptionOrNull();
-          appLogger.e('AI翻译失败: $error');
-          throw error ?? Exception('AI翻译失败');
+          appLogger.e('翻译失败: ${_bookmark.id}', error: error);
+          throw error ?? Exception('翻译失败');
         }
       }
 
+      // 翻译完成
       _isTranslated = true;
       _isTranslating = false;
       notifyListeners();
-
-      appLogger.i('AI翻译完成');
+      appLogger.i('翻译完成: ${_bookmark.id}');
     } catch (e) {
       _isTranslating = false;
       notifyListeners();
-      appLogger.e('AI翻译异常: $e');
+      appLogger.e('翻译异常: ${_bookmark.id}', error: e);
       rethrow;
     }
   }
@@ -312,6 +298,9 @@ class BookmarkDetailViewModel extends ChangeNotifier {
   /// 切换显示原文/译文
   void toggleTranslation() {
     _isTranslateMode = !_isTranslateMode;
+    if (_isTranslateMode) {
+      _isTranslateBannerVisible = true;
+    }
     notifyListeners();
   }
 

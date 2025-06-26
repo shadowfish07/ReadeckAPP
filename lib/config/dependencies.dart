@@ -32,7 +32,9 @@ List<SingleChildWidget> providers(String host, String token) {
         create: (context) =>
             OpenRouterApiClient(context.read<SharedPreferencesService>())),
     Provider(create: (context) => DatabaseService()),
-    Provider(create: (context) => BookmarkRepository(context.read())),
+    Provider(
+        create: (context) =>
+            BookmarkRepository(context.read(), context.read(), context.read())),
     Provider(create: (context) => DailyReadHistoryRepository(context.read())),
     Provider(create: (context) => BookmarkUseCases()),
     Provider(create: (context) => LabelUseCases()),

@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_command/flutter_command.dart';
-import 'package:readeck_app/data/service/shared_preference_service.dart';
+import 'package:readeck_app/data/repository/settings/settings_repository.dart';
 import 'package:readeck_app/main.dart';
 
 class AiSettingsViewModel extends ChangeNotifier {
-  AiSettingsViewModel(this._sharedPreferencesService) {
+  AiSettingsViewModel(this._settingsRepository) {
     _initCommands();
   }
 
-  final SharedPreferencesService _sharedPreferencesService;
+  final SettingsRepository _settingsRepository;
 
   String _openRouterApiKey = '';
   String get openRouterApiKey => _openRouterApiKey;
@@ -28,7 +28,7 @@ class AiSettingsViewModel extends ChangeNotifier {
   }
 
   Future<void> _saveApiKey(String apiKey) async {
-    final result = await _sharedPreferencesService.setOpenRouterApiKey(apiKey);
+    final result = await _settingsRepository.saveOpenRouterApiKey(apiKey);
     if (result.isSuccess()) {
       _openRouterApiKey = apiKey;
       notifyListeners();
@@ -39,7 +39,7 @@ class AiSettingsViewModel extends ChangeNotifier {
   }
 
   Future<void> _loadApiKeyAsync() async {
-    final result = await _sharedPreferencesService.getOpenRouterApiKey();
+    final result = await _settingsRepository.getOpenRouterApiKey();
     if (result.isSuccess()) {
       _openRouterApiKey = result.getOrNull() ?? '';
       notifyListeners();

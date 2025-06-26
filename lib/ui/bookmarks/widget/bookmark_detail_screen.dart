@@ -229,7 +229,11 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
             left: 16,
             right: 16,
             bottom: 16,
-            top: 16 + (widget.viewModel.isTranslateMode ? 48 : 0),
+            top: 16 +
+                (widget.viewModel.isTranslateMode &&
+                        widget.viewModel.isTranslateBannerVisible
+                    ? 48
+                    : 0),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
