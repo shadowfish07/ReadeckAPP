@@ -53,41 +53,14 @@ jobs:
       - name: Run tests with coverage
         run: flutter test --coverage
 
-      # 安装 lcov 工具（用于处理覆盖率数据）
-      - name: Install lcov
-        run: sudo apt-get install -y lcov
-
-      # 生成 HTML 覆盖率报告
-      - name: Generate coverage report
-        run: |
-          genhtml coverage/lcov.info -o coverage/html
-          echo "Coverage report generated at coverage/html/index.html"
-
       # 上传覆盖率报告到 Codecov
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
           file: coverage/lcov.info
           flags: unittests
-          name: codecov-umbrella
+          name: codecov-readeck
           fail_ci_if_error: false
-
-      # 上传覆盖率报告作为 artifact
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: coverage/html/
-          retention-days: 30
-
-      # 生成覆盖率摘要评论（仅在 PR 中）
-      - name: Coverage comment
-        if: github.event_name == 'pull_request'
-        uses: 5monkeys/cobertura-action@master
-        with:
-          path: coverage/lcov.info
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          minimum_coverage: 75
 
   release:
     name: Release
