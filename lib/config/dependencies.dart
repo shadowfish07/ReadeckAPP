@@ -8,7 +8,7 @@ import 'package:readeck_app/data/service/readeck_api_client.dart';
 import 'package:readeck_app/data/service/openrouter_api_client.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_operation_use_cases.dart';
 
-import 'package:readeck_app/domain/use_cases/label_use_cases.dart';
+import 'package:readeck_app/data/repository/label/label_repository.dart';
 
 import '../data/service/shared_preference_service.dart';
 import '../data/repository/theme/theme_repository.dart';
@@ -36,7 +36,7 @@ List<SingleChildWidget> providers(String host, String token) {
         create: (context) =>
             BookmarkRepository(context.read(), context.read(), context.read())),
     Provider(create: (context) => DailyReadHistoryRepository(context.read())),
-    Provider(create: (context) => LabelUseCases()),
+    Provider(create: (context) => LabelRepository(context.read())),
     Provider(
         create: (context) =>
             BookmarkOperationUseCases(context.read(), context.read())),

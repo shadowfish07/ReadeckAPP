@@ -4,7 +4,6 @@ import 'package:readeck_app/data/service/database_service.dart';
 import 'package:readeck_app/data/service/openrouter_api_client.dart';
 import 'package:readeck_app/data/service/readeck_api_client.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
-import 'package:readeck_app/domain/models/bookmark/label_info.dart';
 import 'package:readeck_app/domain/models/bookmark_article/bookmark_article.dart';
 import 'package:readeck_app/main.dart';
 import 'package:result_dart/result_dart.dart';
@@ -183,11 +182,6 @@ class BookmarkRepository {
           bookmark.copyWith(isArchived: !bookmark.isArchived));
     }
     return result;
-  }
-
-// TODO 移走
-  AsyncResult<List<LabelInfo>> getLabels() async {
-    return _readeckApiClient.getLabels();
   }
 
   AsyncResult<void> updateLabels(Bookmark bookmark, List<String> labels) async {

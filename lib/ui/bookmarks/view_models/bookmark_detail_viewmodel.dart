@@ -3,14 +3,14 @@ import 'package:flutter_command/flutter_command.dart';
 import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_operation_use_cases.dart';
-import 'package:readeck_app/domain/use_cases/label_use_cases.dart';
+import 'package:readeck_app/data/repository/label/label_repository.dart';
 import 'package:readeck_app/main.dart';
 
 class BookmarkDetailViewModel extends ChangeNotifier {
   BookmarkDetailViewModel(this._bookmarkRepository,
-      this._bookmarkOperationUseCases, this._labelUseCases, this._bookmark) {
+      this._bookmarkOperationUseCases, this._labelRepository, this._bookmark) {
     // 注册标签数据变化监听器
-    _labelUseCases.addListener(_onLabelsChanged);
+    _labelRepository.addListener(_onLabelsChanged);
     // 注册书签数据变化监听器
     _bookmarkRepository.addListener(_onBookmarksChanged);
     loadArticleContent = Command.createAsync<void, String>(_loadArticleContent,
@@ -40,7 +40,7 @@ class BookmarkDetailViewModel extends ChangeNotifier {
 
   final BookmarkRepository _bookmarkRepository;
   final BookmarkOperationUseCases _bookmarkOperationUseCases;
-  final LabelUseCases _labelUseCases;
+  final LabelRepository _labelRepository;
   Bookmark _bookmark;
 
   // AI翻译相关状态
@@ -72,7 +72,7 @@ class BookmarkDetailViewModel extends ChangeNotifier {
       !_isTranslating && loadArticleContent.value.isNotEmpty && !_isTranslated;
 
   /// 获取可用的标签名称列表
-  List<String> get availableLabels => _labelUseCases.labelNames;
+  List<String> get availableLabels => _labelRepository.labelNames;
   Exception? get error {
     final commandError = loadArticleContent.errors.value?.error;
     if (commandError is Exception) {
@@ -215,10 +215,9 @@ class BookmarkDetailViewModel extends ChangeNotifier {
   }
 
   Future<List<String>> _loadLabels() async {
-    final result = await _bookmarkRepository.getLabels();
+    final result = await _labelRepository.loadLabels();
     if (result.isSuccess()) {
-      _labelUseCases.insertOrUpdateLabels(result.getOrDefault([]));
-      return _labelUseCases.labelNames;
+      return _labelRepository.labelNames;
     }
 
     appLogger.e("Failed to load labels", error: result.exceptionOrNull()!);
@@ -315,7 +314,7 @@ class BookmarkDetailViewModel extends ChangeNotifier {
   @override
   void dispose() {
     // 移除标签数据变化监听器
-    _labelUseCases.removeListener(_onLabelsChanged);
+    _labelRepository.removeListener(_onLabelsChanged);
     // 移除书签数据变化监听器
     _bookmarkRepository.removeListener(_onBookmarksChanged);
     super.dispose();
