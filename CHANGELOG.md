@@ -1,3 +1,11 @@
+## [0.4.0-beta.2](https://github.com/shadowfish07/ReadeckApp/compare/v0.4.0-beta.1...v0.4.0-beta.2) (2025-06-27)
+
+
+### ♻️ 代码重构
+
+* **bookmark:** 重构书签管理逻辑，移除BookmarkUseCases ([85f3547](https://github.com/shadowfish07/ReadeckApp/commit/85f35479385af94f778192120e5d7a72311f232f))
+* **标签:** 将标签相关逻辑从用例层迁移到仓库层 ([f061d94](https://github.com/shadowfish07/ReadeckApp/commit/f061d94391026d0a8394be57932de0afd05105f3))
+
 ## [0.4.0-beta.1](https://github.com/shadowfish07/ReadeckApp/compare/v0.3.1...v0.4.0-beta.1) (2025-06-27)
 
 
