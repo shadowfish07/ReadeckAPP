@@ -5,8 +5,7 @@ import 'package:readeck_app/data/repository/daily_read_history/daily_read_histor
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 import 'package:readeck_app/domain/models/daily_read_history/daily_read_history.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_operation_use_cases.dart';
-import 'package:readeck_app/domain/use_cases/bookmark_use_cases.dart';
-import 'package:readeck_app/domain/use_cases/label_use_cases.dart';
+import 'package:readeck_app/data/repository/label/label_repository.dart';
 import 'package:readeck_app/main.dart';
 import 'package:readeck_app/utils/option_data.dart';
 import 'package:readeck_app/utils/reading_stats_calculator.dart';
@@ -16,8 +15,7 @@ class DailyReadViewModel extends ChangeNotifier {
     this._bookmarkRepository,
     this._dailyReadHistoryRepository,
     this._bookmarkOperationUseCases,
-    this._bookmarkUseCases,
-    this._labelUseCases,
+    this._labelRepository,
   ) {
     load = Command.createAsync<bool, List<Bookmark>>(_load, initialValue: [])
       ..execute(false);
@@ -29,9 +27,9 @@ class DailyReadViewModel extends ChangeNotifier {
     loadLabels = Command.createAsyncNoParam(_loadLabels, initialValue: []);
 
     // 注册书签数据变化监听器
-    _bookmarkUseCases.addListener(_onBookmarksChanged);
+    _bookmarkRepository.addListener(_onBookmarksChanged);
     // 注册标签数据变化监听器
-    _labelUseCases.addListener(_onLabelsChanged);
+    _labelRepository.addListener(_onLabelsChanged);
   }
 
   VoidCallback? _onBookmarkArchivedCallback;
@@ -39,8 +37,7 @@ class DailyReadViewModel extends ChangeNotifier {
   final BookmarkRepository _bookmarkRepository;
   final DailyReadHistoryRepository _dailyReadHistoryRepository;
   final BookmarkOperationUseCases _bookmarkOperationUseCases;
-  final BookmarkUseCases _bookmarkUseCases;
-  final LabelUseCases _labelUseCases;
+  final LabelRepository _labelRepository;
 
   late Command load;
   late Command openUrl;
@@ -52,8 +49,8 @@ class DailyReadViewModel extends ChangeNotifier {
   final Map<String, bool> _optimisticMarked = {};
   final Map<String, ReadingStats> _readingStats = {};
   final List<String> _bookmarkIds = [];
-  List<Bookmark> get _bookmarks => _bookmarkUseCases
-      .getBookmarks(_bookmarkIds)
+  List<Bookmark> get _bookmarks => _bookmarkRepository
+      .getCachedBookmarks(_bookmarkIds)
       .whereType<Bookmark>()
       .toList();
   bool _isNoMore = false;
@@ -70,7 +67,7 @@ class DailyReadViewModel extends ChangeNotifier {
   List<Bookmark> get unArchivedBookmarks =>
       bookmarks.where((bookmark) => !bookmark.isArchived).toList();
 
-  List<String> get availableLabels => _labelUseCases.labelNames;
+  List<String> get availableLabels => _labelRepository.labelNames;
 
   /// 获取书签的阅读统计数据
   ReadingStats? getReadingStats(String bookmarkId) {
@@ -84,10 +81,9 @@ class DailyReadViewModel extends ChangeNotifier {
     }
   }
 
-  void _clearAndSetBookmarks(List<Bookmark> bookmarks) {
+  void _resetBookmarkIds(List<Bookmark> bookmarks) {
     _bookmarkIds.clear();
     _bookmarkIds.addAll(bookmarks.map((e) => e.id));
-    _bookmarkUseCases.insertOrUpdateBookmarks(bookmarks);
   }
 
   Future<List<Bookmark>> _load(bool refresh) async {
@@ -109,9 +105,9 @@ class DailyReadViewModel extends ChangeNotifier {
                 some.value.bookmarkIds.map((item) => item).toList();
             // 今天已经访问过
             final result =
-                await _bookmarkRepository.getBookmarksByIds(todayBookmarks);
+                await _bookmarkRepository.loadBookmarksByIds(todayBookmarks);
             if (result.isSuccess()) {
-              _clearAndSetBookmarks(result.getOrDefault([]));
+              _resetBookmarkIds(result.getOrDefault([]));
 
               // 加载阅读统计数据
               final stats = await _bookmarkOperationUseCases
@@ -129,14 +125,14 @@ class DailyReadViewModel extends ChangeNotifier {
     }
 
     // 今天没有访问过 or 强制刷新
-    final result = await _bookmarkRepository.getRandomUnarchivedBookmarks(5);
+    final result = await _bookmarkRepository.loadRandomUnarchivedBookmarks(5);
     if (result.isSuccess()) {
       if (result.getOrDefault([]).isEmpty) {
         _isNoMore = true;
         return unArchivedBookmarks;
       }
       final newBookmarks = result.getOrDefault([]);
-      _clearAndSetBookmarks(newBookmarks);
+      _resetBookmarkIds(newBookmarks);
 
       // 加载阅读统计数据
       final stats = await _bookmarkOperationUseCases
@@ -173,8 +169,7 @@ class DailyReadViewModel extends ChangeNotifier {
     notifyListeners();
     _onBookmarkArchivedCallback?.call();
 
-    final result =
-        await _bookmarkOperationUseCases.toggleBookmarkArchived(bookmark);
+    final result = await _bookmarkRepository.toggleArchived(bookmark);
 
     if (result.isError()) {
       appLogger.e("Failed to toggle bookmark archived",
@@ -190,8 +185,7 @@ class DailyReadViewModel extends ChangeNotifier {
     _optimisticMarked[bookmark.id] = !bookmark.isMarked;
     notifyListeners();
 
-    final result =
-        await _bookmarkOperationUseCases.toggleBookmarkMarked(bookmark);
+    final result = await _bookmarkRepository.toggleMarked(bookmark);
 
     if (result.isError()) {
       appLogger.e("Failed to toggle bookmark marked",
@@ -203,10 +197,9 @@ class DailyReadViewModel extends ChangeNotifier {
   }
 
   Future<List<String>> _loadLabels() async {
-    final result = await _bookmarkRepository.getLabels();
+    final result = await _labelRepository.loadLabels();
     if (result.isSuccess()) {
-      _labelUseCases.insertOrUpdateLabels(result.getOrDefault([]));
-      return _labelUseCases.labelNames;
+      return _labelRepository.labelNames;
     }
 
     appLogger.e("Failed to load labels", error: result.exceptionOrNull()!);
@@ -215,8 +208,7 @@ class DailyReadViewModel extends ChangeNotifier {
 
   Future<void> updateBookmarkLabels(
       Bookmark bookmark, List<String> labels) async {
-    final result =
-        await _bookmarkOperationUseCases.updateBookmarkLabels(bookmark, labels);
+    final result = await _bookmarkRepository.updateLabels(bookmark, labels);
 
     if (result.isError()) {
       appLogger.e("Failed to update bookmark labels",
@@ -238,9 +230,9 @@ class DailyReadViewModel extends ChangeNotifier {
   @override
   void dispose() {
     // 移除书签数据变化监听器
-    _bookmarkUseCases.removeListener(_onBookmarksChanged);
+    _bookmarkRepository.removeListener(_onBookmarksChanged);
     // 移除标签数据变化监听器
-    _labelUseCases.removeListener(_onLabelsChanged);
+    _labelRepository.removeListener(_onLabelsChanged);
     super.dispose();
   }
 }

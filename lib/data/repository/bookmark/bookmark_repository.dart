@@ -4,10 +4,12 @@ import 'package:readeck_app/data/service/database_service.dart';
 import 'package:readeck_app/data/service/openrouter_api_client.dart';
 import 'package:readeck_app/data/service/readeck_api_client.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
-import 'package:readeck_app/domain/models/bookmark/label_info.dart';
 import 'package:readeck_app/domain/models/bookmark_article/bookmark_article.dart';
 import 'package:readeck_app/main.dart';
 import 'package:result_dart/result_dart.dart';
+
+/// 书签数据变化监听器类型定义
+typedef BookmarkChangeListener = void Function();
 
 class BookmarkRepository {
   BookmarkRepository(
@@ -17,48 +19,137 @@ class BookmarkRepository {
   final DatabaseService _databaseService;
   final OpenRouterApiClient _openRouterApiClient;
 
-  AsyncResult<List<Bookmark>> getBookmarksByIds(List<String> ids) async {
-    return _readeckApiClient.getBookmarks(ids: ids);
+  // 全局共享数据管理 - 单一数据源
+  final List<Bookmark> _bookmarks = [];
+  final List<BookmarkChangeListener> _listeners = [];
+
+  /// 获取所有缓存的书签（只读）
+  List<Bookmark> get bookmarks => List.unmodifiable(_bookmarks);
+
+  /// 添加数据变化监听器
+  void addListener(BookmarkChangeListener listener) {
+    _listeners.add(listener);
   }
 
-  AsyncResult<List<Bookmark>> getUnarchivedBookmarks({
+  /// 移除数据变化监听器
+  void removeListener(BookmarkChangeListener listener) {
+    _listeners.remove(listener);
+  }
+
+  /// 通知所有监听器数据已变化
+  void _notifyListeners() {
+    for (final listener in _listeners) {
+      listener();
+    }
+  }
+
+  /// 插入或更新单个书签到缓存
+  void insertOrUpdateBookmark(Bookmark bookmark) {
+    final index = _bookmarks.indexWhere((b) => b.id == bookmark.id);
+    if (index != -1) {
+      _bookmarks[index] = bookmark;
+    } else {
+      _bookmarks.add(bookmark);
+    }
+    _notifyListeners();
+  }
+
+  /// 批量插入或更新书签到缓存
+  void _insertOrUpdateCachedBookmarks(List<Bookmark> bookmarks) {
+    for (var bookmark in bookmarks) {
+      insertOrUpdateBookmark(bookmark);
+    }
+  }
+
+  /// 从缓存获取单个书签
+  Bookmark? getCachedBookmark(String id) {
+    return _bookmarks.where((b) => b.id == id).firstOrNull;
+  }
+
+  /// 从缓存获取多个书签
+  List<Bookmark?> getCachedBookmarks(List<String> ids) {
+    return ids.map((id) => getCachedBookmark(id)).toList();
+  }
+
+  /// 从缓存删除书签
+  void _deleteCachedBookmark(String id) {
+    _bookmarks.removeWhere((b) => b.id == id);
+    _notifyListeners();
+  }
+
+  /// 释放资源，清空所有监听器
+  void dispose() {
+    _listeners.clear();
+  }
+
+  AsyncResult<List<Bookmark>> loadBookmarksByIds(List<String> ids) async {
+    final result = await _readeckApiClient.getBookmarks(ids: ids);
+    if (result.isSuccess()) {
+      _insertOrUpdateCachedBookmarks(result.getOrThrow());
+      return result;
+    }
+
+    return result;
+  }
+
+  AsyncResult<List<Bookmark>> loadUnarchivedBookmarks({
     int limit = 10,
     int page = 1,
   }) async {
-    return _readeckApiClient.getBookmarks(
+    final result = await _readeckApiClient.getBookmarks(
       isArchived: false,
       limit: limit,
       offset: (page - 1) * limit,
     );
+    if (result.isSuccess()) {
+      _insertOrUpdateCachedBookmarks(result.getOrThrow());
+      return result;
+    }
+
+    return result;
   }
 
-  AsyncResult<List<Bookmark>> getArchivedBookmarks({
+  AsyncResult<List<Bookmark>> loadArchivedBookmarks({
     int limit = 10,
     int page = 1,
   }) async {
-    return _readeckApiClient.getBookmarks(
+    final result = await _readeckApiClient.getBookmarks(
       isArchived: true,
       limit: limit,
       offset: (page - 1) * limit,
     );
+    if (result.isSuccess()) {
+      _insertOrUpdateCachedBookmarks(result.getOrThrow());
+      return result;
+    }
+
+    return result;
   }
 
-  AsyncResult<List<Bookmark>> getMarkedBookmarks({
+  AsyncResult<List<Bookmark>> loadMarkedBookmarks({
     int limit = 10,
     int page = 1,
   }) async {
-    return _readeckApiClient.getBookmarks(
+    final result = await _readeckApiClient.getBookmarks(
       isMarked: true,
       limit: limit,
       offset: (page - 1) * limit,
     );
+    if (result.isSuccess()) {
+      _insertOrUpdateCachedBookmarks(result.getOrThrow());
+      return result;
+    }
+
+    return result;
   }
 
-  AsyncResult<List<Bookmark>> getRandomUnarchivedBookmarks(
+  AsyncResult<List<Bookmark>> loadRandomUnarchivedBookmarks(
       int randomCount) async {
-    final allBookmarks = await getUnarchivedBookmarks(limit: 100);
+    final allBookmarks = await loadUnarchivedBookmarks(limit: 100);
 
     if (allBookmarks.isSuccess()) {
+      _insertOrUpdateCachedBookmarks(allBookmarks.getOrThrow());
+
       // 随机打乱并取前5个
       final shuffled = List<Bookmark>.from(allBookmarks.getOrDefault([]));
       shuffled.shuffle(Random());
@@ -71,21 +162,26 @@ class BookmarkRepository {
   }
 
   AsyncResult<void> toggleMarked(Bookmark bookmark) async {
-    return _readeckApiClient.updateBookmark(
+    final result = await _readeckApiClient.updateBookmark(
       bookmark.id,
       isMarked: !bookmark.isMarked,
     );
+    if (result.isSuccess()) {
+      insertOrUpdateBookmark(bookmark.copyWith(isMarked: !bookmark.isMarked));
+    }
+    return result;
   }
 
   AsyncResult<void> toggleArchived(Bookmark bookmark) async {
-    return _readeckApiClient.updateBookmark(
+    final result = await _readeckApiClient.updateBookmark(
       bookmark.id,
       isArchived: !bookmark.isArchived,
     );
-  }
-
-  AsyncResult<List<LabelInfo>> getLabels() async {
-    return _readeckApiClient.getLabels();
+    if (result.isSuccess()) {
+      insertOrUpdateBookmark(
+          bookmark.copyWith(isArchived: !bookmark.isArchived));
+    }
+    return result;
   }
 
   AsyncResult<void> updateLabels(Bookmark bookmark, List<String> labels) async {
@@ -95,6 +191,7 @@ class BookmarkRepository {
     );
 
     if (result.isSuccess()) {
+      insertOrUpdateBookmark(bookmark.copyWith(labels: labels));
       return const Success(unit);
     }
 
@@ -102,13 +199,14 @@ class BookmarkRepository {
   }
 
   AsyncResult<void> updateReadProgress(
-      String bookmarkId, int readProgress) async {
+      Bookmark bookmark, int readProgress) async {
     final result = await _readeckApiClient.updateBookmark(
-      bookmarkId,
+      bookmark.id,
       readProgress: readProgress,
     );
 
     if (result.isSuccess()) {
+      insertOrUpdateBookmark(bookmark.copyWith(readProgress: readProgress));
       return const Success(unit);
     }
 
@@ -164,7 +262,12 @@ class BookmarkRepository {
 
   /// 删除书签
   AsyncResult<void> deleteBookmark(String bookmarkId) async {
-    return _readeckApiClient.deleteBookmark(bookmarkId);
+    final result = await _readeckApiClient.deleteBookmark(bookmarkId);
+    if (result.isSuccess()) {
+      _deleteCachedBookmark(bookmarkId);
+      await _databaseService.deleteBookmarkArticle(bookmarkId);
+    }
+    return result;
   }
 
   /// 翻译书签内容（流式输出）
