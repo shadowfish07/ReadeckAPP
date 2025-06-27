@@ -86,7 +86,7 @@ class BookmarkOperationUseCases {
           await _sharedPreferencesService.getReadingStats(bookmark.id);
       if (cachedStatsResult.isSuccess() &&
           cachedStatsResult.getOrNull() != null) {
-        appLogger.i('从缓存加载书签 ${bookmark.id} 的阅读统计数据');
+        appLogger.d('从缓存加载书签 ${bookmark.id} 的阅读统计数据');
         return cachedStatsResult.getOrNull()!;
       }
 

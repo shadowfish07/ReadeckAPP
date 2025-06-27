@@ -22,7 +22,7 @@ class MarkedViewmodel extends BaseBookmarksViewmodel {
         if (bookmark == null) {
           return false;
         }
-        return super._optimisticMarked[bookmark.id] ?? bookmark.isMarked;
+        return bookmark.isMarked;
       };
 }
 
@@ -40,7 +40,7 @@ class ArchivedViewmodel extends BaseBookmarksViewmodel {
         if (bookmark == null) {
           return false;
         }
-        return super._optimisticArchived[bookmark.id] ?? bookmark.isArchived;
+        return bookmark.isArchived;
       };
 }
 
@@ -58,7 +58,7 @@ class UnarchivedViewmodel extends BaseBookmarksViewmodel {
         if (bookmark == null) {
           return false;
         }
-        return !(_optimisticArchived[bookmark.id] ?? bookmark.isArchived);
+        return !bookmark.isArchived;
       };
 }
 
@@ -87,8 +87,6 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
   final BookmarkOperationUseCases _bookmarkOperationUseCases;
   final LabelRepository _labelRepository;
 
-  final Map<String, bool> _optimisticArchived = {};
-  final Map<String, bool> _optimisticMarked = {};
   final Map<String, ReadingStats> _readingStats = {};
   // 移除本地 _labels 变量，改用中心化存储
   final List<String> _bookmarkIds = [];
@@ -117,11 +115,7 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
   }
 
   List<Bookmark> get bookmarks {
-    return _bookmarks
-        .map((item) => item.copyWith(
-            isArchived: _optimisticArchived[item.id] ?? item.isArchived,
-            isMarked: _optimisticMarked[item.id] ?? item.isMarked))
-        .toList();
+    return _bookmarks;
   }
 
   bool get hasMoreData => _hasMoreData;
@@ -192,33 +186,21 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
   }
 
   Future<void> _toggleBookmarkMarked(Bookmark bookmark) async {
-    // 乐观更新
-    _optimisticMarked[bookmark.id] = !bookmark.isMarked;
-    notifyListeners();
-
     final result = await _bookmarkRepository.toggleMarked(bookmark);
 
     if (result.isError()) {
       appLogger.e("Failed to toggle bookmark marked",
           error: result.exceptionOrNull()!);
-      _optimisticMarked.remove(bookmark.id);
-      notifyListeners();
       throw result.exceptionOrNull()!;
     }
   }
 
   Future<void> _toggleBookmarkArchived(Bookmark bookmark) async {
-    // 乐观更新
-    _optimisticArchived[bookmark.id] = !bookmark.isArchived;
-    notifyListeners();
-
     final result = await _bookmarkRepository.toggleArchived(bookmark);
 
     if (result.isError()) {
       appLogger.e("Failed to toggle bookmark archived",
           error: result.exceptionOrNull()!);
-      _optimisticArchived.remove(bookmark.id);
-      notifyListeners();
       throw result.exceptionOrNull()!;
     }
   }

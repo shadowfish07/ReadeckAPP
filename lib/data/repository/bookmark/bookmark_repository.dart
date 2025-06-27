@@ -47,30 +47,30 @@ class BookmarkRepository {
   }
 
   /// 插入或更新单个书签到缓存
-  void insertOrUpdateBookmark(Bookmark bookmark) {
+  void _insertOrUpdateBookmark(Bookmark bookmark, {bool batch = false}) {
     final index = _bookmarks.indexWhere((b) => b.id == bookmark.id);
     if (index != -1) {
-      appLogger.d('更新缓存中的书签: ${bookmark.id}');
       _bookmarks[index] = bookmark;
     } else {
-      appLogger.d('添加新书签到缓存: ${bookmark.id}');
       _bookmarks.add(bookmark);
     }
-    _notifyListeners();
+    if (!batch) {
+      _notifyListeners();
+    }
   }
 
   /// 批量插入或更新书签到缓存
   void _insertOrUpdateCachedBookmarks(List<Bookmark> bookmarks) {
     appLogger.i('批量更新缓存书签，数量: ${bookmarks.length}');
     for (var bookmark in bookmarks) {
-      insertOrUpdateBookmark(bookmark);
+      _insertOrUpdateBookmark(bookmark, batch: true);
     }
+    _notifyListeners();
   }
 
   /// 从缓存获取单个书签
   Bookmark? getCachedBookmark(String id) {
     final bookmark = _bookmarks.where((b) => b.id == id).firstOrNull;
-    appLogger.d('从缓存获取书签: $id, 结果: ${bookmark != null ? '找到' : '未找到'}');
     return bookmark;
   }
 
@@ -205,7 +205,7 @@ class BookmarkRepository {
       isMarked: newMarkedState,
     );
     if (result.isSuccess()) {
-      insertOrUpdateBookmark(bookmark.copyWith(isMarked: newMarkedState));
+      _insertOrUpdateBookmark(bookmark.copyWith(isMarked: newMarkedState));
       appLogger.i('书签标记状态切换成功: ${bookmark.id}');
     } else {
       appLogger.e('书签标记状态切换失败: ${bookmark.id}',
@@ -223,7 +223,7 @@ class BookmarkRepository {
       isArchived: newArchivedState,
     );
     if (result.isSuccess()) {
-      insertOrUpdateBookmark(bookmark.copyWith(isArchived: newArchivedState));
+      _insertOrUpdateBookmark(bookmark.copyWith(isArchived: newArchivedState));
       appLogger.i('书签归档状态切换成功: ${bookmark.id}');
     } else {
       appLogger.e('书签归档状态切换失败: ${bookmark.id}',
@@ -240,7 +240,7 @@ class BookmarkRepository {
     );
 
     if (result.isSuccess()) {
-      insertOrUpdateBookmark(bookmark.copyWith(labels: labels));
+      _insertOrUpdateBookmark(bookmark.copyWith(labels: labels));
       appLogger.i('书签标签更新成功: ${bookmark.id}');
       return const Success(unit);
     }
@@ -259,7 +259,7 @@ class BookmarkRepository {
     );
 
     if (result.isSuccess()) {
-      insertOrUpdateBookmark(bookmark.copyWith(readProgress: readProgress));
+      _insertOrUpdateBookmark(bookmark.copyWith(readProgress: readProgress));
       appLogger.i('书签阅读进度更新成功: ${bookmark.id}');
       return const Success(unit);
     }

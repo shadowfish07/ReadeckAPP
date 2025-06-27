@@ -100,7 +100,7 @@ class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
                 return ErrorPage.unknownError(error: Exception(error));
             }
           },
-          onData: (context, data, param) {
+          onData: (context, _, param) {
             final bookmarks = widget.viewModel.bookmarks;
 
             if (bookmarks.isEmpty) {
