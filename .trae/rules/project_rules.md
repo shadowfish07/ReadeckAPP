@@ -99,6 +99,28 @@ ViewModel → Repository → Service
 ViewModel → Service (❌ 禁止)
 ```
 
+### 6. 全局共享数据管理原则（Global Shared Data Management Principle）
+
+ReadeckApp 中的全局共享数据必须严格遵循单一数据源原则：
+
+- **全局共享的数据必须通过 Repository 层进行统一管理**
+- **Repository 层作为全局共享数据的唯一存储和访问入口**
+- **多个 ViewModel 共享同一数据时，必须通过同一个 Repository 实例**
+- **避免在多个地方维护相同的数据副本**
+- **确保数据的一致性和同步性**
+
+**正确的全局数据共享方式：**
+```
+ViewModel A → Repository (SSOT) ← ViewModel B
+ViewModel C → Repository (SSOT) ← ViewModel D
+```
+
+**错误的全局数据共享方式：**
+```
+ViewModel A → Local State (❌ 数据重复)
+ViewModel B → Local State (❌ 数据重复)
+```
+
 ---
 
 ## 分层架构设计
