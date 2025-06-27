@@ -87,7 +87,7 @@ class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
             if (lastValue == null || lastValue.isEmpty) {
               return Loading(text: widget.texts.loadingText);
             }
-            return _buildList(lastValue);
+            return _buildList(widget.viewModel.bookmarks);
           },
           onError: (context, error, lastValue, param) {
             switch (error) {
