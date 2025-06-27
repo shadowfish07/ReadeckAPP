@@ -5,6 +5,7 @@ import 'package:readeck_app/domain/models/bookmark/label_info.dart';
 import 'package:http/http.dart' as http;
 import 'package:readeck_app/main.dart';
 import 'package:readeck_app/utils/api_not_configured_exception.dart';
+import 'package:readeck_app/utils/article_empty_exception.dart';
 import 'package:readeck_app/utils/network_error_exception.dart';
 import 'package:readeck_app/utils/resource_not_found_exception.dart';
 import 'package:result_dart/result_dart.dart';
@@ -342,7 +343,7 @@ class ReadeckApiClient {
         // 检查响应体是否为空
         if (response.body.isEmpty) {
           appLogger.w("服务器返回空响应。uri: $uri");
-          return Failure(NetworkErrorException("服务器返回空响应", uri));
+          return const Failure(ArticleEmptyException());
         }
 
         appLogger.i(

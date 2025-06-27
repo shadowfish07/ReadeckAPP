@@ -79,6 +79,26 @@ ReadeckApp 界面基于状态驱动：
 UI = f(State)
 ```
 
+### 5. 分层依赖原则（Layered Dependency Principle）
+
+ReadeckApp 严格遵循分层依赖原则：
+
+- **ViewModel 不得直接依赖 Service 层**
+- **ViewModel 只能通过 Repository 层获取数据**
+- **Repository 层作为 ViewModel 和 Service 层之间的中介**
+- **确保数据访问逻辑集中在 Repository 层**
+- **提高代码的可测试性和可维护性**
+
+**正确的依赖关系：**
+```
+ViewModel → Repository → Service
+```
+
+**错误的依赖关系：**
+```
+ViewModel → Service (❌ 禁止)
+```
+
 ---
 
 ## 分层架构设计
@@ -160,6 +180,111 @@ graph TD
 4. **UI 状态使用 private setter + public getter**
 5. **在构造函数中初始化 Commands**
 6. **给 View 暴露的异步方法使用 Command 进行暴露**
+7. **使用全局 appLogger 记录日志**
+
+**日志记录最佳实践：**
+
+ViewModel 层应当使用全局的 `appLogger` 实例记录所有重要的操作和状态变化：
+
+- **数据获取**：记录数据请求的开始、成功和失败
+- **操作执行**：记录用户操作的执行过程
+- **错误处理**：记录详细的错误信息和堆栈跟踪
+- **状态变化**：记录关键的状态转换
+
+**示例代码：**
+
+```dart
+class BookmarkViewModel extends ChangeNotifier {
+  final BookmarkRepository _repository;
+
+  late final Command<void, Result<List<Bookmark>>> loadBookmarksCommand;
+
+  BookmarkViewModel(this._repository) {
+    loadBookmarksCommand = Command.createAsyncNoParam(() async {
+      appLogger.info('开始加载书签列表');
+
+      final result = await _repository.getBookmarks();
+
+      if (result.isSuccess()) {
+        final bookmarks = result.getOrNull()!;
+        appLogger.info('成功加载 ${bookmarks.length} 个书签');
+        _bookmarks = bookmarks;
+        notifyListeners();
+      } else {
+        final error = result.exceptionOrNull()!;
+        appLogger.error('加载书签失败', error: error);
+      }
+
+      return result;
+    });
+  }
+}
+```
+
+### Command 监听器使用规范
+
+**ReadeckApp Command 监听器最佳实践：**
+
+当需要在 Command 执行完成后进行页面导航或显示消息提示时，应使用 Command 监听器而非 CommandBuilder 的回调：
+
+1. **在 initState 中设置监听器**
+2. **分别监听 results 流和 errors 流**
+3. **在 dispose 中取消监听器订阅**
+4. **使用 mounted 检查确保 Widget 仍然存在**
+
+**示例代码：**
+
+```dart
+class AiSettingsScreen extends StatefulWidget {
+  @override
+  State<AiSettingsScreen> createState() => _AiSettingsScreenState();
+}
+
+class _AiSettingsScreenState extends State<AiSettingsScreen> {
+  late StreamSubscription _successSubscription;
+  late StreamSubscription _errorSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // 监听保存命令的成功结果（有返回值的场景）
+    _successSubscription = viewModel.saveApiKey.results.listen((result) {
+      if (mounted && result.isSuccess()) {
+        Navigator.of(context).pop();
+      }
+    });
+
+    // 监听保存命令的成功结果（无返回值的场景）
+    _successSubscriptionNoResult = viewModel.saveApiKey.listen((_) {
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    });
+
+    // 监听保存命令的错误
+    _errorSubscription = viewModel.saveApiKey.errors
+      .where((x) => x != null)
+      .listen((error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('保存失败: ${error.error.toString()}'),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        }
+      });
+  }
+
+  @override
+  void dispose() {
+    _successSubscription.cancel();
+    _errorSubscription.cancel();
+    super.dispose();
+  }
+}
+```
 
 ---
 
@@ -287,14 +412,15 @@ test_resources/                    # 测试资源
 
 ### ReadeckApp 强制要求
 
-| 规范             | 说明                                 | 示例                                         |
-| ---------------- | ------------------------------------ | -------------------------------------------- |
-| **分层架构**     | 严格按照 UI/逻辑/数据层组织代码      | Repository 不能直接被 View 使用              |
-| **MVVM 模式**    | 每个页面都有对应的 View 和 ViewModel | `ReadingListScreen` + `ReadingListViewModel` |
-| **Command 模式** | 所有用户交互都通过 Command 执行      | `loadArticlesCommand.execute()`              |
-| **Result 模式**  | 所有可能失败的操作都返回 Result      | `Future<Result<List<Article>>>`              |
-| **依赖注入**     | 使用 Provider 进行依赖管理           | 构造函数注入 Repository                      |
-| **不可变模型**   | 所有数据模型都使用 freezed           | `@freezed class Article`                     |
+| 规范                | 说明                                                         | 示例                                                                   |
+| ------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| **分层架构**        | 严格按照 UI/逻辑/数据层组织代码                              | Repository 不能直接被 View 使用                                        |
+| **MVVM 模式**       | 每个页面都有对应的 View 和 ViewModel                         | `ReadingListScreen` + `ReadingListViewModel`                           |
+| **Command 模式**    | 所有用户交互都通过 Command 执行                              | `loadArticlesCommand.execute()`                                        |
+| **Result 模式**     | 所有可能失败的操作都返回 Result                              | `Future<Result<List<Article>>>`                                        |
+| **Result 错误处理** | ViewModel 中使用 result_dart 工具函数处理错误，不使用 fold() | `result.isSuccess()`, `result.getOrNull()`, `result.exceptionOrNull()` |
+| **依赖注入**        | 使用 Provider 进行依赖管理                                   | 构造函数注入 Repository                                                |
+| **不可变模型**      | 所有数据模型都使用 freezed                                   | `@freezed class Article`                                               |
 
 ### ReadeckApp 推荐实践
 

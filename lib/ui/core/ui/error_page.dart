@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:readeck_app/main.dart';
+import 'package:readeck_app/utils/article_empty_exception.dart';
+import 'package:readeck_app/utils/network_error_exception.dart';
+import 'package:readeck_app/utils/resource_not_found_exception.dart';
 
 /// 通用错误页面组件
 /// 用于显示资源不存在、已删除等错误状态
@@ -28,6 +31,37 @@ class ErrorPage extends StatelessWidget {
     this.buttonText,
     this.onBack,
   });
+
+  factory ErrorPage.fromException(Object ex,
+      {VoidCallback? networkErrorRetry}) {
+    switch (ex) {
+      case ResourceNotFoundException _:
+        return ErrorPage.bookmarkNotFound();
+      case ArticleEmptyException _:
+        return ErrorPage.bookmarkArticleIsEmpty();
+      case NetworkErrorException _:
+        return ErrorPage.networkError(
+          error: ex,
+          onBack: networkErrorRetry,
+        );
+      default:
+        return ErrorPage.unknownError(error: Exception(ex));
+    }
+  }
+
+  factory ErrorPage.bookmarkArticleIsEmpty({
+    Key? key,
+    VoidCallback? onBack,
+  }) {
+    return ErrorPage(
+      key: key,
+      icon: Icons.article_outlined,
+      message: '文章内容为空',
+      description: '可能是提取过程出错',
+      buttonText: '返回',
+      onBack: onBack,
+    );
+  }
 
   /// 创建书签不存在错误页面
   factory ErrorPage.bookmarkNotFound({
@@ -65,7 +99,7 @@ class ErrorPage extends StatelessWidget {
     Key? key,
     String message = '网络开小差啦',
     String description = '请检查你的API凭据是否正确，确保Readeck服务正常运行',
-    required VoidCallback onBack,
+    required VoidCallback? onBack,
     required Exception? error,
   }) {
     appLogger.w("网络错误: $error");
@@ -75,7 +109,7 @@ class ErrorPage extends StatelessWidget {
       icon: Icons.error_outline,
       message: message,
       description: description,
-      buttonText: '重试',
+      buttonText: onBack != null ? '重试' : '返回',
       onBack: onBack,
     );
   }

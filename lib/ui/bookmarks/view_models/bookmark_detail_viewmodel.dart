@@ -36,6 +36,9 @@ class BookmarkDetailViewModel extends ChangeNotifier {
     deleteBookmarkCommand = Command.createAsyncNoParamNoResult(_deleteBookmark);
 
     loadLabels = Command.createAsyncNoParam(_loadLabels, initialValue: []);
+
+    translateContentCommand =
+        Command.createAsyncNoParamNoResult(_translateContent);
   }
 
   final BookmarkUseCases _bookmarkUseCases;
@@ -44,6 +47,14 @@ class BookmarkDetailViewModel extends ChangeNotifier {
   final LabelUseCases _labelUseCases;
   Bookmark _bookmark;
 
+  // AI翻译相关状态
+  bool _isTranslating = false;
+  bool _isTranslated = false;
+  bool _isTranslateMode = false;
+  bool _isTranslateBannerVisible = true;
+  String _translatedContent = '';
+  String _originalContent = '';
+
   late Command<void, String> loadArticleContent;
   late Command<int, void> updateReadProgressCommand;
   late Command<String, void> openUrl;
@@ -51,10 +62,18 @@ class BookmarkDetailViewModel extends ChangeNotifier {
   late Command<void, void> toggleMarkCommand;
   late Command<void, void> deleteBookmarkCommand;
   late Command<void, List<String>> loadLabels;
+  late Command<void, void> translateContentCommand;
 
   Bookmark get bookmark => _bookmark;
-  String get articleHtml => loadArticleContent.value;
+  String get articleHtml =>
+      _isTranslateMode ? _translatedContent : loadArticleContent.value;
   bool get isLoading => loadArticleContent.isExecuting.value;
+  bool get isTranslating => _isTranslating;
+  bool get isTranslated => _isTranslated;
+  bool get isTranslateMode => _isTranslateMode;
+  bool get isTranslateBannerVisible => _isTranslateBannerVisible;
+  bool get canStartTranslate =>
+      !_isTranslating && loadArticleContent.value.isNotEmpty && !_isTranslated;
 
   /// 获取可用的标签名称列表
   List<String> get availableLabels => _labelUseCases.labelNames;
@@ -228,6 +247,78 @@ class BookmarkDetailViewModel extends ChangeNotifier {
 
     appLogger.e("Failed to load labels", error: result.exceptionOrNull()!);
     throw result.exceptionOrNull()!;
+  }
+
+  /// AI翻译内容（流式处理）
+  /// 通过Repository层进行翻译，优先从缓存获取翻译，如果缓存没有则使用AI翻译并写入缓存
+  Future<void> _translateContent() async {
+    try {
+      appLogger.i('开始AI翻译内容');
+
+      _isTranslateMode = true;
+      _isTranslating = true;
+      _translatedContent = ''; // 清空之前的翻译内容
+      notifyListeners();
+
+      // 保存原始内容
+      _originalContent = loadArticleContent.value;
+
+      // 通过Repository进行流式翻译
+      final translationStream = _bookmarkRepository
+          .translateBookmarkContentStream(_bookmark.id, _originalContent);
+
+      await for (final result in translationStream) {
+        if (result.isSuccess()) {
+          _translatedContent = result.getOrThrow();
+          // 实时更新UI显示翻译进度
+          notifyListeners();
+          appLogger.d('翻译进度更新: ${_translatedContent.length} 字符');
+        } else {
+          _isTranslating = false;
+          notifyListeners();
+          final error = result.exceptionOrNull();
+          appLogger.e('翻译失败: ${_bookmark.id}', error: error);
+          throw error ?? Exception('翻译失败');
+        }
+      }
+
+      // 翻译完成
+      _isTranslated = true;
+      _isTranslating = false;
+      notifyListeners();
+      appLogger.i('翻译完成: ${_bookmark.id}');
+    } catch (e) {
+      _isTranslating = false;
+      notifyListeners();
+      appLogger.e('翻译异常: ${_bookmark.id}', error: e);
+      rethrow;
+    }
+  }
+
+  /// 切换显示原文/译文
+  void toggleTranslation() {
+    _isTranslateMode = !_isTranslateMode;
+    if (_isTranslateMode) {
+      _isTranslateBannerVisible = true;
+    }
+    notifyListeners();
+  }
+
+  /// 隐藏翻译横幅
+  void hideTranslateBanner() {
+    _isTranslateBannerVisible = false;
+    notifyListeners();
+  }
+
+  /// 重置翻译状态
+  void resetTranslation() {
+    _isTranslated = false;
+    _isTranslateMode = false;
+    _isTranslating = false;
+    _isTranslateBannerVisible = true;
+    _translatedContent = '';
+    _originalContent = '';
+    notifyListeners();
   }
 
   /// 标签数据变化回调
