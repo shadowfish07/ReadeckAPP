@@ -1,3 +1,23 @@
+## [0.4.0-beta.1](https://github.com/shadowfish07/ReadeckApp/compare/v0.3.1...v0.4.0-beta.1) (2025-06-27)
+
+
+### ✨ 新功能
+
+* **ai:** 添加 OpenRouter API 配置功能 ([76c1771](https://github.com/shadowfish07/ReadeckApp/commit/76c177113f8d7bcb14a18577488b04ef1bf76bd8))
+* **bookmark:** 实现书签文章缓存 ([725c480](https://github.com/shadowfish07/ReadeckApp/commit/725c480cd6f999ea703038038a3f3a6807733e9d))
+* **书签详情:** 书签右上角改为菜单入口，添加更多操作菜单项包括标记喜爱、编辑标签等 ([24a1ede](https://github.com/shadowfish07/ReadeckApp/commit/24a1ede538d187eac7870eae6fb92b195b19fb10))
+* 文章页支持AI翻译，支持配置OpenRouter AI key ([51bc98f](https://github.com/shadowfish07/ReadeckApp/commit/51bc98f62c6f554ae93914c83f63b17c79e498af))
+
+
+### 🐛 Bug修复
+
+* **错误处理:** 添加文章内容为空异常并统一错误页面处理 ([f1454e1](https://github.com/shadowfish07/ReadeckApp/commit/f1454e15bee6c5b43b2091ed470ea82e82585825)), closes [#8](https://github.com/shadowfish07/ReadeckApp/issues/8)
+
+
+### ♻️ 代码重构
+
+* **viewmodel:** 使用 result_dart 工具函数替换 fold 处理错误 ([3df0e55](https://github.com/shadowfish07/ReadeckApp/commit/3df0e557fdf46e5539f884555914af8b07a23ad5))
+
 ## [0.3.1](https://github.com/shadowfish07/ReadeckApp/compare/v0.3.0...v0.3.1) (2025-06-24)
 
 
