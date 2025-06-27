@@ -11,145 +11,19 @@ on:
     branches:
       - main
       - beta
-  pull_request:
-    branches:
-      - main
-      - beta
 
 jobs:
   test:
-    name: Test
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: "3.32.2"
-          channel: "stable"
-          cache: true
-
-      - name: Cache Pub dependencies
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.pub-cache
-            .dart_tool
-          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pub-
-
-      - name: Get dependencies
-        run: flutter pub get
-
-      - name: Analyze code
-        run: flutter analyze
-
-      # 生成测试覆盖率报告
-      - name: Run tests with coverage
-        run: flutter test --coverage
-
-      # 上传覆盖率报告到 Codecov
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          file: coverage/lcov.info
-          flags: unittests
-          name: codecov-readeck
-          fail_ci_if_error: false
-
-      # 缓存 APT 包
-      - name: Cache APT packages
-        uses: actions/cache@v3
-        with:
-          path: /var/cache/apt/archives
-          key: ${{ runner.os }}-apt-lcov-${{ hashFiles('/etc/apt/sources.list') }}
-          restore-keys: |
-            ${{ runner.os }}-apt-lcov-
-            ${{ runner.os }}-apt-
-
-      # 生成覆盖率报告并添加PR评论
-      - name: Generate coverage report
-        id: coverage
-        run: |
-          # 安装 lcov 工具
-          sudo apt-get update
-          sudo apt-get install -y lcov
-          
-          # 生成覆盖率摘要
-          COVERAGE_SUMMARY=$(lcov --summary coverage/lcov.info 2>&1 | grep -E "lines|functions|branches" | tail -3)
-          
-          # 提取总体覆盖率百分比
-          TOTAL_COVERAGE=$(lcov --summary coverage/lcov.info 2>&1 | grep "lines" | grep -oE '[0-9]+\.[0-9]+%' | head -1)
-          
-          # 生成详细的覆盖率报告
-          echo "## 📊 测试覆盖率报告" > coverage_report.md
-          echo "" >> coverage_report.md
-          echo "### 总体覆盖率: $TOTAL_COVERAGE" >> coverage_report.md
-          echo "" >> coverage_report.md
-          echo "### 详细信息" >> coverage_report.md
-          echo "\`\`\`" >> coverage_report.md
-          echo "$COVERAGE_SUMMARY" >> coverage_report.md
-          echo "\`\`\`" >> coverage_report.md
-          echo "" >> coverage_report.md
-          echo "📈 覆盖率报告已上传到 [Codecov](https://codecov.io/gh/${{ github.repository }})" >> coverage_report.md
-          
-          # 设置输出变量
-          echo "total_coverage=$TOTAL_COVERAGE" >> $GITHUB_OUTPUT
-          
-          # 输出报告内容供下一步使用
-          cat coverage_report.md
-
-      # 在PR中添加覆盖率评论
-      - name: Comment coverage on PR
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs = require('fs');
-            const coverageReport = fs.readFileSync('coverage_report.md', 'utf8');
-            
-            // 查找是否已存在覆盖率评论
-            const comments = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
-            
-            const botComment = comments.data.find(comment => 
-              comment.user.type === 'Bot' && 
-              comment.body.includes('📊 测试覆盖率报告')
-            );
-            
-            if (botComment) {
-              // 更新现有评论
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: botComment.id,
-                body: coverageReport
-              });
-              console.log('Updated existing coverage comment');
-            } else {
-              // 创建新评论
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body: coverageReport
-              });
-              console.log('Created new coverage comment');
-            }
+    uses: ./.github/workflows/test.yml
+    permissions:
+      contents: read
+      pull-requests: write
+      actions: read
 
   release:
     name: Release
     runs-on: ubuntu-latest
+    needs: test
     if: |
       github.event_name == 'push' && 
       (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta') &&
