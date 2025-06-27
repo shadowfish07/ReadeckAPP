@@ -385,7 +385,7 @@ class ReadeckApiClient {
 
       if (response.statusCode == 204) {
         appLogger.i('deleteBookmark success for bookmark: $bookmarkId');
-        return const Success(());
+        return const Success(unit);
       } else {
         appLogger.w("删除书签失败。uri: $uri, 状态码: ${response.statusCode}");
         return Failure(

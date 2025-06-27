@@ -3,7 +3,6 @@ import 'package:flutter_command/flutter_command.dart';
 import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_operation_use_cases.dart';
-import 'package:readeck_app/domain/use_cases/bookmark_use_cases.dart';
 import 'package:readeck_app/domain/use_cases/label_use_cases.dart';
 import 'package:readeck_app/main.dart';
 import 'package:readeck_app/utils/reading_stats_calculator.dart';
@@ -11,15 +10,15 @@ import 'package:result_dart/result_dart.dart';
 
 class MarkedViewmodel extends BaseBookmarksViewmodel {
   MarkedViewmodel(super._bookmarkRepository, super._bookmarkOperationUseCases,
-      super._bookmarkUseCases, super._labelUseCases);
+      super._labelUseCases);
 
   @override
   Future<ResultDart<List<Bookmark>, Exception>> Function({int limit, int page})
-      get _loadBookmarks => _bookmarkRepository.getMarkedBookmarks;
+      get _loadBookmarks => _bookmarkRepository.loadMarkedBookmarks;
 
   @override
   bool Function(String) get _bookmarkIdFilter => (id) {
-        final bookmark = super._bookmarkUseCases.getBookmark(id);
+        final bookmark = super._bookmarkRepository.getCachedBookmark(id);
         if (bookmark == null) {
           return false;
         }
@@ -29,15 +28,15 @@ class MarkedViewmodel extends BaseBookmarksViewmodel {
 
 class ArchivedViewmodel extends BaseBookmarksViewmodel {
   ArchivedViewmodel(super._bookmarkRepository, super._bookmarkOperationUseCases,
-      super._bookmarkUseCases, super._labelUseCases);
+      super._labelUseCases);
 
   @override
   Future<ResultDart<List<Bookmark>, Exception>> Function({int limit, int page})
-      get _loadBookmarks => _bookmarkRepository.getArchivedBookmarks;
+      get _loadBookmarks => _bookmarkRepository.loadArchivedBookmarks;
 
   @override
   bool Function(String) get _bookmarkIdFilter => (id) {
-        final bookmark = super._bookmarkUseCases.getBookmark(id);
+        final bookmark = super._bookmarkRepository.getCachedBookmark(id);
         if (bookmark == null) {
           return false;
         }
@@ -46,19 +45,16 @@ class ArchivedViewmodel extends BaseBookmarksViewmodel {
 }
 
 class UnarchivedViewmodel extends BaseBookmarksViewmodel {
-  UnarchivedViewmodel(
-      super._bookmarkRepository,
-      super._bookmarkOperationUseCases,
-      super._bookmarkUseCases,
-      super._labelUseCases);
+  UnarchivedViewmodel(super._bookmarkRepository,
+      super._bookmarkOperationUseCases, super._labelUseCases);
 
   @override
   Future<ResultDart<List<Bookmark>, Exception>> Function({int limit, int page})
-      get _loadBookmarks => _bookmarkRepository.getUnarchivedBookmarks;
+      get _loadBookmarks => _bookmarkRepository.loadUnarchivedBookmarks;
 
   @override
   bool Function(String) get _bookmarkIdFilter => (id) {
-        final bookmark = super._bookmarkUseCases.getBookmark(id);
+        final bookmark = super._bookmarkRepository.getCachedBookmark(id);
         if (bookmark == null) {
           return false;
         }
@@ -67,11 +63,8 @@ class UnarchivedViewmodel extends BaseBookmarksViewmodel {
 }
 
 abstract class BaseBookmarksViewmodel extends ChangeNotifier {
-  BaseBookmarksViewmodel(
-      this._bookmarkRepository,
-      this._bookmarkOperationUseCases,
-      this._bookmarkUseCases,
-      this._labelUseCases) {
+  BaseBookmarksViewmodel(this._bookmarkRepository,
+      this._bookmarkOperationUseCases, this._labelUseCases) {
     load = Command.createAsync<int, List<Bookmark>>(_load,
         initialValue: [], includeLastResultInCommandResults: true)
       ..execute(1);
@@ -85,14 +78,13 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
     loadLabels = Command.createAsyncNoParam(_loadLabels, initialValue: []);
 
     // 注册书签数据变化监听器
-    _bookmarkUseCases.addListener(_onBookmarksChanged);
+    _bookmarkRepository.addListener(_onBookmarksChanged);
     // 注册标签数据变化监听器
     _labelUseCases.addListener(_onLabelsChanged);
   }
 
   final BookmarkRepository _bookmarkRepository;
   final BookmarkOperationUseCases _bookmarkOperationUseCases;
-  final BookmarkUseCases _bookmarkUseCases;
   final LabelUseCases _labelUseCases;
 
   final Map<String, bool> _optimisticArchived = {};
@@ -100,8 +92,8 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
   final Map<String, ReadingStats> _readingStats = {};
   // 移除本地 _labels 变量，改用中心化存储
   final List<String> _bookmarkIds = [];
-  List<Bookmark> get _bookmarks => _bookmarkUseCases
-      .getBookmarks(_bookmarkIds.where(_bookmarkIdFilter).toList())
+  List<Bookmark> get _bookmarks => _bookmarkRepository
+      .getCachedBookmarks(_bookmarkIds.where(_bookmarkIdFilter).toList())
       .whereType<Bookmark>()
       .toList();
   int _currentPage = 1;
@@ -117,13 +109,11 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
 
   void _addBookmarkIds(List<Bookmark> bookmarks) {
     _bookmarkIds.addAll(bookmarks.map((e) => e.id));
-    _bookmarkUseCases.insertOrUpdateBookmarks(bookmarks);
   }
 
-  void _clearAndSetBookmarks(List<Bookmark> bookmarks) {
+  void _resetBookmarks(List<Bookmark> bookmarks) {
     _bookmarkIds.clear();
     _bookmarkIds.addAll(bookmarks.map((e) => e.id));
-    _bookmarkUseCases.insertOrUpdateBookmarks(bookmarks);
   }
 
   List<Bookmark> get bookmarks {
@@ -152,7 +142,7 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
     _currentPage = page;
     final result = await _loadBookmarks(limit: limit, page: page);
     final bookmarks = result.getOrThrow();
-    _clearAndSetBookmarks(bookmarks);
+    _resetBookmarks(bookmarks);
     _hasMoreData = bookmarks.length == limit;
 
     // 加载阅读统计数据
@@ -165,7 +155,7 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
   }
 
   Future<List<Bookmark>> _loadMore(int page) async {
-    if (!_hasMoreData) return _bookmarkUseCases.bookmarks;
+    if (!_hasMoreData) return _bookmarkRepository.bookmarks;
 
     var limit = 10;
     _currentPage = page;
@@ -185,7 +175,7 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
     }
 
     notifyListeners();
-    return _bookmarkUseCases.bookmarks;
+    return _bookmarkRepository.bookmarks;
   }
 
   void loadNextPage() {
@@ -206,8 +196,7 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
     _optimisticMarked[bookmark.id] = !bookmark.isMarked;
     notifyListeners();
 
-    final result =
-        await _bookmarkOperationUseCases.toggleBookmarkMarked(bookmark);
+    final result = await _bookmarkRepository.toggleMarked(bookmark);
 
     if (result.isError()) {
       appLogger.e("Failed to toggle bookmark marked",
@@ -223,8 +212,7 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
     _optimisticArchived[bookmark.id] = !bookmark.isArchived;
     notifyListeners();
 
-    final result =
-        await _bookmarkOperationUseCases.toggleBookmarkArchived(bookmark);
+    final result = await _bookmarkRepository.toggleArchived(bookmark);
 
     if (result.isError()) {
       appLogger.e("Failed to toggle bookmark archived",
@@ -248,8 +236,7 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
 
   Future<void> updateBookmarkLabels(
       Bookmark bookmark, List<String> labels) async {
-    final result =
-        await _bookmarkOperationUseCases.updateBookmarkLabels(bookmark, labels);
+    final result = await _bookmarkRepository.updateLabels(bookmark, labels);
 
     if (result.isError()) {
       appLogger.e("Failed to update bookmark labels",
@@ -271,7 +258,7 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
   @override
   void dispose() {
     // 移除书签数据变化监听器
-    _bookmarkUseCases.removeListener(_onBookmarksChanged);
+    _bookmarkRepository.removeListener(_onBookmarksChanged);
     // 移除标签数据变化监听器
     _labelUseCases.removeListener(_onLabelsChanged);
     super.dispose();

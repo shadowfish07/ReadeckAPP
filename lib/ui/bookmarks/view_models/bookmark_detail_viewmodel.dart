@@ -3,19 +3,16 @@ import 'package:flutter_command/flutter_command.dart';
 import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_operation_use_cases.dart';
-import 'package:readeck_app/domain/use_cases/bookmark_use_cases.dart';
 import 'package:readeck_app/domain/use_cases/label_use_cases.dart';
 import 'package:readeck_app/main.dart';
 
 class BookmarkDetailViewModel extends ChangeNotifier {
-  BookmarkDetailViewModel(
-      this._bookmarkRepository,
-      this._bookmarkOperationUseCases,
-      this._bookmarkUseCases,
-      this._labelUseCases,
-      this._bookmark) {
+  BookmarkDetailViewModel(this._bookmarkRepository,
+      this._bookmarkOperationUseCases, this._labelUseCases, this._bookmark) {
     // 注册标签数据变化监听器
     _labelUseCases.addListener(_onLabelsChanged);
+    // 注册书签数据变化监听器
+    _bookmarkRepository.addListener(_onBookmarksChanged);
     loadArticleContent = Command.createAsync<void, String>(_loadArticleContent,
         initialValue: '', includeLastResultInCommandResults: true)
       ..execute();
@@ -41,7 +38,6 @@ class BookmarkDetailViewModel extends ChangeNotifier {
         Command.createAsyncNoParamNoResult(_translateContent);
   }
 
-  final BookmarkUseCases _bookmarkUseCases;
   final BookmarkRepository _bookmarkRepository;
   final BookmarkOperationUseCases _bookmarkOperationUseCases;
   final LabelUseCases _labelUseCases;
@@ -88,7 +84,7 @@ class BookmarkDetailViewModel extends ChangeNotifier {
   }
 
   void _reloadBookmark() {
-    final newBookmark = _bookmarkUseCases.getBookmark(bookmark.id);
+    final newBookmark = _bookmarkRepository.getCachedBookmark(bookmark.id);
     if (newBookmark != null) {
       _bookmark = newBookmark;
       notifyListeners();
@@ -126,10 +122,8 @@ class BookmarkDetailViewModel extends ChangeNotifier {
       appLogger.i(
           'Updating read progress for bookmark: ${bookmark.id}, progress: $readProgress');
 
-      final result = await _bookmarkRepository.updateReadProgress(
-          bookmark.id, readProgress);
-      _bookmarkUseCases.insertOrUpdateBookmark(
-          bookmark.copyWith(readProgress: readProgress));
+      final result =
+          await _bookmarkRepository.updateReadProgress(bookmark, readProgress);
 
       _reloadBookmark();
 
@@ -159,8 +153,7 @@ class BookmarkDetailViewModel extends ChangeNotifier {
     try {
       appLogger.i('Archiving bookmark: ${bookmark.id}');
 
-      final result =
-          await _bookmarkOperationUseCases.toggleBookmarkArchived(bookmark);
+      final result = await _bookmarkRepository.toggleArchived(bookmark);
       _reloadBookmark();
 
       if (result.isSuccess()) {
@@ -180,8 +173,7 @@ class BookmarkDetailViewModel extends ChangeNotifier {
     try {
       appLogger.i('Toggling bookmark marked: ${bookmark.id}');
 
-      final result =
-          await _bookmarkOperationUseCases.toggleBookmarkMarked(bookmark);
+      final result = await _bookmarkRepository.toggleMarked(bookmark);
       _reloadBookmark();
 
       if (result.isSuccess()) {
@@ -198,31 +190,15 @@ class BookmarkDetailViewModel extends ChangeNotifier {
   }
 
   Future<void> _deleteBookmark() async {
-    try {
-      appLogger.i('Deleting bookmark: ${bookmark.id}');
-
-      final result =
-          await _bookmarkOperationUseCases.deleteBookmark(bookmark.id);
-
-      if (result.isSuccess()) {
-        appLogger.i('Successfully deleted bookmark');
-      } else {
-        final error = result.exceptionOrNull();
-        appLogger.e('Failed to delete bookmark: $error');
-        throw error ?? Exception('Failed to delete bookmark');
-      }
-    } catch (e) {
-      appLogger.e('Exception while deleting bookmark: $e');
-      rethrow;
-    }
+    appLogger.i('Deleting bookmark: ${bookmark.id}');
+    _bookmarkRepository.deleteBookmark(bookmark.id);
   }
 
   Future<void> updateBookmarkLabels(List<String> labels) async {
     try {
       appLogger.i('Updating bookmark labels: ${bookmark.id}');
 
-      final result = await _bookmarkOperationUseCases.updateBookmarkLabels(
-          bookmark, labels);
+      final result = await _bookmarkRepository.updateLabels(bookmark, labels);
       _reloadBookmark();
 
       if (result.isSuccess()) {
@@ -326,10 +302,22 @@ class BookmarkDetailViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 书签数据变化回调
+  void _onBookmarksChanged() {
+    // 更新当前书签数据
+    final updatedBookmark = _bookmarkRepository.getCachedBookmark(_bookmark.id);
+    if (updatedBookmark != null) {
+      _bookmark = updatedBookmark;
+      notifyListeners();
+    }
+  }
+
   @override
   void dispose() {
     // 移除标签数据变化监听器
     _labelUseCases.removeListener(_onLabelsChanged);
+    // 移除书签数据变化监听器
+    _bookmarkRepository.removeListener(_onBookmarksChanged);
     super.dispose();
   }
 }

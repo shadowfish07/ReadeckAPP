@@ -90,11 +90,13 @@ ReadeckApp 严格遵循分层依赖原则：
 - **提高代码的可测试性和可维护性**
 
 **正确的依赖关系：**
+
 ```
 ViewModel → Repository → Service
 ```
 
 **错误的依赖关系：**
+
 ```
 ViewModel → Service (❌ 禁止)
 ```
@@ -110,12 +112,14 @@ ReadeckApp 中的全局共享数据必须严格遵循单一数据源原则：
 - **确保数据的一致性和同步性**
 
 **正确的全局数据共享方式：**
+
 ```
 ViewModel A → Repository (SSOT) ← ViewModel B
 ViewModel C → Repository (SSOT) ← ViewModel D
 ```
 
 **错误的全局数据共享方式：**
+
 ```
 ViewModel A → Local State (❌ 数据重复)
 ViewModel B → Local State (❌ 数据重复)

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
 import 'package:readeck_app/data/repository/settings/settings_repository.dart';
 import 'package:readeck_app/ui/api_config/view_models/api_config_viewmodel.dart';
 import 'package:readeck_app/ui/api_config/widgets/api_config_page.dart';
@@ -20,7 +21,6 @@ import 'package:readeck_app/ui/bookmarks/widget/archived_screen.dart';
 import 'package:readeck_app/ui/bookmarks/widget/marked_screen.dart';
 import 'package:readeck_app/ui/bookmarks/view_models/bookmark_detail_viewmodel.dart';
 import 'package:readeck_app/ui/bookmarks/widget/bookmark_detail_screen.dart';
-import 'package:readeck_app/domain/use_cases/bookmark_use_cases.dart';
 
 import 'routes.dart';
 
@@ -79,12 +79,8 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
                   builder: (context, state) {
                     return ChangeNotifierProvider(
                       create: (context) {
-                        return DailyReadViewModel(
-                            context.read(),
-                            context.read(),
-                            context.read(),
-                            context.read(),
-                            context.read());
+                        return DailyReadViewModel(context.read(),
+                            context.read(), context.read(), context.read());
                       },
                       child: Consumer<DailyReadViewModel>(
                         builder: (context, viewModel, child) {
@@ -100,7 +96,7 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
                   path: Routes.unarchived,
                   builder: (context, state) {
                     return ChangeNotifierProvider(
-                      create: (context) => UnarchivedViewmodel(context.read(),
+                      create: (context) => UnarchivedViewmodel(
                           context.read(), context.read(), context.read()),
                       child: Consumer<UnarchivedViewmodel>(
                         builder: (context, viewModel, child) {
@@ -116,7 +112,7 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
                   path: Routes.archived,
                   builder: (context, state) {
                     return ChangeNotifierProvider(
-                      create: (context) => ArchivedViewmodel(context.read(),
+                      create: (context) => ArchivedViewmodel(
                           context.read(), context.read(), context.read()),
                       child: Consumer<ArchivedViewmodel>(
                         builder: (context, viewModel, child) {
@@ -132,7 +128,7 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
                   path: Routes.marked,
                   builder: (context, state) {
                     return ChangeNotifierProvider(
-                      create: (context) => MarkedViewmodel(context.read(),
+                      create: (context) => MarkedViewmodel(
                           context.read(), context.read(), context.read()),
                       child: Consumer<MarkedViewmodel>(
                         builder: (context, viewModel, child) {
@@ -182,14 +178,13 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
             path: '${Routes.bookmarkDetail}/:id',
             builder: (context, state) {
               final bookmarkId = state.pathParameters['id']!;
-              final bookmarkUseCases = context.read<BookmarkUseCases>();
-              final bookmark = bookmarkUseCases.getBookmark(bookmarkId);
+              final bookmarkRepository = context.read<BookmarkRepository>();
+              final bookmark = bookmarkRepository.getCachedBookmark(bookmarkId);
               if (bookmark == null) {
                 // 书签可能已被删除，显示友好的错误提示
                 return ErrorPage.bookmarkNotFound();
               }
               final viewModel = BookmarkDetailViewModel(
-                context.read(),
                 context.read(),
                 context.read(),
                 context.read(),
