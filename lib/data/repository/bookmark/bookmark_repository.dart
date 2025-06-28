@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:readeck_app/data/repository/settings/settings_repository.dart';
 import 'package:readeck_app/data/service/database_service.dart';
 import 'package:readeck_app/data/service/openrouter_api_client.dart';
 import 'package:readeck_app/data/service/readeck_api_client.dart';
@@ -12,12 +13,13 @@ import 'package:result_dart/result_dart.dart';
 typedef BookmarkChangeListener = void Function();
 
 class BookmarkRepository {
-  BookmarkRepository(
-      this._readeckApiClient, this._databaseService, this._openRouterApiClient);
+  BookmarkRepository(this._readeckApiClient, this._databaseService,
+      this._openRouterApiClient, this._settingsRepository);
 
   final ReadeckApiClient _readeckApiClient;
   final DatabaseService _databaseService;
   final OpenRouterApiClient _openRouterApiClient;
+  final SettingsRepository _settingsRepository;
 
   // 全局共享数据管理 - 单一数据源
   final List<Bookmark> _bookmarks = [];
@@ -330,24 +332,35 @@ class BookmarkRepository {
   }
 
   /// 翻译书签内容（流式输出）
-  /// 优先从缓存获取翻译，如果缓存没有则使用AI翻译并写入缓存
+  /// 根据缓存配置决定是否使用缓存，如果启用缓存则优先从缓存获取翻译
   Stream<Result<String>> translateBookmarkContentStream(
       String bookmarkId, String originalContent) async* {
     try {
       appLogger.i('开始翻译书签内容: $bookmarkId');
 
-      // 首先尝试从缓存获取翻译
-      final cachedResult =
-          await _databaseService.getBookmarkArticleByBookmarkId(bookmarkId);
+      // 获取翻译缓存配置
+      final cacheEnabledResult =
+          await _settingsRepository.getTranslationCacheEnabled();
+      final isCacheEnabled = cacheEnabledResult.getOrDefault(true); // 默认启用缓存
 
-      if (cachedResult.isSuccess()) {
-        final cachedArticle = cachedResult.getOrNull()!;
-        if (cachedArticle.translate != null &&
-            cachedArticle.translate!.isNotEmpty) {
-          appLogger.i('从缓存获取翻译内容成功: $bookmarkId');
-          yield Success(cachedArticle.translate!);
-          return;
+      appLogger.d('翻译缓存配置: ${isCacheEnabled ? "启用" : "禁用"}');
+
+      // 如果启用缓存，首先尝试从缓存获取翻译
+      if (isCacheEnabled) {
+        final cachedResult =
+            await _databaseService.getBookmarkArticleByBookmarkId(bookmarkId);
+
+        if (cachedResult.isSuccess()) {
+          final cachedArticle = cachedResult.getOrNull()!;
+          if (cachedArticle.translate != null &&
+              cachedArticle.translate!.isNotEmpty) {
+            appLogger.i('从缓存获取翻译内容成功: $bookmarkId');
+            yield Success(cachedArticle.translate!);
+            return;
+          }
         }
+      } else {
+        appLogger.i('翻译缓存已禁用，直接使用AI翻译: $bookmarkId');
       }
 
       // 缓存中没有翻译，使用AI进行翻译
@@ -387,9 +400,13 @@ class BookmarkRepository {
         }
       }
 
-      // 将翻译结果保存到缓存
-      await _saveTranslationToCache(
-          bookmarkId, originalContent, translatedContent);
+      // 如果启用缓存，将翻译结果保存到缓存
+      if (isCacheEnabled) {
+        await _saveTranslationToCache(
+            bookmarkId, originalContent, translatedContent);
+      } else {
+        appLogger.d('翻译缓存已禁用，不保存翻译结果: $bookmarkId');
+      }
 
       appLogger.i('AI翻译完成: $bookmarkId');
     } catch (e) {
