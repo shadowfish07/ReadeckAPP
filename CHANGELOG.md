@@ -1,3 +1,22 @@
+## [0.4.0-beta.3](https://github.com/shadowfish07/ReadeckApp/compare/v0.4.0-beta.2...v0.4.0-beta.3) (2025-06-28)
+
+
+### ✨ 新功能
+
+* **bookmarks:** 优化书签状态管理和缓存操作，移除乐观更新 ([88b4d84](https://github.com/shadowfish07/ReadeckApp/commit/88b4d8447ae84716ef906beefa4f8b8eeea17f0b))
+
+
+### 🐛 Bug修复
+
+* **bookmarks:** 标记喜爱后，下拉刷新，过程中喜爱图标会闪烁 ([4460999](https://github.com/shadowfish07/ReadeckApp/commit/446099900e625eab5b861deb204ab786b29b4297)), closes [#44](https://github.com/shadowfish07/ReadeckApp/issues/44)
+* 仅一项时，无法触发下拉刷新 ([1ce48cd](https://github.com/shadowfish07/ReadeckApp/commit/1ce48cd482856fddc4f583b04174f8d920dfad31)), closes [#43](https://github.com/shadowfish07/ReadeckApp/issues/43)
+
+
+### ♻️ 代码重构
+
+* **bookmark:** 为书签仓库添加详细日志记录 ([e98798e](https://github.com/shadowfish07/ReadeckApp/commit/e98798e5394e2d9372b7e976c9f131f18d91df33))
+* **readeck_api_client:** 重构HTTP客户端使用并添加资源释放方法 ([2e96849](https://github.com/shadowfish07/ReadeckApp/commit/2e96849136f63a14b9fa489c0dfebb3e3415b2e1))
+
 ## [0.4.0-beta.2](https://github.com/shadowfish07/ReadeckApp/compare/v0.4.0-beta.1...v0.4.0-beta.2) (2025-06-27)
 
 
