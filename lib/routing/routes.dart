@@ -7,6 +7,9 @@ abstract final class Routes {
   static const apiConfigSettingRelative = 'api-config';
   static const aiSetting = '/$settingsRelative/$aiSettingRelative';
   static const aiSettingRelative = 'ai-setting';
+  static const translationSetting =
+      '/$settingsRelative/$translationSettingRelative';
+  static const translationSettingRelative = 'translation-setting';
   static const about = '/about';
   static const dailyRead = '/$dailyReadRelative';
   static const dailyReadRelative = 'daily-read';
