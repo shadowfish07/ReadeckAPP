@@ -74,4 +74,64 @@ class SettingsRepository {
 
     return Success(result.getOrThrow());
   }
+
+  /// 保存翻译服务提供方
+  AsyncResult<void> saveTranslationProvider(String provider) async {
+    final result = await _prefsService.setTranslationProvider(provider);
+    if (result.isError()) {
+      appLogger.e("保存翻译服务提供方失败", error: result.exceptionOrNull());
+      return result;
+    }
+    return const Success(unit);
+  }
+
+  /// 获取翻译服务提供方
+  AsyncResult<String> getTranslationProvider() async {
+    final result = await _prefsService.getTranslationProvider();
+    if (result.isError()) {
+      appLogger.e("获取翻译服务提供方失败", error: result.exceptionOrNull());
+      return Failure(Exception(result.exceptionOrNull()));
+    }
+    return Success(result.getOrThrow());
+  }
+
+  /// 保存翻译目标语种
+  AsyncResult<void> saveTranslationTargetLanguage(String language) async {
+    final result = await _prefsService.setTranslationTargetLanguage(language);
+    if (result.isError()) {
+      appLogger.e("保存翻译目标语种失败", error: result.exceptionOrNull());
+      return result;
+    }
+    return const Success(unit);
+  }
+
+  /// 获取翻译目标语种
+  AsyncResult<String> getTranslationTargetLanguage() async {
+    final result = await _prefsService.getTranslationTargetLanguage();
+    if (result.isError()) {
+      appLogger.e("获取翻译目标语种失败", error: result.exceptionOrNull());
+      return Failure(Exception(result.exceptionOrNull()));
+    }
+    return Success(result.getOrThrow());
+  }
+
+  /// 保存翻译缓存启用状态
+  AsyncResult<void> saveTranslationCacheEnabled(bool enabled) async {
+    final result = await _prefsService.setTranslationCacheEnabled(enabled);
+    if (result.isError()) {
+      appLogger.e("保存翻译缓存启用状态失败", error: result.exceptionOrNull());
+      return result;
+    }
+    return const Success(unit);
+  }
+
+  /// 获取翻译缓存启用状态
+  AsyncResult<bool> getTranslationCacheEnabled() async {
+    final result = await _prefsService.getTranslationCacheEnabled();
+    if (result.isError()) {
+      appLogger.e("获取翻译缓存启用状态失败", error: result.exceptionOrNull());
+      return Failure(Exception(result.exceptionOrNull()));
+    }
+    return Success(result.getOrThrow());
+  }
 }

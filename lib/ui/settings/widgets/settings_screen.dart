@@ -66,6 +66,16 @@ class SettingsScreen extends StatelessWidget {
           ),
           const Divider(),
           ListTile(
+            leading: const Icon(Icons.translate),
+            title: const Text('翻译设置'),
+            subtitle: const Text('配置翻译服务和目标语言'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              context.push(Routes.translationSetting);
+            },
+          ),
+          const Divider(),
+          ListTile(
             leading: const Icon(Icons.palette),
             title: const Text('主题模式'),
             subtitle: Text(_getThemeModeText(viewModel.themeMode)),

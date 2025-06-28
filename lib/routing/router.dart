@@ -12,9 +12,11 @@ import 'package:readeck_app/ui/daily_read/widgets/daily_read_screen.dart';
 import 'package:readeck_app/ui/settings/view_models/about_viewmodel.dart';
 import 'package:readeck_app/ui/settings/view_models/ai_settings_viewmodel.dart';
 import 'package:readeck_app/ui/settings/view_models/settings_viewmodel.dart';
+import 'package:readeck_app/ui/settings/view_models/translation_settings_viewmodel.dart';
 import 'package:readeck_app/ui/settings/widgets/about_page.dart';
 import 'package:readeck_app/ui/settings/widgets/ai_settings_screen.dart';
 import 'package:readeck_app/ui/settings/widgets/settings_screen.dart';
+import 'package:readeck_app/ui/settings/widgets/translation_settings_screen.dart';
 import 'package:readeck_app/ui/bookmarks/view_models/bookmarks_viewmodel.dart';
 import 'package:readeck_app/ui/bookmarks/widget/unarchived_screen.dart';
 import 'package:readeck_app/ui/bookmarks/widget/archived_screen.dart';
@@ -29,6 +31,8 @@ final Map<String, String> _routeTitleMap = {
   Routes.settings: '设置',
   Routes.about: '关于',
   Routes.apiConfigSetting: 'API 配置',
+  Routes.aiSetting: 'AI 设置',
+  Routes.translationSetting: '翻译设置',
   Routes.dailyRead: '每日阅读',
   Routes.unarchived: '未读',
   Routes.archived: '已归档',
@@ -173,6 +177,12 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
             builder: (context, state) {
               final viewModel = AiSettingsViewModel(context.read());
               return AiSettingsScreen(viewModel: viewModel);
+            }),
+        GoRoute(
+            path: Routes.translationSetting,
+            builder: (context, state) {
+              final viewModel = TranslationSettingsViewModel(context.read());
+              return TranslationSettingsScreen(viewModel: viewModel);
             }),
         GoRoute(
             path: '${Routes.bookmarkDetail}/:id',
