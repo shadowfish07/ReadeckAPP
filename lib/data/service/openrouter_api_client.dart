@@ -212,6 +212,183 @@ class OpenRouterApiClient {
     }
   }
 
+  /// 流式文本完成
+  ///
+  /// [model] - 使用的模型名称，如 'openai/gpt-3.5-turbo-instruct'
+  /// [prompt] - 输入提示文本
+  /// [temperature] - 温度参数，控制输出的随机性 (0.0-2.0)
+  /// [maxTokens] - 最大生成令牌数
+  /// [topP] - 核采样参数
+  /// [frequencyPenalty] - 频率惩罚
+  /// [presencePenalty] - 存在惩罚
+  /// [stop] - 停止序列
+  Stream<Result<String>> streamCompletion({
+    required String model,
+    required String prompt,
+    double? temperature,
+    int? maxTokens,
+    double? topP,
+    double? frequencyPenalty,
+    double? presencePenalty,
+    List<String>? stop,
+  }) async* {
+    if (!(await isConfigured)) {
+      yield Failure(ApiNotConfiguredException());
+      return;
+    }
+
+    try {
+      final uri = Uri.parse('$_baseUrl/completions');
+      final request = http.Request('POST', uri);
+
+      request.headers.addAll(_headers);
+
+      appLogger.d('OpenRouter API headers: $_headers');
+
+      final requestBody = {
+        'model': model,
+        'prompt': prompt,
+        'stream': true,
+        if (temperature != null) 'temperature': temperature,
+        if (maxTokens != null) 'max_tokens': maxTokens,
+        if (topP != null) 'top_p': topP,
+        if (frequencyPenalty != null) 'frequency_penalty': frequencyPenalty,
+        if (presencePenalty != null) 'presence_penalty': presencePenalty,
+        if (stop != null) 'stop': stop,
+      };
+
+      request.body = jsonEncode(requestBody);
+
+      appLogger.d('发送流式文本完成请求到 OpenRouter: $uri');
+      appLogger.d('请求体: ${jsonEncode(requestBody)}');
+
+      final streamedResponse = await request.send();
+
+      if (streamedResponse.statusCode != 200) {
+        appLogger.w('OpenRouter API 请求失败。状态码: ${streamedResponse.statusCode}');
+        // 读取错误响应的body内容
+        final responseBody = await streamedResponse.stream.bytesToString();
+        appLogger.w('响应body: $responseBody');
+        yield Failure(NetworkErrorException(
+          'OpenRouter API 请求失败: $responseBody',
+          uri,
+          streamedResponse.statusCode,
+        ));
+        return;
+      }
+
+      await for (final chunk
+          in streamedResponse.stream.transform(utf8.decoder)) {
+        final lines = chunk.split('\n');
+
+        for (final line in lines) {
+          if (line.startsWith('data: ')) {
+            final data = line.substring(6).trim();
+
+            if (data == '[DONE]') {
+              appLogger.d('OpenRouter 流式响应完成');
+              return;
+            }
+
+            if (data.isEmpty) {
+              continue;
+            }
+
+            try {
+              final json = jsonDecode(data);
+              final content = json['choices']?[0]?['text'];
+
+              if (content != null && content is String) {
+                yield Success(content);
+              }
+            } catch (e) {
+              appLogger.w('解析 OpenRouter 响应数据失败: $e, 数据: $data');
+              // 忽略解析错误，继续处理下一行
+              continue;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      appLogger.w('OpenRouter 流式请求失败: $e');
+      final uri = Uri.parse('$_baseUrl/completions');
+      yield Failure(NetworkErrorException('OpenRouter 流式请求失败', uri));
+    }
+  }
+
+  /// 非流式文本完成
+  ///
+  /// [model] - 使用的模型名称
+  /// [prompt] - 输入提示文本
+  /// [temperature] - 温度参数
+  /// [maxTokens] - 最大生成令牌数
+  /// [topP] - 核采样参数
+  /// [frequencyPenalty] - 频率惩罚
+  /// [presencePenalty] - 存在惩罚
+  /// [stop] - 停止序列
+  AsyncResult<String> completion({
+    required String model,
+    required String prompt,
+    double? temperature,
+    int? maxTokens,
+    double? topP,
+    double? frequencyPenalty,
+    double? presencePenalty,
+    List<String>? stop,
+  }) async {
+    if (!(await isConfigured)) {
+      return Failure(ApiNotConfiguredException());
+    }
+
+    try {
+      final uri = Uri.parse('$_baseUrl/completions');
+
+      final requestBody = {
+        'model': model,
+        'prompt': prompt,
+        'stream': false,
+        if (temperature != null) 'temperature': temperature,
+        if (maxTokens != null) 'max_tokens': maxTokens,
+        if (topP != null) 'top_p': topP,
+        if (frequencyPenalty != null) 'frequency_penalty': frequencyPenalty,
+        if (presencePenalty != null) 'presence_penalty': presencePenalty,
+        if (stop != null) 'stop': stop,
+      };
+
+      appLogger.d('发送文本完成请求到 OpenRouter: $uri');
+
+      final response = await http.post(
+        uri,
+        headers: _headers,
+        body: jsonEncode(requestBody),
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        final content = responseData['choices']?[0]?['text'];
+
+        if (content != null && content is String) {
+          appLogger.d('OpenRouter 文本完成请求成功');
+          return Success(content);
+        } else {
+          appLogger.w('OpenRouter 响应格式异常: ${response.body}');
+          return Failure(Exception('OpenRouter 响应格式异常'));
+        }
+      } else {
+        appLogger.w('OpenRouter API 请求失败。状态码: ${response.statusCode}');
+        return Failure(NetworkErrorException(
+          'OpenRouter API 请求失败',
+          uri,
+          response.statusCode,
+        ));
+      }
+    } catch (e) {
+      appLogger.w('OpenRouter 请求失败: $e');
+      final uri = Uri.parse('$_baseUrl/completions');
+      return Failure(NetworkErrorException('OpenRouter 请求失败', uri));
+    }
+  }
+
   /// 获取可用模型列表
   AsyncResult<List<Map<String, dynamic>>> getModels() async {
     if (!(await isConfigured)) {

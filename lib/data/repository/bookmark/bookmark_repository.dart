@@ -373,16 +373,13 @@ class BookmarkRepository {
       appLogger.i('缓存中未找到翻译，使用AI翻译: $bookmarkId');
 
       // 根据目标语言构建翻译提示
-      final systemPrompt = _buildTranslationSystemPrompt(targetLanguage);
-      final messages = [
-        {'role': 'system', 'content': systemPrompt},
-        {'role': 'user', 'content': originalContent}
-      ];
+      final translationPrompt =
+          _buildTranslationPrompt(targetLanguage, originalContent);
 
-      // 使用流式API进行翻译
-      final translationStream = _openRouterApiClient.streamChatCompletion(
+      // 使用流式Completion API进行翻译
+      final translationStream = _openRouterApiClient.streamCompletion(
         model: 'google/gemini-2.5-flash',
-        messages: messages,
+        prompt: translationPrompt,
         temperature: 0.3,
       );
 
@@ -418,9 +415,14 @@ class BookmarkRepository {
     }
   }
 
-  /// 根据目标语言构建翻译系统提示
-  String _buildTranslationSystemPrompt(String targetLanguage) {
-    return 'You are a professional translation assistant. Please translate the provided HTML content into $targetLanguage, keeping the HTML tag structure unchanged and only translating the text content. Ensure the translation is accurate, fluent, and follows the expression habits of $targetLanguage.';
+  /// 根据目标语言构建翻译提示
+  String _buildTranslationPrompt(String targetLanguage, String content) {
+    return '''You are a professional translation assistant. Please translate the following HTML content into $targetLanguage, keeping the HTML tag structure unchanged and only translating the text content. Ensure the translation is accurate, fluent, and follows the expression habits of $targetLanguage.
+
+Content to translate:
+$content
+
+Translated content:''';
   }
 
   /// 将翻译结果保存到缓存
