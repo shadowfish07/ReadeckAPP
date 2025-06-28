@@ -45,8 +45,6 @@ class DailyReadViewModel extends ChangeNotifier {
   late Command toggleBookmarkMarked;
   late Command<void, List<String>> loadLabels;
 
-  final Map<String, bool> _optimisticArchived = {};
-  final Map<String, bool> _optimisticMarked = {};
   final Map<String, ReadingStats> _readingStats = {};
   final List<String> _bookmarkIds = [];
   List<Bookmark> get _bookmarks => _bookmarkRepository
@@ -56,13 +54,7 @@ class DailyReadViewModel extends ChangeNotifier {
   bool _isNoMore = false;
   // 移除本地 _labels 变量，改用中心化存储
   bool get isNoMore => _isNoMore;
-  List<Bookmark> get bookmarks {
-    return _bookmarks
-        .map((item) => item.copyWith(
-            isArchived: _optimisticArchived[item.id] ?? item.isArchived,
-            isMarked: _optimisticMarked[item.id] ?? item.isMarked))
-        .toList();
-  }
+  List<Bookmark> get bookmarks => _bookmarks;
 
   List<Bookmark> get unArchivedBookmarks =>
       bookmarks.where((bookmark) => !bookmark.isArchived).toList();
@@ -164,34 +156,23 @@ class DailyReadViewModel extends ChangeNotifier {
   }
 
   Future<void> _toggleBookmarkArchived(Bookmark bookmark) async {
-    // 乐观更新
-    _optimisticArchived[bookmark.id] = !bookmark.isArchived;
-    notifyListeners();
-    _onBookmarkArchivedCallback?.call();
-
     final result = await _bookmarkRepository.toggleArchived(bookmark);
 
     if (result.isError()) {
       appLogger.e("Failed to toggle bookmark archived",
           error: result.exceptionOrNull()!);
-      _optimisticArchived.remove(bookmark.id);
-      notifyListeners();
       throw result.exceptionOrNull()!;
     }
+
+    _onBookmarkArchivedCallback?.call();
   }
 
   Future<void> _toggleBookmarkMarked(Bookmark bookmark) async {
-    // 乐观更新
-    _optimisticMarked[bookmark.id] = !bookmark.isMarked;
-    notifyListeners();
-
     final result = await _bookmarkRepository.toggleMarked(bookmark);
 
     if (result.isError()) {
       appLogger.e("Failed to toggle bookmark marked",
           error: result.exceptionOrNull()!);
-      _optimisticMarked.remove(bookmark.id);
-      notifyListeners();
       throw result.exceptionOrNull()!;
     }
   }

@@ -87,7 +87,7 @@ class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
             if (lastValue == null || lastValue.isEmpty) {
               return Loading(text: widget.texts.loadingText);
             }
-            return _buildList(lastValue);
+            return _buildList(widget.viewModel.bookmarks);
           },
           onError: (context, error, lastValue, param) {
             switch (error) {
@@ -100,7 +100,7 @@ class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
                 return ErrorPage.unknownError(error: Exception(error));
             }
           },
-          onData: (context, data, param) {
+          onData: (context, _, param) {
             final bookmarks = widget.viewModel.bookmarks;
 
             if (bookmarks.isEmpty) {
@@ -171,6 +171,7 @@ class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
       },
       child: ListView.builder(
         controller: _scrollController,
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),
         itemCount: bookmarks.length + (widget.viewModel.hasMoreData ? 1 : 0),
         itemBuilder: (context, index) {
