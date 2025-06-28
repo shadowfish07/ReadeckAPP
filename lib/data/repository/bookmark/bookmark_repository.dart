@@ -343,7 +343,13 @@ class BookmarkRepository {
           await _settingsRepository.getTranslationCacheEnabled();
       final isCacheEnabled = cacheEnabledResult.getOrDefault(true); // 默认启用缓存
 
+      // 获取翻译目标语言
+      final targetLanguageResult =
+          await _settingsRepository.getTranslationTargetLanguage();
+      final targetLanguage = targetLanguageResult.getOrDefault('中文'); // 默认中文
+
       appLogger.d('翻译缓存配置: ${isCacheEnabled ? "启用" : "禁用"}');
+      appLogger.d('翻译目标语言: $targetLanguage');
 
       // 如果启用缓存，首先尝试从缓存获取翻译
       if (isCacheEnabled) {
@@ -366,13 +372,10 @@ class BookmarkRepository {
       // 缓存中没有翻译，使用AI进行翻译
       appLogger.i('缓存中未找到翻译，使用AI翻译: $bookmarkId');
 
-      // 构建翻译提示
+      // 根据目标语言构建翻译提示
+      final systemPrompt = _buildTranslationSystemPrompt(targetLanguage);
       final messages = [
-        {
-          'role': 'system',
-          'content':
-              '你是一个专业的翻译助手。请将用户提供的HTML内容翻译成中文，保持HTML标签结构不变，只翻译文本内容。请确保翻译准确、流畅、符合中文表达习惯。'
-        },
+        {'role': 'system', 'content': systemPrompt},
         {'role': 'user', 'content': originalContent}
       ];
 
@@ -413,6 +416,11 @@ class BookmarkRepository {
       appLogger.e('翻译异常: $bookmarkId', error: e);
       yield Failure(Exception('翻译失败: $e'));
     }
+  }
+
+  /// 根据目标语言构建翻译系统提示
+  String _buildTranslationSystemPrompt(String targetLanguage) {
+    return 'You are a professional translation assistant. Please translate the provided HTML content into $targetLanguage, keeping the HTML tag structure unchanged and only translating the text content. Ensure the translation is accurate, fluent, and follows the expression habits of $targetLanguage.';
   }
 
   /// 将翻译结果保存到缓存
