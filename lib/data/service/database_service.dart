@@ -282,6 +282,29 @@ class DatabaseService {
     }
   }
 
+  /// 清空所有翻译缓存
+  AsyncResult<void> clearAllTranslationCache() async {
+    if (_database == null) {
+      return Failure(Exception("Database is not open"));
+    }
+
+    try {
+      // 将所有书签文章的翻译字段设为 null
+      final count = await _database!.update(
+        _kTableBookmarkArticle,
+        {_kColumnTranslate: null},
+      );
+      appLogger.i("Cleared translation cache for $count articles");
+      return const Success(unit);
+    } on Exception catch (e) {
+      appLogger.e("Failed to clear translation cache", error: e);
+      return Failure(e);
+    } catch (e) {
+      appLogger.e("Failed to clear translation cache", error: e);
+      return Failure(Exception(e));
+    }
+  }
+
   /// 清空所有数据库表的数据
   AsyncResult<void> clearAllData() async {
     if (_database == null) {

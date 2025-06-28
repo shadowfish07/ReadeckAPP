@@ -22,6 +22,7 @@ class TranslationSettingsViewModel extends ChangeNotifier {
   late Command<String, void> saveTranslationTargetLanguage;
   late Command<bool, void> saveTranslationCacheEnabled;
   late Command<void, void> loadTranslationSettings;
+  late Command<void, void> clearTranslationCache;
 
   // 支持的语言列表
   static const List<String> supportedLanguages = [
@@ -54,6 +55,11 @@ class TranslationSettingsViewModel extends ChangeNotifier {
       _loadTranslationSettingsAsync,
       initialValue: null,
     )..execute();
+
+    clearTranslationCache = Command.createAsyncNoParam(
+      _clearTranslationCacheAsync,
+      initialValue: null,
+    );
   }
 
   Future<void> _saveTranslationProvider(String provider) async {
@@ -73,6 +79,15 @@ class TranslationSettingsViewModel extends ChangeNotifier {
     if (result.isSuccess()) {
       _translationTargetLanguage = language;
       notifyListeners();
+
+      // 切换目标语种时清空翻译缓存
+      appLogger.i('切换翻译目标语种到: $language，开始清空翻译缓存');
+      final clearResult = await _settingsRepository.clearTranslationCache();
+      if (clearResult.isSuccess()) {
+        appLogger.i('翻译缓存清空成功');
+      } else {
+        appLogger.e('清空翻译缓存失败', error: clearResult.exceptionOrNull()!);
+      }
     } else {
       appLogger.e('保存翻译目标语种失败', error: result.exceptionOrNull()!);
       throw result.exceptionOrNull()!;
@@ -123,12 +138,24 @@ class TranslationSettingsViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> _clearTranslationCacheAsync() async {
+    appLogger.i('手动清空翻译缓存');
+    final result = await _settingsRepository.clearTranslationCache();
+    if (result.isSuccess()) {
+      appLogger.i('翻译缓存清空成功');
+    } else {
+      appLogger.e('清空翻译缓存失败', error: result.exceptionOrNull()!);
+      throw result.exceptionOrNull()!;
+    }
+  }
+
   @override
   void dispose() {
     saveTranslationProvider.dispose();
     saveTranslationTargetLanguage.dispose();
     saveTranslationCacheEnabled.dispose();
     loadTranslationSettings.dispose();
+    clearTranslationCache.dispose();
     super.dispose();
   }
 }
