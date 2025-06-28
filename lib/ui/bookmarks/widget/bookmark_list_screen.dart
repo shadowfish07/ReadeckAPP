@@ -171,6 +171,7 @@ class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
       },
       child: ListView.builder(
         controller: _scrollController,
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),
         itemCount: bookmarks.length + (widget.viewModel.hasMoreData ? 1 : 0),
         itemBuilder: (context, index) {
