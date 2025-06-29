@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'package:readeck_app/data/service/shared_preference_service.dart';
+import 'package:readeck_app/domain/models/openrouter_model/openrouter_model.dart';
 import 'package:readeck_app/main.dart';
 import 'package:readeck_app/utils/api_not_configured_exception.dart';
 import 'package:readeck_app/utils/network_error_exception.dart';
@@ -397,7 +398,7 @@ class OpenRouterApiClient {
   }
 
   /// 获取可用模型列表
-  AsyncResult<List<Map<String, dynamic>>> getModels() async {
+  AsyncResult<List<OpenRouterModel>> getModels() async {
     if (!(await isConfigured)) {
       return Failure(ApiNotConfiguredException());
     }
@@ -415,7 +416,16 @@ class OpenRouterApiClient {
 
         if (models != null) {
           appLogger.d('成功获取 ${models.length} 个模型');
-          return Success(models.cast<Map<String, dynamic>>());
+          try {
+            final modelList = models
+                .map((model) =>
+                    OpenRouterModel.fromJson(model as Map<String, dynamic>))
+                .toList();
+            return Success(modelList);
+          } catch (e) {
+            appLogger.w('解析模型数据失败: $e');
+            return Failure(Exception('解析模型数据失败: $e'));
+          }
         } else {
           appLogger.w('模型列表响应格式异常: ${response.body}');
           return Failure(Exception('模型列表响应格式异常'));

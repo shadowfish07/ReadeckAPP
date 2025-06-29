@@ -529,8 +529,8 @@ void main() {
         expect(result.isSuccess(), true);
         final models = result.getOrNull()!;
         expect(models.length, 2);
-        expect(models[0]['id'], 'openai/gpt-3.5-turbo');
-        expect(models[1]['id'], 'openai/gpt-4');
+        expect(models[0].id, 'openai/gpt-3.5-turbo');
+        expect(models[1].id, 'openai/gpt-4');
       });
 
       test('should handle HTTP error response', () async {
