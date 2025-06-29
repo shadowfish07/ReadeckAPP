@@ -10,12 +10,20 @@ import 'package:result_dart/result_dart.dart';
 /// OpenRouter API 客户端
 /// 提供与 OpenRouter API 的交互功能，支持流式聊天完成
 class OpenRouterApiClient {
-  OpenRouterApiClient(this._sharedPreferencesService, {String? baseUrl})
-      : _baseUrl = baseUrl ?? 'https://openrouter.ai/api/v1';
+  OpenRouterApiClient(this._sharedPreferencesService,
+      {String? baseUrl, http.Client? httpClient})
+      : _baseUrl = baseUrl ?? 'https://openrouter.ai/api/v1',
+        _httpClient = httpClient ?? http.Client();
 
   final String _baseUrl;
   final SharedPreferencesService _sharedPreferencesService;
+  final http.Client _httpClient;
   String? _apiKey;
+
+  /// 释放资源
+  void dispose() {
+    _httpClient.close();
+  }
 
   /// 初始化API密钥
   Future<void> _initApiKey() async {
@@ -88,7 +96,7 @@ class OpenRouterApiClient {
       appLogger.d('发送流式聊天请求到 OpenRouter: $uri');
       appLogger.d('请求体: ${jsonEncode(requestBody)}');
 
-      final streamedResponse = await request.send();
+      final streamedResponse = await _httpClient.send(request);
 
       if (streamedResponse.statusCode != 200) {
         appLogger.w('OpenRouter API 请求失败。状态码: ${streamedResponse.statusCode}');
@@ -180,7 +188,7 @@ class OpenRouterApiClient {
 
       appLogger.d('发送聊天请求到 OpenRouter: $uri');
 
-      final response = await http.post(
+      final response = await _httpClient.post(
         uri,
         headers: _headers,
         body: jsonEncode(requestBody),
@@ -262,7 +270,7 @@ class OpenRouterApiClient {
       appLogger.d('发送流式文本完成请求到 OpenRouter: $uri');
       appLogger.d('请求体: ${jsonEncode(requestBody)}');
 
-      final streamedResponse = await request.send();
+      final streamedResponse = await _httpClient.send(request);
 
       if (streamedResponse.statusCode != 200) {
         appLogger.w('OpenRouter API 请求失败。状态码: ${streamedResponse.statusCode}');
@@ -357,7 +365,7 @@ class OpenRouterApiClient {
 
       appLogger.d('发送文本完成请求到 OpenRouter: $uri');
 
-      final response = await http.post(
+      final response = await _httpClient.post(
         uri,
         headers: _headers,
         body: jsonEncode(requestBody),
@@ -400,7 +408,7 @@ class OpenRouterApiClient {
 
       appLogger.d('获取 OpenRouter 模型列表: $uri');
 
-      final response = await http.get(uri, headers: _headers);
+      final response = await _httpClient.get(uri, headers: _headers);
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
