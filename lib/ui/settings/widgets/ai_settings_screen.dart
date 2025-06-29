@@ -131,12 +131,6 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
                   prefixIcon: Icon(Icons.key),
                 ),
                 obscureText: true,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return '请输入 API 密钥';
-                  }
-                  return null;
-                },
                 onFieldSubmitted: (_) => _saveApiKey(),
               ),
               const SizedBox(height: 16),
