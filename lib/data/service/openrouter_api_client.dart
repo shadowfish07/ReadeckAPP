@@ -45,7 +45,6 @@ class OpenRouterApiClient {
   Map<String, String> get _headers => {
         'Authorization': 'Bearer $_apiKey',
         'Content-Type': 'application/json',
-        // 'HTTP-Referer': 'https://readeck-app.zqydev.me',
         'X-Title': 'ReadeckApp',
       };
 
