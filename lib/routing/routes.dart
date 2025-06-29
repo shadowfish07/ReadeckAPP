@@ -7,6 +7,8 @@ abstract final class Routes {
   static const apiConfigSettingRelative = 'api-config';
   static const aiSetting = '/$settingsRelative/$aiSettingRelative';
   static const aiSettingRelative = 'ai-setting';
+  static const modelSelection = '/$settingsRelative/$modelSelectionRelative';
+  static const modelSelectionRelative = 'model-selection';
   static const translationSetting =
       '/$settingsRelative/$translationSettingRelative';
   static const translationSettingRelative = 'translation-setting';

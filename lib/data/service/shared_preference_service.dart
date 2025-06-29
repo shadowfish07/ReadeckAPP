@@ -9,6 +9,7 @@ class SharedPreferencesService {
   static const String _kReadeckApiHost = 'readeckApiHost';
   static const String _kReadeckApiToken = 'readeckApiToken';
   static const String _kOpenRouterApiKey = 'openRouterApiKey';
+  static const String _kSelectedOpenRouterModel = 'selectedOpenRouterModel';
   static const String _kReadingStatsPrefix = 'readingStats_';
   static const String _kTranslationProvider = 'translationProvider';
   static const String _kTranslationTargetLanguage = 'translationTargetLanguage';
@@ -88,6 +89,26 @@ class SharedPreferencesService {
     final prefs = await SharedPreferences.getInstance();
     try {
       final value = prefs.getString(_kOpenRouterApiKey) ?? '';
+      return Success(value);
+    } on Exception catch (e) {
+      return Failure(e);
+    }
+  }
+
+  AsyncResult<void> setSelectedOpenRouterModel(String value) async {
+    final prefs = await SharedPreferences.getInstance();
+    try {
+      await prefs.setString(_kSelectedOpenRouterModel, value);
+      return const Success(unit);
+    } on Exception catch (e) {
+      return Failure(e);
+    }
+  }
+
+  AsyncResult<String> getSelectedOpenRouterModel() async {
+    final prefs = await SharedPreferences.getInstance();
+    try {
+      final value = prefs.getString(_kSelectedOpenRouterModel) ?? '';
       return Success(value);
     } on Exception catch (e) {
       return Failure(e);

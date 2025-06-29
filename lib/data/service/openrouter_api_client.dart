@@ -398,15 +398,22 @@ class OpenRouterApiClient {
   }
 
   /// 获取可用模型列表
-  AsyncResult<List<OpenRouterModel>> getModels() async {
-    if (!(await isConfigured)) {
-      return Failure(ApiNotConfiguredException());
-    }
-
+  ///
+  /// [category] - 可选的模型类别过滤参数
+  AsyncResult<List<OpenRouterModel>> getModels({String? category}) async {
     try {
-      final uri = Uri.parse('$_baseUrl/models');
+      final queryParams = <String, String>{};
+      if (category != null && category.isNotEmpty) {
+        queryParams['category'] = category;
+      }
+
+      final uri =
+          Uri.parse('$_baseUrl/models').replace(queryParameters: queryParams);
 
       appLogger.d('获取 OpenRouter 模型列表: $uri');
+      if (category != null) {
+        appLogger.d('过滤类别: $category');
+      }
 
       final response = await _httpClient.get(uri, headers: _headers);
 
@@ -417,10 +424,20 @@ class OpenRouterApiClient {
         if (models != null) {
           appLogger.d('成功获取 ${models.length} 个模型');
           try {
-            final modelList = models
-                .map((model) =>
-                    OpenRouterModel.fromJson(model as Map<String, dynamic>))
-                .toList();
+            final modelList = <OpenRouterModel>[];
+            for (final model in models) {
+              if (model != null && model is Map<String, dynamic>) {
+                try {
+                  final parsedModel = OpenRouterModel.fromJson(model);
+                  modelList.add(parsedModel);
+                } catch (e) {
+                  appLogger.w('跳过无效模型数据: $e, 模型数据: $model');
+                  // 跳过无法解析的模型，继续处理其他模型
+                  continue;
+                }
+              }
+            }
+            appLogger.d('成功解析 ${modelList.length} 个有效模型');
             return Success(modelList);
           } catch (e) {
             appLogger.w('解析模型数据失败: $e');

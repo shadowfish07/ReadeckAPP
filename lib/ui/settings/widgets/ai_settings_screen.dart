@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_command/flutter_command.dart';
+import 'package:go_router/go_router.dart';
 import 'package:readeck_app/main.dart';
+import 'package:readeck_app/routing/routes.dart';
 import 'package:readeck_app/ui/settings/view_models/ai_settings_viewmodel.dart';
 
 class AiSettingsScreen extends StatefulWidget {
@@ -14,7 +16,6 @@ class AiSettingsScreen extends StatefulWidget {
 
 class _AiSettingsScreenState extends State<AiSettingsScreen> {
   late final TextEditingController _apiKeyController;
-  final _formKey = GlobalKey<FormState>();
   late ListenableSubscription _successSubscription;
   late ListenableSubscription _errorSubscription;
 
@@ -30,8 +31,8 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
     // 监听保存命令的结果
     _successSubscription = widget.viewModel.saveApiKey.listen((result, _) {
       if (mounted) {
-        // 保存成功，返回上一页
-        Navigator.of(context).pop();
+        // API key 保存成功，无需额外操作
+        appLogger.d('API key 保存成功');
       }
     });
 
@@ -68,8 +69,9 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
   }
 
   void _saveApiKey() {
-    if (_formKey.currentState?.validate() ?? false) {
-      widget.viewModel.saveApiKey.execute(_apiKeyController.text.trim());
+    final apiKey = _apiKeyController.text.trim();
+    if (apiKey != widget.viewModel.openRouterApiKey) {
+      widget.viewModel.saveApiKey.execute(apiKey);
     }
   }
 
@@ -78,106 +80,166 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('AI 设置'),
-        actions: [
-          CommandBuilder<String, void>(
-              command: widget.viewModel.saveApiKey,
-              whileExecuting: (context, _, __) => const Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  ),
-              onNullData: (context, _) => TextButton(
-                    onPressed: _saveApiKey,
-                    child: const Text('保存'),
-                  ),
-              onData: (context, _, __) => TextButton(
-                    onPressed: _saveApiKey,
-                    child: const Text('保存'),
-                  ),
-              onError: (context, error, _, __) => TextButton(
-                    onPressed: _saveApiKey,
-                    child: const Text('保存'),
-                  )),
-        ],
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'OpenRouter API 配置',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '请输入您的 OpenRouter API 密钥以启用 AI 功能。',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-              ),
-              const SizedBox(height: 24),
-              TextFormField(
-                controller: _apiKeyController,
-                decoration: const InputDecoration(
-                  labelText: 'API 密钥',
-                  hintText: '请输入 OpenRouter API 密钥',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.key),
-                ),
-                obscureText: true,
-                onFieldSubmitted: (_) => _saveApiKey(),
-              ),
-              const SizedBox(height: 16),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '关于 OpenRouter',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'OpenRouter 是一个统一的 AI 模型 API 平台，支持多种大语言模型。您可以在 openrouter.ai 注册账户并获取 API 密钥。',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '• 支持 GPT、Claude、Llama 等多种模型\n• 按使用量付费，价格透明\n• 提供详细的使用统计',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                            ),
-                      ),
-                    ],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '配置 OpenRouter API 密钥和选择 AI 模型以启用 AI 能力',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
+            ),
+            const SizedBox(height: 24),
+
+            // API 密钥配置卡片
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.key,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'API 密钥',
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _apiKeyController,
+                      decoration: const InputDecoration(
+                        labelText: 'OpenRouter API 密钥',
+                        hintText: '请输入您的 API 密钥',
+                        border: OutlineInputBorder(),
+                      ),
+                      obscureText: true,
+                      onChanged: widget.viewModel.textChangedCommand.call,
+                      onFieldSubmitted: (_) => _saveApiKey(),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // 模型选择配置卡片
+            Card(
+              child: ListenableBuilder(
+                listenable: widget.viewModel,
+                builder: (context, child) {
+                  final selectedModel = widget.viewModel.selectedModel;
+                  final hasApiKey =
+                      widget.viewModel.openRouterApiKey.isNotEmpty;
+
+                  return Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.smart_toy,
+                              color: hasApiKey
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'AI 模型',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
+                                  ?.copyWith(
+                                    color: hasApiKey
+                                        ? Theme.of(context).colorScheme.primary
+                                        : Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant,
+                                  ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(
+                            selectedModel?.name ?? '未选择模型',
+                          ),
+                          trailing: const Icon(Icons.arrow_forward_ios),
+                          onTap: () async {
+                            await context.push(Routes.modelSelection);
+                            // 从模型选择页面返回后，重新加载选中的模型
+                            widget.viewModel.loadSelectedModel.execute();
+                          },
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '关于 OpenRouter',
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'OpenRouter 是一个统一的 AI 模型 API 平台，支持多种大语言模型。您可以在 openrouter.ai 注册账户并获取 API 密钥。',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '• 支持 GPT、Claude、Llama 等多种模型\n• 按使用量付费，价格透明\n• 提供详细的使用统计',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

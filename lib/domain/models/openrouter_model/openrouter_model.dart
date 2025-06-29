@@ -11,13 +11,17 @@ part 'openrouter_model.g.dart';
 abstract class ModelArchitecture with _$ModelArchitecture {
   const factory ModelArchitecture({
     /// 输入模态
-    @JsonKey(name: 'input_modalities') required List<String> inputModalities,
+    @JsonKey(name: 'input_modalities')
+    @Default(<String>[])
+    List<String> inputModalities,
 
     /// 输出模态
-    @JsonKey(name: 'output_modalities') required List<String> outputModalities,
+    @JsonKey(name: 'output_modalities')
+    @Default(<String>[])
+    List<String> outputModalities,
 
     /// 分词器类型
-    required String tokenizer,
+    @Default('') String tokenizer,
   }) = _ModelArchitecture;
 
   factory ModelArchitecture.fromJson(Map<String, Object?> json) =>
@@ -29,7 +33,7 @@ abstract class ModelArchitecture with _$ModelArchitecture {
 abstract class TopProvider with _$TopProvider {
   const factory TopProvider({
     /// 是否受到审核
-    @JsonKey(name: 'is_moderated') required bool isModerated,
+    @JsonKey(name: 'is_moderated') @Default(false) bool isModerated,
   }) = _TopProvider;
 
   factory TopProvider.fromJson(Map<String, Object?> json) =>
@@ -41,22 +45,22 @@ abstract class TopProvider with _$TopProvider {
 abstract class ModelPricing with _$ModelPricing {
   const factory ModelPricing({
     /// 提示价格
-    required String prompt,
+    @Default('0') String prompt,
 
     /// 完成价格
-    required String completion,
+    @Default('0') String completion,
 
     /// 图片价格
-    required String image,
+    @Default('0') String image,
 
     /// 请求价格
-    required String request,
+    @Default('0') String request,
 
     /// 网络搜索价格
-    @JsonKey(name: 'web_search') required String webSearch,
+    @JsonKey(name: 'web_search') @Default('0') String webSearch,
 
     /// 内部推理价格
-    @JsonKey(name: 'internal_reasoning') required String internalReasoning,
+    @JsonKey(name: 'internal_reasoning') @Default('0') String internalReasoning,
   }) = _ModelPricing;
 
   factory ModelPricing.fromJson(Map<String, Object?> json) =>
@@ -74,36 +78,38 @@ abstract class OpenRouterModel with _$OpenRouterModel {
     required String name,
 
     /// 创建时间戳
-    required int created,
+    @Default(0) int created,
 
     /// 模型描述
-    required String description,
+    @Default('') String description,
 
     /// 模型架构
-    required ModelArchitecture architecture,
+    ModelArchitecture? architecture,
 
     /// 顶级提供商
-    @JsonKey(name: 'top_provider') required TopProvider topProvider,
+    @JsonKey(name: 'top_provider') TopProvider? topProvider,
 
     /// 定价信息
-    required ModelPricing pricing,
+    ModelPricing? pricing,
 
     /// 规范化标识符
-    @JsonKey(name: 'canonical_slug') required String canonicalSlug,
+    @JsonKey(name: 'canonical_slug') @Default('') String canonicalSlug,
 
     /// 上下文长度
-    @JsonKey(name: 'context_length') required int contextLength,
+    @JsonKey(name: 'context_length') @Default(0) int contextLength,
 
     /// Hugging Face ID
-    @JsonKey(name: 'hugging_face_id') required String huggingFaceId,
+    @JsonKey(name: 'hugging_face_id') @Default('') String huggingFaceId,
 
     /// 每请求限制
     @JsonKey(name: 'per_request_limits')
-    required Map<String, dynamic> perRequestLimits,
+    @Default(<String, dynamic>{})
+    Map<String, dynamic> perRequestLimits,
 
     /// 支持的参数
     @JsonKey(name: 'supported_parameters')
-    required List<String> supportedParameters,
+    @Default(<String>[])
+    List<String> supportedParameters,
   }) = _OpenRouterModel;
 
   factory OpenRouterModel.fromJson(Map<String, Object?> json) =>

@@ -378,6 +378,7 @@ class BookmarkRepository {
 
       // 使用流式Completion API进行翻译
       final translationStream = _openRouterApiClient.streamCompletion(
+        // TODO 使用设置里的模型
         model: 'google/gemini-2.5-flash',
         prompt: translationPrompt,
         temperature: 0.3,

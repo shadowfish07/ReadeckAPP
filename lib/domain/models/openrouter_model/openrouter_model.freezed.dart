@@ -126,10 +126,10 @@ class _ModelArchitecture
     implements ModelArchitecture {
   const _ModelArchitecture(
       {@JsonKey(name: 'input_modalities')
-      required final List<String> inputModalities,
+      final List<String> inputModalities = const <String>[],
       @JsonKey(name: 'output_modalities')
-      required final List<String> outputModalities,
-      required this.tokenizer})
+      final List<String> outputModalities = const <String>[],
+      this.tokenizer = ''})
       : _inputModalities = inputModalities,
         _outputModalities = outputModalities;
   factory _ModelArchitecture.fromJson(Map<String, dynamic> json) =>
@@ -162,6 +162,7 @@ class _ModelArchitecture
 
   /// 分词器类型
   @override
+  @JsonKey()
   final String tokenizer;
 
   /// Create a copy of ModelArchitecture
@@ -340,8 +341,7 @@ class _$TopProviderCopyWithImpl<$Res> implements $TopProviderCopyWith<$Res> {
 /// @nodoc
 @JsonSerializable()
 class _TopProvider with DiagnosticableTreeMixin implements TopProvider {
-  const _TopProvider(
-      {@JsonKey(name: 'is_moderated') required this.isModerated});
+  const _TopProvider({@JsonKey(name: 'is_moderated') this.isModerated = false});
   factory _TopProvider.fromJson(Map<String, dynamic> json) =>
       _$TopProviderFromJson(json);
 
@@ -564,29 +564,33 @@ class _$ModelPricingCopyWithImpl<$Res> implements $ModelPricingCopyWith<$Res> {
 @JsonSerializable()
 class _ModelPricing with DiagnosticableTreeMixin implements ModelPricing {
   const _ModelPricing(
-      {required this.prompt,
-      required this.completion,
-      required this.image,
-      required this.request,
-      @JsonKey(name: 'web_search') required this.webSearch,
-      @JsonKey(name: 'internal_reasoning') required this.internalReasoning});
+      {this.prompt = '0',
+      this.completion = '0',
+      this.image = '0',
+      this.request = '0',
+      @JsonKey(name: 'web_search') this.webSearch = '0',
+      @JsonKey(name: 'internal_reasoning') this.internalReasoning = '0'});
   factory _ModelPricing.fromJson(Map<String, dynamic> json) =>
       _$ModelPricingFromJson(json);
 
   /// 提示价格
   @override
+  @JsonKey()
   final String prompt;
 
   /// 完成价格
   @override
+  @JsonKey()
   final String completion;
 
   /// 图片价格
   @override
+  @JsonKey()
   final String image;
 
   /// 请求价格
   @override
+  @JsonKey()
   final String request;
 
   /// 网络搜索价格
@@ -734,14 +738,14 @@ mixin _$OpenRouterModel implements DiagnosticableTreeMixin {
   String get description;
 
   /// 模型架构
-  ModelArchitecture get architecture;
+  ModelArchitecture? get architecture;
 
   /// 顶级提供商
   @JsonKey(name: 'top_provider')
-  TopProvider get topProvider;
+  TopProvider? get topProvider;
 
   /// 定价信息
-  ModelPricing get pricing;
+  ModelPricing? get pricing;
 
   /// 规范化标识符
   @JsonKey(name: 'canonical_slug')
@@ -853,9 +857,9 @@ abstract mixin class $OpenRouterModelCopyWith<$Res> {
       String name,
       int created,
       String description,
-      ModelArchitecture architecture,
-      @JsonKey(name: 'top_provider') TopProvider topProvider,
-      ModelPricing pricing,
+      ModelArchitecture? architecture,
+      @JsonKey(name: 'top_provider') TopProvider? topProvider,
+      ModelPricing? pricing,
       @JsonKey(name: 'canonical_slug') String canonicalSlug,
       @JsonKey(name: 'context_length') int contextLength,
       @JsonKey(name: 'hugging_face_id') String huggingFaceId,
@@ -863,9 +867,9 @@ abstract mixin class $OpenRouterModelCopyWith<$Res> {
       Map<String, dynamic> perRequestLimits,
       @JsonKey(name: 'supported_parameters') List<String> supportedParameters});
 
-  $ModelArchitectureCopyWith<$Res> get architecture;
-  $TopProviderCopyWith<$Res> get topProvider;
-  $ModelPricingCopyWith<$Res> get pricing;
+  $ModelArchitectureCopyWith<$Res>? get architecture;
+  $TopProviderCopyWith<$Res>? get topProvider;
+  $ModelPricingCopyWith<$Res>? get pricing;
 }
 
 /// @nodoc
@@ -885,9 +889,9 @@ class _$OpenRouterModelCopyWithImpl<$Res>
     Object? name = null,
     Object? created = null,
     Object? description = null,
-    Object? architecture = null,
-    Object? topProvider = null,
-    Object? pricing = null,
+    Object? architecture = freezed,
+    Object? topProvider = freezed,
+    Object? pricing = freezed,
     Object? canonicalSlug = null,
     Object? contextLength = null,
     Object? huggingFaceId = null,
@@ -911,18 +915,18 @@ class _$OpenRouterModelCopyWithImpl<$Res>
           ? _self.description
           : description // ignore: cast_nullable_to_non_nullable
               as String,
-      architecture: null == architecture
+      architecture: freezed == architecture
           ? _self.architecture
           : architecture // ignore: cast_nullable_to_non_nullable
-              as ModelArchitecture,
-      topProvider: null == topProvider
+              as ModelArchitecture?,
+      topProvider: freezed == topProvider
           ? _self.topProvider
           : topProvider // ignore: cast_nullable_to_non_nullable
-              as TopProvider,
-      pricing: null == pricing
+              as TopProvider?,
+      pricing: freezed == pricing
           ? _self.pricing
           : pricing // ignore: cast_nullable_to_non_nullable
-              as ModelPricing,
+              as ModelPricing?,
       canonicalSlug: null == canonicalSlug
           ? _self.canonicalSlug
           : canonicalSlug // ignore: cast_nullable_to_non_nullable
@@ -950,8 +954,12 @@ class _$OpenRouterModelCopyWithImpl<$Res>
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
-  $ModelArchitectureCopyWith<$Res> get architecture {
-    return $ModelArchitectureCopyWith<$Res>(_self.architecture, (value) {
+  $ModelArchitectureCopyWith<$Res>? get architecture {
+    if (_self.architecture == null) {
+      return null;
+    }
+
+    return $ModelArchitectureCopyWith<$Res>(_self.architecture!, (value) {
       return _then(_self.copyWith(architecture: value));
     });
   }
@@ -960,8 +968,12 @@ class _$OpenRouterModelCopyWithImpl<$Res>
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
-  $TopProviderCopyWith<$Res> get topProvider {
-    return $TopProviderCopyWith<$Res>(_self.topProvider, (value) {
+  $TopProviderCopyWith<$Res>? get topProvider {
+    if (_self.topProvider == null) {
+      return null;
+    }
+
+    return $TopProviderCopyWith<$Res>(_self.topProvider!, (value) {
       return _then(_self.copyWith(topProvider: value));
     });
   }
@@ -970,8 +982,12 @@ class _$OpenRouterModelCopyWithImpl<$Res>
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
-  $ModelPricingCopyWith<$Res> get pricing {
-    return $ModelPricingCopyWith<$Res>(_self.pricing, (value) {
+  $ModelPricingCopyWith<$Res>? get pricing {
+    if (_self.pricing == null) {
+      return null;
+    }
+
+    return $ModelPricingCopyWith<$Res>(_self.pricing!, (value) {
       return _then(_self.copyWith(pricing: value));
     });
   }
@@ -983,18 +999,18 @@ class _OpenRouterModel with DiagnosticableTreeMixin implements OpenRouterModel {
   const _OpenRouterModel(
       {required this.id,
       required this.name,
-      required this.created,
-      required this.description,
-      required this.architecture,
-      @JsonKey(name: 'top_provider') required this.topProvider,
-      required this.pricing,
-      @JsonKey(name: 'canonical_slug') required this.canonicalSlug,
-      @JsonKey(name: 'context_length') required this.contextLength,
-      @JsonKey(name: 'hugging_face_id') required this.huggingFaceId,
+      this.created = 0,
+      this.description = '',
+      this.architecture,
+      @JsonKey(name: 'top_provider') this.topProvider,
+      this.pricing,
+      @JsonKey(name: 'canonical_slug') this.canonicalSlug = '',
+      @JsonKey(name: 'context_length') this.contextLength = 0,
+      @JsonKey(name: 'hugging_face_id') this.huggingFaceId = '',
       @JsonKey(name: 'per_request_limits')
-      required final Map<String, dynamic> perRequestLimits,
+      final Map<String, dynamic> perRequestLimits = const <String, dynamic>{},
       @JsonKey(name: 'supported_parameters')
-      required final List<String> supportedParameters})
+      final List<String> supportedParameters = const <String>[]})
       : _perRequestLimits = perRequestLimits,
         _supportedParameters = supportedParameters;
   factory _OpenRouterModel.fromJson(Map<String, dynamic> json) =>
@@ -1010,24 +1026,26 @@ class _OpenRouterModel with DiagnosticableTreeMixin implements OpenRouterModel {
 
   /// 创建时间戳
   @override
+  @JsonKey()
   final int created;
 
   /// 模型描述
   @override
+  @JsonKey()
   final String description;
 
   /// 模型架构
   @override
-  final ModelArchitecture architecture;
+  final ModelArchitecture? architecture;
 
   /// 顶级提供商
   @override
   @JsonKey(name: 'top_provider')
-  final TopProvider topProvider;
+  final TopProvider? topProvider;
 
   /// 定价信息
   @override
-  final ModelPricing pricing;
+  final ModelPricing? pricing;
 
   /// 规范化标识符
   @override
@@ -1165,9 +1183,9 @@ abstract mixin class _$OpenRouterModelCopyWith<$Res>
       String name,
       int created,
       String description,
-      ModelArchitecture architecture,
-      @JsonKey(name: 'top_provider') TopProvider topProvider,
-      ModelPricing pricing,
+      ModelArchitecture? architecture,
+      @JsonKey(name: 'top_provider') TopProvider? topProvider,
+      ModelPricing? pricing,
       @JsonKey(name: 'canonical_slug') String canonicalSlug,
       @JsonKey(name: 'context_length') int contextLength,
       @JsonKey(name: 'hugging_face_id') String huggingFaceId,
@@ -1176,11 +1194,11 @@ abstract mixin class _$OpenRouterModelCopyWith<$Res>
       @JsonKey(name: 'supported_parameters') List<String> supportedParameters});
 
   @override
-  $ModelArchitectureCopyWith<$Res> get architecture;
+  $ModelArchitectureCopyWith<$Res>? get architecture;
   @override
-  $TopProviderCopyWith<$Res> get topProvider;
+  $TopProviderCopyWith<$Res>? get topProvider;
   @override
-  $ModelPricingCopyWith<$Res> get pricing;
+  $ModelPricingCopyWith<$Res>? get pricing;
 }
 
 /// @nodoc
@@ -1200,9 +1218,9 @@ class __$OpenRouterModelCopyWithImpl<$Res>
     Object? name = null,
     Object? created = null,
     Object? description = null,
-    Object? architecture = null,
-    Object? topProvider = null,
-    Object? pricing = null,
+    Object? architecture = freezed,
+    Object? topProvider = freezed,
+    Object? pricing = freezed,
     Object? canonicalSlug = null,
     Object? contextLength = null,
     Object? huggingFaceId = null,
@@ -1226,18 +1244,18 @@ class __$OpenRouterModelCopyWithImpl<$Res>
           ? _self.description
           : description // ignore: cast_nullable_to_non_nullable
               as String,
-      architecture: null == architecture
+      architecture: freezed == architecture
           ? _self.architecture
           : architecture // ignore: cast_nullable_to_non_nullable
-              as ModelArchitecture,
-      topProvider: null == topProvider
+              as ModelArchitecture?,
+      topProvider: freezed == topProvider
           ? _self.topProvider
           : topProvider // ignore: cast_nullable_to_non_nullable
-              as TopProvider,
-      pricing: null == pricing
+              as TopProvider?,
+      pricing: freezed == pricing
           ? _self.pricing
           : pricing // ignore: cast_nullable_to_non_nullable
-              as ModelPricing,
+              as ModelPricing?,
       canonicalSlug: null == canonicalSlug
           ? _self.canonicalSlug
           : canonicalSlug // ignore: cast_nullable_to_non_nullable
@@ -1265,8 +1283,12 @@ class __$OpenRouterModelCopyWithImpl<$Res>
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
-  $ModelArchitectureCopyWith<$Res> get architecture {
-    return $ModelArchitectureCopyWith<$Res>(_self.architecture, (value) {
+  $ModelArchitectureCopyWith<$Res>? get architecture {
+    if (_self.architecture == null) {
+      return null;
+    }
+
+    return $ModelArchitectureCopyWith<$Res>(_self.architecture!, (value) {
       return _then(_self.copyWith(architecture: value));
     });
   }
@@ -1275,8 +1297,12 @@ class __$OpenRouterModelCopyWithImpl<$Res>
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
-  $TopProviderCopyWith<$Res> get topProvider {
-    return $TopProviderCopyWith<$Res>(_self.topProvider, (value) {
+  $TopProviderCopyWith<$Res>? get topProvider {
+    if (_self.topProvider == null) {
+      return null;
+    }
+
+    return $TopProviderCopyWith<$Res>(_self.topProvider!, (value) {
       return _then(_self.copyWith(topProvider: value));
     });
   }
@@ -1285,8 +1311,12 @@ class __$OpenRouterModelCopyWithImpl<$Res>
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
-  $ModelPricingCopyWith<$Res> get pricing {
-    return $ModelPricingCopyWith<$Res>(_self.pricing, (value) {
+  $ModelPricingCopyWith<$Res>? get pricing {
+    if (_self.pricing == null) {
+      return null;
+    }
+
+    return $ModelPricingCopyWith<$Res>(_self.pricing!, (value) {
       return _then(_self.copyWith(pricing: value));
     });
   }

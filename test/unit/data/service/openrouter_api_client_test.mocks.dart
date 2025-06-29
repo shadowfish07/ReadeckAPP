@@ -434,6 +434,41 @@ class MockSharedPreferencesService extends _i1.Mock
       ) as _i3.Future<_i8.ResultDart<String, Exception>>);
 
   @override
+  _i3.Future<_i8.ResultDart<void, Exception>> setSelectedOpenRouterModel(
+          String? value) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #setSelectedOpenRouterModel,
+          [value],
+        ),
+        returnValue: _i3.Future<_i8.ResultDart<void, Exception>>.value(
+            _i5.dummyValue<_i8.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #setSelectedOpenRouterModel,
+            [value],
+          ),
+        )),
+      ) as _i3.Future<_i8.ResultDart<void, Exception>>);
+
+  @override
+  _i3.Future<_i8.ResultDart<String, Exception>> getSelectedOpenRouterModel() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getSelectedOpenRouterModel,
+          [],
+        ),
+        returnValue: _i3.Future<_i8.ResultDart<String, Exception>>.value(
+            _i5.dummyValue<_i8.ResultDart<String, Exception>>(
+          this,
+          Invocation.method(
+            #getSelectedOpenRouterModel,
+            [],
+          ),
+        )),
+      ) as _i3.Future<_i8.ResultDart<String, Exception>>);
+
+  @override
   _i3.Future<_i8.ResultDart<void, Exception>> setReadingStats(
     String? bookmarkId,
     _i9.ReadingStats? stats,

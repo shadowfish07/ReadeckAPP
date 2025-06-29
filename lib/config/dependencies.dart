@@ -30,8 +30,8 @@ List<SingleChildWidget> providers(String host, String token) {
     Provider(create: (context) => ReadeckApiClient(host, token)),
     Provider(create: (context) => DatabaseService()),
     Provider(
-        create: (context) =>
-            SettingsRepository(context.read(), context.read(), context.read())),
+        create: (context) => SettingsRepository(
+            context.read(), context.read(), context.read(), context.read())),
     Provider(
         create: (context) =>
             OpenRouterApiClient(context.read<SharedPreferencesService>())),

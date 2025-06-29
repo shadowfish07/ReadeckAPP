@@ -1,16 +1,19 @@
 import 'package:readeck_app/data/service/readeck_api_client.dart';
 import 'package:readeck_app/data/service/database_service.dart';
+import 'package:readeck_app/data/service/openrouter_api_client.dart';
 import 'package:readeck_app/data/service/shared_preference_service.dart';
+import 'package:readeck_app/domain/models/openrouter_model/openrouter_model.dart';
 import 'package:readeck_app/main.dart';
 import 'package:result_dart/result_dart.dart';
 
 class SettingsRepository {
-  SettingsRepository(
-      this._apiClient, this._prefsService, this._databaseService);
+  SettingsRepository(this._apiClient, this._prefsService, this._databaseService,
+      this._openRouterApiClient);
 
   final ReadeckApiClient _apiClient;
   final SharedPreferencesService _prefsService;
   final DatabaseService _databaseService;
+  final OpenRouterApiClient _openRouterApiClient;
 
   AsyncResult<bool> isApiConfigured() async {
     if (await _prefsService.getReadeckApiHost().getOrDefault('') == '') {
@@ -146,5 +149,36 @@ class SettingsRepository {
       return result;
     }
     return const Success(unit);
+  }
+
+  /// 获取 OpenRouter 可用模型列表
+  AsyncResult<List<OpenRouterModel>> getOpenRouterModels(
+      {String? category}) async {
+    final result = await _openRouterApiClient.getModels(category: category);
+    if (result.isError()) {
+      appLogger.e("获取OpenRouter模型列表失败", error: result.exceptionOrNull());
+      return result;
+    }
+    return result;
+  }
+
+  /// 保存选中的 OpenRouter 模型
+  AsyncResult<void> saveSelectedOpenRouterModel(String modelId) async {
+    final result = await _prefsService.setSelectedOpenRouterModel(modelId);
+    if (result.isError()) {
+      appLogger.e("保存选中的OpenRouter模型失败", error: result.exceptionOrNull());
+      return result;
+    }
+    return const Success(unit);
+  }
+
+  /// 获取选中的 OpenRouter 模型
+  AsyncResult<String> getSelectedOpenRouterModel() async {
+    final result = await _prefsService.getSelectedOpenRouterModel();
+    if (result.isError()) {
+      appLogger.e("获取选中的OpenRouter模型失败", error: result.exceptionOrNull());
+      return Failure(Exception(result.exceptionOrNull()));
+    }
+    return Success(result.getOrThrow());
   }
 }
