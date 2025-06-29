@@ -4,11 +4,16 @@ import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_operation_use_cases.dart';
 import 'package:readeck_app/data/repository/label/label_repository.dart';
+import 'package:readeck_app/data/repository/settings/settings_repository.dart';
 import 'package:readeck_app/main.dart';
 
 class BookmarkDetailViewModel extends ChangeNotifier {
-  BookmarkDetailViewModel(this._bookmarkRepository,
-      this._bookmarkOperationUseCases, this._labelRepository, this._bookmark) {
+  BookmarkDetailViewModel(
+      this._bookmarkRepository,
+      this._bookmarkOperationUseCases,
+      this._labelRepository,
+      this._settingsRepository,
+      this._bookmark) {
     // 注册标签数据变化监听器
     _labelRepository.addListener(_onLabelsChanged);
     // 注册书签数据变化监听器
@@ -41,6 +46,7 @@ class BookmarkDetailViewModel extends ChangeNotifier {
   final BookmarkRepository _bookmarkRepository;
   final BookmarkOperationUseCases _bookmarkOperationUseCases;
   final LabelRepository _labelRepository;
+  final SettingsRepository _settingsRepository;
   Bookmark _bookmark;
 
   // AI翻译相关状态
@@ -229,6 +235,13 @@ class BookmarkDetailViewModel extends ChangeNotifier {
   Future<void> _translateContent() async {
     try {
       appLogger.i('开始AI翻译内容');
+
+      // 检查OpenRouter API Key是否已配置
+      final apiKeyResult = await _settingsRepository.getOpenRouterApiKey();
+      if (apiKeyResult.isError() || apiKeyResult.getOrNull()?.isEmpty == true) {
+        appLogger.w('OpenRouter API Key未配置，无法进行AI翻译');
+        throw '请先在设置中配置OpenRouter API Key';
+      }
 
       _isTranslateMode = true;
       _isTranslating = true;
