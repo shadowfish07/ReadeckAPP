@@ -64,9 +64,9 @@ class BookmarkOperationUseCases {
   }
 
   /// 为书签列表加载阅读统计数据
-  Future<Map<String, ReadingStats>> loadReadingStatsForBookmarks(
+  Future<Map<String, ReadingStatsForView>> loadReadingStatsForBookmarks(
       List<Bookmark> bookmarks) async {
-    final Map<String, ReadingStats> readingStats = {};
+    final Map<String, ReadingStatsForView> readingStats = {};
     for (final bookmark in bookmarks) {
       final stats = await loadReadingStatsForBookmark(bookmark);
       if (stats != null) {
@@ -77,7 +77,8 @@ class BookmarkOperationUseCases {
   }
 
   /// 为单个书签加载阅读统计数据
-  Future<ReadingStats?> loadReadingStatsForBookmark(Bookmark bookmark) async {
+  Future<ReadingStatsForView?> loadReadingStatsForBookmark(
+      Bookmark bookmark) async {
     try {
       // 首先尝试从数据库中读取
       final cachedStatsResult =

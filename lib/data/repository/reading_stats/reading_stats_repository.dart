@@ -19,7 +19,7 @@ class ReadingStatsRepository {
   /// [bookmarkId] 书签ID
   /// [htmlContent] HTML内容
   /// 返回计算结果和保存状态
-  AsyncResult<ReadingStats> calculateAndSaveReadingStats(
+  AsyncResult<ReadingStatsForView> calculateAndSaveReadingStats(
     String bookmarkId,
     String htmlContent,
   ) async {
@@ -34,13 +34,13 @@ class ReadingStatsRepository {
         return Failure(error);
       }
 
-      final stats = calculateResult.getOrNull()!;
+      final (stats, characterCount) = calculateResult.getOrNull()!;
       appLogger.i('计算完成 - 书签: $bookmarkId, 字数: ${stats.readableCharCount}');
 
       // 保存到数据库
       final model = ReadingStatsModel(
         bookmarkId: bookmarkId,
-        readableCharCount: stats.readableCharCount,
+        characterCount: characterCount,
         createdDate: DateTime.now(),
       );
 
@@ -65,7 +65,7 @@ class ReadingStatsRepository {
   ///
   /// [bookmarkId] 书签ID
   /// 返回阅读统计数据，如果不存在则返回失败
-  AsyncResult<ReadingStats> getReadingStats(String bookmarkId) async {
+  AsyncResult<ReadingStatsForView> getReadingStats(String bookmarkId) async {
     try {
       appLogger.i('获取书签阅读统计数据: $bookmarkId');
 
@@ -81,10 +81,10 @@ class ReadingStatsRepository {
 
       // 根据字数计算阅读时间
       final estimatedTime =
-          _calculateReadingTimeFromCharCount(model.readableCharCount);
+          _calculator.calculateReadingTime(model.characterCount);
 
-      final stats = ReadingStats(
-        readableCharCount: model.readableCharCount,
+      final stats = ReadingStatsForView(
+        readableCharCount: model.characterCount.totalCharCount,
         estimatedReadingTimeMinutes: estimatedTime,
       );
 
@@ -119,16 +119,5 @@ class ReadingStatsRepository {
       appLogger.e('删除阅读统计异常: $bookmarkId', error: error);
       return Failure(error);
     }
-  }
-
-  /// 根据字符数计算阅读时间
-  ///
-  /// [charCount] 字符数
-  /// 返回预计阅读时间（分钟）
-  double _calculateReadingTimeFromCharCount(int charCount) {
-    // 使用与ReadingStatsCalculator相同的计算逻辑
-    // 假设平均阅读速度为每分钟200-300字符（中文）或每分钟250个单词（英文约1250字符）
-    const double averageReadingSpeedCharsPerMinute = 250.0;
-    return charCount / averageReadingSpeedCharsPerMinute;
   }
 }

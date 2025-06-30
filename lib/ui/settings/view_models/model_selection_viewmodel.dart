@@ -87,16 +87,13 @@ class ModelSelectionViewModel extends ChangeNotifier {
   }
 
   Future<void> _saveSelectedModel(String modelId) async {
-    try {
-      final result =
-          await _settingsRepository.saveSelectedOpenRouterModel(modelId);
-      if (result.isSuccess()) {
-        appLogger.d('成功保存选中的模型: $modelId');
-      } else {
-        appLogger.e('保存选中的模型失败', error: result.exceptionOrNull()!);
-      }
-    } catch (e) {
-      appLogger.e('保存选中的模型异常', error: e);
+    final result =
+        await _settingsRepository.saveSelectedOpenRouterModel(modelId);
+    if (result.isSuccess()) {
+      appLogger.d('成功保存选中的模型: $modelId');
+    } else {
+      appLogger.e('保存选中的模型失败', error: result.exceptionOrNull()!);
+      throw '保存选中的模型失败';
     }
   }
 

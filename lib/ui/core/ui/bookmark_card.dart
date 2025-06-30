@@ -15,8 +15,8 @@ class BookmarkCard extends StatefulWidget {
   final Function(Bookmark bookmark, List<String> labels)? onUpdateLabels;
   final List<String>? availableLabels;
   final Future<List<String>> Function()? onLoadLabels;
-  final ReadingStats? readingStats;
-  final Future<ReadingStats?> Function()? onLoadReadingStats;
+  final ReadingStatsForView? readingStats;
+  final Future<ReadingStatsForView?> Function()? onLoadReadingStats;
 
   const BookmarkCard({
     super.key,
@@ -369,7 +369,7 @@ class _BookmarkCardState extends State<BookmarkCard> {
 
     // 如果有异步加载函数，使用FutureBuilder
     if (widget.onLoadReadingStats != null) {
-      return FutureBuilder<ReadingStats?>(
+      return FutureBuilder<ReadingStatsForView?>(
         future: widget.onLoadReadingStats!(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -389,7 +389,8 @@ class _BookmarkCardState extends State<BookmarkCard> {
   }
 
   /// 构建阅读统计信息行
-  Widget _buildReadingStatsRow(BuildContext context, ReadingStats stats) {
+  Widget _buildReadingStatsRow(
+      BuildContext context, ReadingStatsForView stats) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [

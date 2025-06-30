@@ -62,7 +62,7 @@ class DailyReadViewModel extends ChangeNotifier {
   List<String> get availableLabels => _labelRepository.labelNames;
 
   /// 获取书签的阅读统计数据
-  Future<ReadingStats?> getReadingStats(String bookmarkId) async {
+  Future<ReadingStatsForView?> getReadingStats(String bookmarkId) async {
     final bookmark = _bookmarkRepository.getCachedBookmark(bookmarkId);
     if (bookmark == null) return null;
     final result =

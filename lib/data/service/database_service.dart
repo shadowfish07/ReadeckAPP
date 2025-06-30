@@ -22,7 +22,7 @@ class DatabaseService {
   static const _kColumnBookmarkId = 'bookmark_id';
   static const _kColumnArticle = 'article';
   static const _kColumnTranslate = 'translate';
-  static const _kColumnReadableCharCount = 'readable_char_count';
+  static const _kColumnCharacterCount = 'character_count';
 
   Database? _database;
 
@@ -63,7 +63,7 @@ class DatabaseService {
       '''CREATE TABLE $_kTableReadingStats (
     $_kColumnId INTEGER PRIMARY KEY AUTOINCREMENT,
     $_kColumnBookmarkId TEXT NOT NULL,
-    $_kColumnReadableCharCount INTEGER NOT NULL,
+    $_kColumnCharacterCount TEXT NOT NULL CHECK (json_valid($_kColumnCharacterCount)),
     $_kColumnCreatedDate TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
     UNIQUE($_kColumnBookmarkId)
 );
@@ -366,7 +366,8 @@ class DatabaseService {
     try {
       final data = {
         _kColumnBookmarkId: readingStats.bookmarkId,
-        _kColumnReadableCharCount: readingStats.readableCharCount,
+        _kColumnCharacterCount:
+            jsonEncode(readingStats.characterCount.toJson()),
         _kColumnCreatedDate: readingStats.createdDate.toIso8601String(),
       };
 
@@ -414,10 +415,12 @@ class DatabaseService {
       }
 
       final map = maps.first;
+      final statsDataJson = jsonDecode(map[_kColumnCharacterCount] as String)
+          as Map<String, dynamic>;
       final readingStats = ReadingStatsModel(
         id: map[_kColumnId] as int?,
         bookmarkId: map[_kColumnBookmarkId] as String,
-        readableCharCount: map[_kColumnReadableCharCount] as int,
+        characterCount: CharacterCount.fromJson(statsDataJson),
         createdDate: DateTime.parse(map[_kColumnCreatedDate] as String),
       );
 
