@@ -1,5 +1,4 @@
 import 'package:readeck_app/data/service/readeck_api_client.dart';
-import 'package:readeck_app/data/service/database_service.dart';
 import 'package:readeck_app/data/service/openrouter_api_client.dart';
 import 'package:readeck_app/data/service/shared_preference_service.dart';
 import 'package:readeck_app/domain/models/openrouter_model/openrouter_model.dart';
@@ -7,12 +6,11 @@ import 'package:readeck_app/main.dart';
 import 'package:result_dart/result_dart.dart';
 
 class SettingsRepository {
-  SettingsRepository(this._apiClient, this._prefsService, this._databaseService,
-      this._openRouterApiClient);
+  SettingsRepository(
+      this._apiClient, this._prefsService, this._openRouterApiClient);
 
   final ReadeckApiClient _apiClient;
   final SharedPreferencesService _prefsService;
-  final DatabaseService _databaseService;
   final OpenRouterApiClient _openRouterApiClient;
 
   AsyncResult<bool> isApiConfigured() async {
@@ -139,16 +137,6 @@ class SettingsRepository {
       return Failure(Exception(result.exceptionOrNull()));
     }
     return Success(result.getOrThrow());
-  }
-
-  /// 清空所有翻译缓存
-  AsyncResult<void> clearTranslationCache() async {
-    final result = await _databaseService.clearAllTranslationCache();
-    if (result.isError()) {
-      appLogger.e("清空翻译缓存失败", error: result.exceptionOrNull());
-      return result;
-    }
-    return const Success(unit);
   }
 
   /// 获取 OpenRouter 可用模型列表

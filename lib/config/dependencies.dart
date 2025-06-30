@@ -1,5 +1,6 @@
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
+import 'package:readeck_app/data/repository/article/article_repository.dart';
 import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
 import 'package:readeck_app/data/repository/daily_read_history/daily_read_history_repository.dart';
 import 'package:readeck_app/data/repository/settings/settings_repository.dart';
@@ -31,13 +32,17 @@ List<SingleChildWidget> providers(String host, String token) {
     Provider(create: (context) => DatabaseService()),
     Provider(
         create: (context) => SettingsRepository(
-            context.read(), context.read(), context.read(), context.read())),
+              context.read(),
+              context.read(),
+              context.read(),
+            )),
     Provider(
         create: (context) =>
             OpenRouterApiClient(context.read<SharedPreferencesService>())),
     Provider(
-        create: (context) => BookmarkRepository(
+        create: (context) => ArticleRepository(
             context.read(), context.read(), context.read(), context.read())),
+    Provider(create: (context) => BookmarkRepository(context.read())),
     Provider(create: (context) => DailyReadHistoryRepository(context.read())),
     Provider(create: (context) => LabelRepository(context.read())),
     Provider(

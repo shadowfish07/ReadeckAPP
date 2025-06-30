@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_command/flutter_command.dart';
+import 'package:readeck_app/data/repository/article/article_repository.dart';
 import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_operation_use_cases.dart';
@@ -10,6 +11,7 @@ import 'package:readeck_app/main.dart';
 class BookmarkDetailViewModel extends ChangeNotifier {
   BookmarkDetailViewModel(
       this._bookmarkRepository,
+      this._articleRepository,
       this._bookmarkOperationUseCases,
       this._labelRepository,
       this._settingsRepository,
@@ -44,6 +46,7 @@ class BookmarkDetailViewModel extends ChangeNotifier {
   }
 
   final BookmarkRepository _bookmarkRepository;
+  final ArticleRepository _articleRepository;
   final BookmarkOperationUseCases _bookmarkOperationUseCases;
   final LabelRepository _labelRepository;
   final SettingsRepository _settingsRepository;
@@ -101,7 +104,7 @@ class BookmarkDetailViewModel extends ChangeNotifier {
     try {
       appLogger.i('Loading article content for bookmark: ${bookmark.id}');
 
-      final result = await _bookmarkRepository.getBookmarkArticle(bookmark.id);
+      final result = await _articleRepository.getBookmarkArticle(bookmark.id);
 
       if (result.isSuccess()) {
         final htmlContent = result.getOrThrow();
@@ -252,7 +255,7 @@ class BookmarkDetailViewModel extends ChangeNotifier {
       _originalContent = loadArticleContent.value;
 
       // 通过Repository进行流式翻译
-      final translationStream = _bookmarkRepository
+      final translationStream = _articleRepository
           .translateBookmarkContentStream(_bookmark.id, _originalContent);
 
       await for (final result in translationStream) {

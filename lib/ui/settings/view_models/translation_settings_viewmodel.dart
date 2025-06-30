@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_command/flutter_command.dart';
+import 'package:readeck_app/data/repository/article/article_repository.dart';
 import 'package:readeck_app/data/repository/settings/settings_repository.dart';
 import 'package:readeck_app/main.dart';
 
 class TranslationSettingsViewModel extends ChangeNotifier {
-  TranslationSettingsViewModel(this._settingsRepository) {
+  TranslationSettingsViewModel(
+      this._settingsRepository, this._articleRepository) {
     _initCommands();
   }
 
   final SettingsRepository _settingsRepository;
+  final ArticleRepository _articleRepository;
 
   String _translationProvider = 'AI';
   String _translationTargetLanguage = '中文';
@@ -82,7 +85,7 @@ class TranslationSettingsViewModel extends ChangeNotifier {
 
       // 切换目标语种时清空翻译缓存
       appLogger.i('切换翻译目标语种到: $language，开始清空翻译缓存');
-      final clearResult = await _settingsRepository.clearTranslationCache();
+      final clearResult = await _articleRepository.clearTranslationCache();
       if (clearResult.isSuccess()) {
         appLogger.i('翻译缓存清空成功');
       } else {
@@ -140,7 +143,7 @@ class TranslationSettingsViewModel extends ChangeNotifier {
 
   Future<void> _clearTranslationCacheAsync() async {
     appLogger.i('手动清空翻译缓存');
-    final result = await _settingsRepository.clearTranslationCache();
+    final result = await _articleRepository.clearTranslationCache();
     if (result.isSuccess()) {
       appLogger.i('翻译缓存清空成功');
     } else {

@@ -1,4 +1,4 @@
-import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
+import 'package:readeck_app/data/repository/article/article_repository.dart';
 import 'package:readeck_app/data/service/shared_preference_service.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 
@@ -9,9 +9,9 @@ import 'package:url_launcher/url_launcher.dart';
 
 class BookmarkOperationUseCases {
   BookmarkOperationUseCases(
-      this._bookmarkRepository, this._sharedPreferencesService);
+      this._articleRepository, this._sharedPreferencesService);
 
-  final BookmarkRepository _bookmarkRepository;
+  final ArticleRepository _articleRepository;
   final SharedPreferencesService _sharedPreferencesService;
   final ReadingStatsCalculator _readingStatsCalculator =
       const ReadingStatsCalculator();
@@ -92,7 +92,7 @@ class BookmarkOperationUseCases {
 
       // 缓存中没有，获取文章内容并计算
       final articleResult =
-          await _bookmarkRepository.getBookmarkArticle(bookmark.id);
+          await _articleRepository.getBookmarkArticle(bookmark.id);
       if (articleResult.isSuccess()) {
         final htmlContent = articleResult.getOrNull()!;
         final statsResult =

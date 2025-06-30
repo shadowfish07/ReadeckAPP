@@ -192,7 +192,8 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
         GoRoute(
             path: Routes.translationSetting,
             builder: (context, state) {
-              final viewModel = TranslationSettingsViewModel(context.read());
+              final viewModel =
+                  TranslationSettingsViewModel(context.read(), context.read());
               return TranslationSettingsScreen(viewModel: viewModel);
             }),
         GoRoute(
@@ -206,6 +207,7 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
                 return ErrorPage.bookmarkNotFound();
               }
               final viewModel = BookmarkDetailViewModel(
+                context.read(),
                 context.read(),
                 context.read(),
                 context.read(),
