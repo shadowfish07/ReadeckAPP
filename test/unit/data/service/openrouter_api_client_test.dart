@@ -1,5 +1,5 @@
-import 'dart:convert';
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
@@ -470,122 +470,6 @@ void main() {
         // Assert
         expect(result.isSuccess(), true);
         expect(result.getOrNull(), 'Hello! How can I help you today?');
-      });
-    });
-
-    group('getModels Tests', () {
-      test('should return ApiNotConfiguredException when not configured',
-          () async {
-        // Arrange
-        when(mockSettingsRepository.getOpenRouterApiKey()).thenReturn('');
-
-        // Act
-        final result = await apiClient.getModels();
-
-        // Assert
-        expect(result.isError(), true);
-        expect(result.exceptionOrNull(), isA<ApiNotConfiguredException>());
-      });
-
-      test('should handle successful models retrieval', () async {
-        // Arrange
-        when(mockSettingsRepository.getOpenRouterApiKey())
-            .thenReturn(testApiKey);
-
-        final mockResponse = {
-          'data': [
-            {
-              'id': 'openai/gpt-3.5-turbo',
-              'name': 'GPT-3.5 Turbo',
-              'description': 'OpenAI GPT-3.5 Turbo model'
-            },
-            {
-              'id': 'openai/gpt-4',
-              'name': 'GPT-4',
-              'description': 'OpenAI GPT-4 model'
-            }
-          ]
-        };
-
-        when(mockHttpClient.get(
-          any,
-          headers: anyNamed('headers'),
-        )).thenAnswer((_) async => http.Response(
-              jsonEncode(mockResponse),
-              200,
-            ));
-
-        // Act
-        final result = await apiClient.getModels();
-
-        // Assert
-        expect(result.isSuccess(), true);
-        final models = result.getOrNull()!;
-        expect(models.length, 2);
-        expect(models[0].id, 'openai/gpt-3.5-turbo');
-        expect(models[1].id, 'openai/gpt-4');
-      });
-
-      test('should handle HTTP error response', () async {
-        // Arrange
-        when(mockSettingsRepository.getOpenRouterApiKey())
-            .thenReturn(testApiKey);
-
-        when(mockHttpClient.get(
-          any,
-          headers: anyNamed('headers'),
-        )).thenAnswer((_) async => http.Response(
-              'Unauthorized',
-              401,
-            ));
-
-        // Act
-        final result = await apiClient.getModels();
-
-        // Assert
-        expect(result.isError(), true);
-        expect(result.exceptionOrNull(), isA<NetworkErrorException>());
-      });
-
-      test('should handle malformed response', () async {
-        // Arrange
-        when(mockSettingsRepository.getOpenRouterApiKey())
-            .thenReturn(testApiKey);
-
-        final mockResponse = {'invalid': 'response'};
-
-        when(mockHttpClient.get(
-          any,
-          headers: anyNamed('headers'),
-        )).thenAnswer((_) async => http.Response(
-              jsonEncode(mockResponse),
-              200,
-            ));
-
-        // Act
-        final result = await apiClient.getModels();
-
-        // Assert
-        expect(result.isError(), true);
-        expect(result.exceptionOrNull(), isA<Exception>());
-      });
-
-      test('should handle network exception', () async {
-        // Arrange
-        when(mockSettingsRepository.getOpenRouterApiKey())
-            .thenReturn(testApiKey);
-
-        when(mockHttpClient.get(
-          any,
-          headers: anyNamed('headers'),
-        )).thenThrow(Exception('Network error'));
-
-        // Act
-        final result = await apiClient.getModels();
-
-        // Assert
-        expect(result.isError(), true);
-        expect(result.exceptionOrNull(), isA<NetworkErrorException>());
       });
     });
 

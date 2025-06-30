@@ -4,6 +4,7 @@ import 'package:readeck_app/data/repository/article/article_repository.dart';
 import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
 import 'package:readeck_app/data/repository/daily_read_history/daily_read_history_repository.dart';
 import 'package:readeck_app/data/repository/openrouter/openrouter_repository.dart';
+import 'package:readeck_app/data/repository/reading_stats/reading_stats_repository.dart';
 import 'package:readeck_app/data/repository/settings/settings_repository.dart';
 import 'package:readeck_app/data/service/database_service.dart';
 import 'package:readeck_app/data/service/readeck_api_client.dart';
@@ -23,7 +24,8 @@ List<SingleChildWidget> providers(String host, String token) {
     Provider(create: (context) => DatabaseService()),
     Provider(create: (context) {
       final prefsService = context.read<SharedPreferencesService>();
-      return SettingsRepository(prefsService);
+      final apiClient = context.read<ReadeckApiClient>();
+      return SettingsRepository(prefsService, apiClient);
     }),
     Provider(
         create: (context) =>
@@ -43,6 +45,7 @@ List<SingleChildWidget> providers(String host, String token) {
     Provider(create: (context) => BookmarkRepository(context.read())),
     Provider(create: (context) => DailyReadHistoryRepository(context.read())),
     Provider(create: (context) => LabelRepository(context.read())),
+    Provider(create: (context) => ReadingStatsRepository(context.read())),
     Provider(
         create: (context) =>
             BookmarkOperationUseCases(context.read(), context.read())),

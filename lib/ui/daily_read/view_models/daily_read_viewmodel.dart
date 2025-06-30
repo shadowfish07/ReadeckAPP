@@ -45,7 +45,7 @@ class DailyReadViewModel extends ChangeNotifier {
   late Command toggleBookmarkMarked;
   late Command<void, List<String>> loadLabels;
 
-  final Map<String, ReadingStats> _readingStats = {};
+  // 移除本地缓存，改为通过Repository获取
   final List<String> _bookmarkIds = [];
   List<Bookmark> get _bookmarks => _bookmarkRepository
       .getCachedBookmarks(_bookmarkIds)
@@ -62,8 +62,12 @@ class DailyReadViewModel extends ChangeNotifier {
   List<String> get availableLabels => _labelRepository.labelNames;
 
   /// 获取书签的阅读统计数据
-  ReadingStats? getReadingStats(String bookmarkId) {
-    return _readingStats[bookmarkId];
+  Future<ReadingStats?> getReadingStats(String bookmarkId) async {
+    final bookmark = _bookmarkRepository.getCachedBookmark(bookmarkId);
+    if (bookmark == null) return null;
+    final result =
+        await _bookmarkOperationUseCases.loadReadingStatsForBookmark(bookmark);
+    return result;
   }
 
   Future<void> _openUrl(String url) async {
@@ -101,10 +105,9 @@ class DailyReadViewModel extends ChangeNotifier {
             if (result.isSuccess()) {
               _resetBookmarkIds(result.getOrDefault([]));
 
-              // 加载阅读统计数据
-              final stats = await _bookmarkOperationUseCases
+              // 预加载阅读统计数据到Repository缓存
+              await _bookmarkOperationUseCases
                   .loadReadingStatsForBookmarks(_bookmarks);
-              _readingStats.addAll(stats);
               return unArchivedBookmarks;
             }
 
@@ -126,10 +129,9 @@ class DailyReadViewModel extends ChangeNotifier {
       final newBookmarks = result.getOrDefault([]);
       _resetBookmarkIds(newBookmarks);
 
-      // 加载阅读统计数据
-      final stats = await _bookmarkOperationUseCases
+      // 预加载阅读统计数据到Repository缓存
+      await _bookmarkOperationUseCases
           .loadReadingStatsForBookmarks(newBookmarks);
-      _readingStats.addAll(stats);
       //异步存到数据库
       _saveTodayBookmarks();
       return unArchivedBookmarks;

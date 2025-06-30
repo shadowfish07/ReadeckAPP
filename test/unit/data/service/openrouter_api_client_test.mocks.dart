@@ -295,6 +295,12 @@ class MockSettingsRepository extends _i1.Mock
   }
 
   @override
+  _i3.Stream<void> get settingsChanged => (super.noSuchMethod(
+        Invocation.getter(#settingsChanged),
+        returnValue: _i3.Stream<void>.empty(),
+      ) as _i3.Stream<void>);
+
+  @override
   _i3.Future<_i8.ResultDart<void, Exception>> loadSettings() =>
       (super.noSuchMethod(
         Invocation.method(
@@ -554,4 +560,13 @@ class MockSettingsRepository extends _i1.Mock
           ),
         ),
       ) as String);
+
+  @override
+  void dispose() => super.noSuchMethod(
+        Invocation.method(
+          #dispose,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
 }

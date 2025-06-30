@@ -233,7 +233,8 @@ class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
                 }
               });
             },
-            readingStats: widget.viewModel.getReadingStats(bookmarks[index].id),
+            onLoadReadingStats: () =>
+                widget.viewModel.getReadingStats(bookmarks[index].id),
             onCardTap: (bookmark) {
               context.push(
                 Routes.bookmarkDetailWithId(bookmark.id),

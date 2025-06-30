@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'package:readeck_app/data/service/shared_preference_service.dart';
+import 'package:readeck_app/data/service/readeck_api_client.dart';
 import 'package:readeck_app/main.dart';
 import 'package:result_dart/result_dart.dart';
 
 class SettingsRepository {
-  SettingsRepository(this._prefsService);
+  SettingsRepository(this._prefsService, this._apiClient);
 
   final StreamController<void> _settingsChangedController =
       StreamController<void>.broadcast();
@@ -13,6 +14,7 @@ class SettingsRepository {
   Stream<void> get settingsChanged => _settingsChangedController.stream;
 
   final SharedPreferencesService _prefsService;
+  final ReadeckApiClient _apiClient;
 
   // 缓存的配置数据
   int? _themeMode;
@@ -155,6 +157,9 @@ class SettingsRepository {
     // 更新缓存
     _readeckApiHost = host;
     _readeckApiToken = token;
+
+    // 更新 API 客户端配置
+    _apiClient.updateConfig(host, token);
 
     return const Success(unit);
   }
