@@ -125,6 +125,68 @@ ViewModel A → Local State (❌ 数据重复)
 ViewModel B → Local State (❌ 数据重复)
 ```
 
+### 7. ViewModel 解耦原则（ViewModel Decoupling Principle）
+
+ReadeckApp 中的 ViewModel 必须严格遵循解耦原则：
+
+- **ViewModel 之间不得直接相互引用**
+- **ViewModel 不能持有其他 ViewModel 的实例**
+- **ViewModel 之间的通信必须通过 Repository 层进行**
+- **避免 ViewModel 之间的紧耦合关系**
+- **确保每个 ViewModel 的独立性和可测试性**
+
+**正确的 ViewModel 通信方式：**
+
+```
+ViewModel A → Repository → StreamController → ViewModel B
+```
+
+**错误的 ViewModel 通信方式：**
+
+```
+ViewModel A → ViewModel B (❌ 直接引用)
+```
+
+### 8. Repository 通知机制原则（Repository Notification Principle）
+
+ReadeckApp 中的 Repository 必须使用正确的通知机制：
+
+- **Repository 不得继承 ChangeNotifier**
+- **Repository 必须使用 StreamController 对外暴露数据变更**
+- **Repository 通过 Stream 通知数据变化，而非 ChangeNotifier**
+- **确保 Repository 层的职责单一性**
+- **避免 Repository 与 UI 层的直接耦合**
+
+**正确的 Repository 通知方式：**
+
+```dart
+class ExampleRepository {
+  final StreamController<void> _dataChangedController = StreamController<void>.broadcast();
+  
+  Stream<void> get dataChanged => _dataChangedController.stream;
+  
+  Future<void> saveData() async {
+    // 保存数据逻辑
+    _dataChangedController.add(null); // 通知数据变更
+  }
+  
+  void dispose() {
+    _dataChangedController.close();
+  }
+}
+```
+
+**错误的 Repository 通知方式：**
+
+```dart
+class ExampleRepository extends ChangeNotifier { // ❌ 禁止继承 ChangeNotifier
+  Future<void> saveData() async {
+    // 保存数据逻辑
+    notifyListeners(); // ❌ 禁止使用 notifyListeners
+  }
+}
+```
+
 ---
 
 ## 分层架构设计
@@ -460,6 +522,40 @@ test_resources/                    # 测试资源
 ### ReadeckApp 代码示例
 
 ---
+
+## 错误处理和错误页面规范
+
+### 统一错误页面组件
+
+ReadeckApp 项目必须使用统一的错误页面组件来处理各种错误状态，确保用户体验的一致性。
+
+**错误页面组件位置：**
+
+```
+lib/ui/core/ui/error_page.dart
+```
+
+### ErrorPage 组件使用规范
+
+**ReadeckApp ErrorPage 规范要点：**
+
+1. **统一错误处理入口**：所有错误状态都应使用 `ErrorPage` 组件
+2. **工厂方法优先**：优先使用预定义的工厂方法创建错误页面
+3. **异常类型映射**：使用 `ErrorPage.fromException()` 自动映射异常类型
+4. **主题一致性**：所有错误页面样式遵循应用主题
+5. **用户友好**：提供清晰的错误信息和操作指引
+
+### 使用示例
+
+```dart
+// Repository 层抛出特定异常
+if (response.statusCode == 404) {
+  throw ResourceNotFoundException('书签不存在');
+}
+
+// View 层自动处理
+final errorPage = ErrorPage.fromException(exception);
+```
 
 ## 测试策略
 

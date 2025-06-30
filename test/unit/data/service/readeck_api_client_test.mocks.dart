@@ -10,6 +10,9 @@ import 'dart:typed_data' as _i6;
 import 'package:http/http.dart' as _i2;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i5;
+import 'package:readeck_app/data/repository/settings/settings_repository.dart'
+    as _i7;
+import 'package:result_dart/result_dart.dart' as _i8;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -280,4 +283,275 @@ class MockClient extends _i1.Mock implements _i2.Client {
         ),
         returnValueForMissingStub: null,
       );
+}
+
+/// A class which mocks [SettingsRepository].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockSettingsRepository extends _i1.Mock
+    implements _i7.SettingsRepository {
+  MockSettingsRepository() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i3.Future<_i8.ResultDart<void, Exception>> loadSettings() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #loadSettings,
+          [],
+        ),
+        returnValue: _i3.Future<_i8.ResultDart<void, Exception>>.value(
+            _i5.dummyValue<_i8.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #loadSettings,
+            [],
+          ),
+        )),
+      ) as _i3.Future<_i8.ResultDart<void, Exception>>);
+
+  @override
+  bool isApiConfigured() => (super.noSuchMethod(
+        Invocation.method(
+          #isApiConfigured,
+          [],
+        ),
+        returnValue: false,
+      ) as bool);
+
+  @override
+  _i3.Future<_i8.ResultDart<void, Exception>> saveApiConfig(
+    String? host,
+    String? token,
+  ) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #saveApiConfig,
+          [
+            host,
+            token,
+          ],
+        ),
+        returnValue: _i3.Future<_i8.ResultDart<void, Exception>>.value(
+            _i5.dummyValue<_i8.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #saveApiConfig,
+            [
+              host,
+              token,
+            ],
+          ),
+        )),
+      ) as _i3.Future<_i8.ResultDart<void, Exception>>);
+
+  @override
+  (String, String) getApiConfig() => (super.noSuchMethod(
+        Invocation.method(
+          #getApiConfig,
+          [],
+        ),
+        returnValue: (
+          _i5.dummyValue<String>(
+            this,
+            Invocation.method(
+              #getApiConfig,
+              [],
+            ),
+          ),
+          _i5.dummyValue<String>(
+            this,
+            Invocation.method(
+              #getApiConfig,
+              [],
+            ),
+          )
+        ),
+      ) as (String, String));
+
+  @override
+  int getThemeMode() => (super.noSuchMethod(
+        Invocation.method(
+          #getThemeMode,
+          [],
+        ),
+        returnValue: 0,
+      ) as int);
+
+  @override
+  _i3.Future<_i8.ResultDart<void, Exception>> saveThemeMode(int? themeMode) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #saveThemeMode,
+          [themeMode],
+        ),
+        returnValue: _i3.Future<_i8.ResultDart<void, Exception>>.value(
+            _i5.dummyValue<_i8.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #saveThemeMode,
+            [themeMode],
+          ),
+        )),
+      ) as _i3.Future<_i8.ResultDart<void, Exception>>);
+
+  @override
+  _i3.Future<_i8.ResultDart<void, Exception>> saveOpenRouterApiKey(
+          String? apiKey) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #saveOpenRouterApiKey,
+          [apiKey],
+        ),
+        returnValue: _i3.Future<_i8.ResultDart<void, Exception>>.value(
+            _i5.dummyValue<_i8.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #saveOpenRouterApiKey,
+            [apiKey],
+          ),
+        )),
+      ) as _i3.Future<_i8.ResultDart<void, Exception>>);
+
+  @override
+  String getOpenRouterApiKey() => (super.noSuchMethod(
+        Invocation.method(
+          #getOpenRouterApiKey,
+          [],
+        ),
+        returnValue: _i5.dummyValue<String>(
+          this,
+          Invocation.method(
+            #getOpenRouterApiKey,
+            [],
+          ),
+        ),
+      ) as String);
+
+  @override
+  _i3.Future<_i8.ResultDart<void, Exception>> saveTranslationProvider(
+          String? provider) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #saveTranslationProvider,
+          [provider],
+        ),
+        returnValue: _i3.Future<_i8.ResultDart<void, Exception>>.value(
+            _i5.dummyValue<_i8.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #saveTranslationProvider,
+            [provider],
+          ),
+        )),
+      ) as _i3.Future<_i8.ResultDart<void, Exception>>);
+
+  @override
+  String getTranslationProvider() => (super.noSuchMethod(
+        Invocation.method(
+          #getTranslationProvider,
+          [],
+        ),
+        returnValue: _i5.dummyValue<String>(
+          this,
+          Invocation.method(
+            #getTranslationProvider,
+            [],
+          ),
+        ),
+      ) as String);
+
+  @override
+  _i3.Future<_i8.ResultDart<void, Exception>> saveTranslationTargetLanguage(
+          String? language) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #saveTranslationTargetLanguage,
+          [language],
+        ),
+        returnValue: _i3.Future<_i8.ResultDart<void, Exception>>.value(
+            _i5.dummyValue<_i8.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #saveTranslationTargetLanguage,
+            [language],
+          ),
+        )),
+      ) as _i3.Future<_i8.ResultDart<void, Exception>>);
+
+  @override
+  String getTranslationTargetLanguage() => (super.noSuchMethod(
+        Invocation.method(
+          #getTranslationTargetLanguage,
+          [],
+        ),
+        returnValue: _i5.dummyValue<String>(
+          this,
+          Invocation.method(
+            #getTranslationTargetLanguage,
+            [],
+          ),
+        ),
+      ) as String);
+
+  @override
+  _i3.Future<_i8.ResultDart<void, Exception>> saveTranslationCacheEnabled(
+          bool? enabled) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #saveTranslationCacheEnabled,
+          [enabled],
+        ),
+        returnValue: _i3.Future<_i8.ResultDart<void, Exception>>.value(
+            _i5.dummyValue<_i8.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #saveTranslationCacheEnabled,
+            [enabled],
+          ),
+        )),
+      ) as _i3.Future<_i8.ResultDart<void, Exception>>);
+
+  @override
+  bool getTranslationCacheEnabled() => (super.noSuchMethod(
+        Invocation.method(
+          #getTranslationCacheEnabled,
+          [],
+        ),
+        returnValue: false,
+      ) as bool);
+
+  @override
+  _i3.Future<_i8.ResultDart<void, Exception>> saveSelectedOpenRouterModel(
+          String? modelId) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #saveSelectedOpenRouterModel,
+          [modelId],
+        ),
+        returnValue: _i3.Future<_i8.ResultDart<void, Exception>>.value(
+            _i5.dummyValue<_i8.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #saveSelectedOpenRouterModel,
+            [modelId],
+          ),
+        )),
+      ) as _i3.Future<_i8.ResultDart<void, Exception>>);
+
+  @override
+  String getSelectedOpenRouterModel() => (super.noSuchMethod(
+        Invocation.method(
+          #getSelectedOpenRouterModel,
+          [],
+        ),
+        returnValue: _i5.dummyValue<String>(
+          this,
+          Invocation.method(
+            #getSelectedOpenRouterModel,
+            [],
+          ),
+        ),
+      ) as String);
 }

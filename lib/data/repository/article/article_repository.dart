@@ -88,14 +88,10 @@ class ArticleRepository {
       appLogger.i('开始翻译书签内容: $bookmarkId');
 
       // 获取翻译缓存配置
-      final cacheEnabledResult =
-          await _settingsRepository.getTranslationCacheEnabled();
-      final isCacheEnabled = cacheEnabledResult.getOrDefault(true); // 默认启用缓存
+      final isCacheEnabled = _settingsRepository.getTranslationCacheEnabled();
 
       // 获取翻译目标语言
-      final targetLanguageResult =
-          await _settingsRepository.getTranslationTargetLanguage();
-      final targetLanguage = targetLanguageResult.getOrDefault('中文'); // 默认中文
+      final targetLanguage = _settingsRepository.getTranslationTargetLanguage();
 
       appLogger.d('翻译缓存配置: ${isCacheEnabled ? "启用" : "禁用"}');
       appLogger.d('翻译目标语言: $targetLanguage');

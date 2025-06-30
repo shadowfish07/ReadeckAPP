@@ -1,15 +1,18 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_command/flutter_command.dart';
+import 'package:readeck_app/data/repository/openrouter/openrouter_repository.dart';
 import 'package:readeck_app/data/repository/settings/settings_repository.dart';
 import 'package:readeck_app/domain/models/openrouter_model/openrouter_model.dart';
 import 'package:readeck_app/main.dart';
 
 class ModelSelectionViewModel extends ChangeNotifier {
-  ModelSelectionViewModel(this._settingsRepository) {
+  ModelSelectionViewModel(
+      this._settingsRepository, this._openRouterRepository) {
     _initCommands();
   }
 
   final SettingsRepository _settingsRepository;
+  final OpenRouterRepository _openRouterRepository;
 
   List<OpenRouterModel> _availableModels = [];
   List<OpenRouterModel> get availableModels {
@@ -55,14 +58,14 @@ class ModelSelectionViewModel extends ChangeNotifier {
     )..execute();
 
     loadSelectedModel = Command.createAsyncNoParam(
-      _loadSelectedModelAsync,
+      _loadSelectedModel,
       initialValue: null,
     )..execute();
   }
 
   Future<List<OpenRouterModel>> _loadModelsAsync() async {
     final result =
-        await _settingsRepository.getOpenRouterModels(category: 'translation');
+        await _openRouterRepository.getModels(category: 'translation');
     if (result.isSuccess()) {
       _availableModels = result.getOrNull() ?? [];
       appLogger.d('成功加载 ${_availableModels.length} 个OpenRouter翻译模型');
@@ -97,18 +100,13 @@ class ModelSelectionViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> _loadSelectedModelAsync() async {
+  Future<void> _loadSelectedModel() async {
     try {
-      final result = await _settingsRepository.getSelectedOpenRouterModel();
-      if (result.isSuccess()) {
-        final selectedModelId = result.getOrNull();
-        if (selectedModelId != null && selectedModelId.isNotEmpty) {
-          _selectedModelId = selectedModelId;
-          appLogger.d('成功加载选中的模型ID: $selectedModelId');
-          notifyListeners();
-        }
-      } else {
-        appLogger.e('加载选中的模型失败', error: result.exceptionOrNull()!);
+      final selectedModelId = _settingsRepository.getSelectedOpenRouterModel();
+      if (selectedModelId.isNotEmpty) {
+        _selectedModelId = selectedModelId;
+        appLogger.d('成功加载选中的模型ID: $selectedModelId');
+        notifyListeners();
       }
     } catch (e) {
       appLogger.e('加载选中的模型异常', error: e);

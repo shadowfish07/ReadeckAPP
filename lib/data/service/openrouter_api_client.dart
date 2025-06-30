@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:async';
 import 'package:http/http.dart' as http;
-import 'package:readeck_app/data/service/shared_preference_service.dart';
+import 'package:readeck_app/data/repository/settings/settings_repository.dart';
 import 'package:readeck_app/domain/models/openrouter_model/openrouter_model.dart';
 import 'package:readeck_app/main.dart';
 import 'package:readeck_app/utils/api_not_configured_exception.dart';
@@ -11,13 +11,13 @@ import 'package:result_dart/result_dart.dart';
 /// OpenRouter API 客户端
 /// 提供与 OpenRouter API 的交互功能，支持流式聊天完成
 class OpenRouterApiClient {
-  OpenRouterApiClient(this._sharedPreferencesService,
+  OpenRouterApiClient(this._settingsRepository,
       {String? baseUrl, http.Client? httpClient})
       : _baseUrl = baseUrl ?? 'https://openrouter.ai/api/v1',
         _httpClient = httpClient ?? http.Client();
 
   final String _baseUrl;
-  final SharedPreferencesService _sharedPreferencesService;
+  final SettingsRepository? _settingsRepository;
   final http.Client _httpClient;
   String? _apiKey;
 
@@ -27,18 +27,15 @@ class OpenRouterApiClient {
   }
 
   /// 初始化API密钥
-  Future<void> _initApiKey() async {
-    if (_apiKey == null) {
-      final result = await _sharedPreferencesService.getOpenRouterApiKey();
-      if (result.isSuccess()) {
-        _apiKey = result.getOrNull();
-      }
+  void _initApiKey() {
+    if (_apiKey == null && _settingsRepository != null) {
+      _apiKey = _settingsRepository.getOpenRouterApiKey();
     }
   }
 
   /// 检查 API 是否已配置
-  Future<bool> get isConfigured async {
-    await _initApiKey();
+  bool get isConfigured {
+    _initApiKey();
     return _apiKey != null && _apiKey!.isNotEmpty;
   }
 
@@ -67,7 +64,7 @@ class OpenRouterApiClient {
     double? frequencyPenalty,
     double? presencePenalty,
   }) async* {
-    if (!(await isConfigured)) {
+    if (!isConfigured) {
       yield Failure(ApiNotConfiguredException());
       return;
     }
@@ -168,7 +165,7 @@ class OpenRouterApiClient {
     double? frequencyPenalty,
     double? presencePenalty,
   }) async {
-    if (!(await isConfigured)) {
+    if (!isConfigured) {
       return Failure(ApiNotConfiguredException());
     }
 
@@ -240,7 +237,7 @@ class OpenRouterApiClient {
     double? presencePenalty,
     List<String>? stop,
   }) async* {
-    if (!(await isConfigured)) {
+    if (!isConfigured) {
       yield Failure(ApiNotConfiguredException());
       return;
     }
@@ -344,7 +341,7 @@ class OpenRouterApiClient {
     double? presencePenalty,
     List<String>? stop,
   }) async {
-    if (!(await isConfigured)) {
+    if (!isConfigured) {
       return Failure(ApiNotConfiguredException());
     }
 

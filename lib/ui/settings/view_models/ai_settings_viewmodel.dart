@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_command/flutter_command.dart';
+import 'package:readeck_app/data/repository/openrouter/openrouter_repository.dart';
 import 'package:readeck_app/data/repository/settings/settings_repository.dart';
 import 'package:readeck_app/domain/models/openrouter_model/openrouter_model.dart';
 import 'package:readeck_app/main.dart';
 
 class AiSettingsViewModel extends ChangeNotifier {
-  AiSettingsViewModel(this._settingsRepository) {
+  AiSettingsViewModel(this._settingsRepository, this._openRouterRepository) {
     _initCommands();
   }
 
   final SettingsRepository _settingsRepository;
+  final OpenRouterRepository _openRouterRepository;
 
   String _openRouterApiKey = '';
   String get openRouterApiKey => _openRouterApiKey;
@@ -62,39 +64,29 @@ class AiSettingsViewModel extends ChangeNotifier {
   }
 
   Future<void> _loadApiKeyAsync() async {
-    final result = await _settingsRepository.getOpenRouterApiKey();
-    if (result.isSuccess()) {
-      _openRouterApiKey = result.getOrNull() ?? '';
-      notifyListeners();
-    } else {
-      appLogger.e('获取 OpenRouter API 密钥失败', error: result.exceptionOrNull()!);
-      _openRouterApiKey = '';
-      notifyListeners();
-    }
+    _openRouterApiKey = _settingsRepository.getOpenRouterApiKey();
+    notifyListeners();
   }
 
   Future<void> _loadSelectedModelAsync() async {
     try {
-      final result = await _settingsRepository.getSelectedOpenRouterModel();
-      if (result.isSuccess()) {
-        final selectedModelId = result.getOrNull();
-        if (selectedModelId != null && selectedModelId.isNotEmpty) {
-          // 需要从 Repository 获取模型详情
-          final modelsResult = await _settingsRepository.getOpenRouterModels();
-          if (modelsResult.isSuccess()) {
-            final availableModels = modelsResult.getOrNull() ?? [];
-            final matchedModel = availableModels
-                .where((model) => model.id == selectedModelId)
-                .firstOrNull;
-            if (matchedModel != null) {
-              _selectedModel = matchedModel;
-              appLogger.d('成功加载选中的模型: $selectedModelId');
-              notifyListeners();
-            }
+      final selectedModelId = _settingsRepository.getSelectedOpenRouterModel();
+      if (selectedModelId.isNotEmpty) {
+        // 需要从 Repository 获取模型详情
+        final modelsResult = await _openRouterRepository.getModels();
+        if (modelsResult.isSuccess()) {
+          final availableModels = modelsResult.getOrNull() ?? [];
+          final matchedModel = availableModels
+              .where((model) => model.id == selectedModelId)
+              .firstOrNull;
+          if (matchedModel != null) {
+            _selectedModel = matchedModel;
+            appLogger.d('成功加载选中的模型: $selectedModelId');
+            notifyListeners();
           }
+        } else {
+          appLogger.e('加载模型列表失败', error: modelsResult.exceptionOrNull()!);
         }
-      } else {
-        appLogger.e('加载选中的模型失败', error: result.exceptionOrNull()!);
       }
     } catch (e) {
       appLogger.e('加载选中的模型异常', error: e);

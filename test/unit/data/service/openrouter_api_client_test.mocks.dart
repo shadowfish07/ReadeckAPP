@@ -10,8 +10,8 @@ import 'dart:typed_data' as _i6;
 import 'package:http/http.dart' as _i2;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i5;
-import 'package:readeck_app/data/service/shared_preference_service.dart' as _i7;
-import 'package:readeck_app/utils/reading_stats_calculator.dart' as _i9;
+import 'package:readeck_app/data/repository/settings/settings_repository.dart'
+    as _i7;
 import 'package:result_dart/result_dart.dart' as _i8;
 
 // ignore_for_file: type=lint
@@ -285,336 +285,273 @@ class MockClient extends _i1.Mock implements _i2.Client {
       );
 }
 
-/// A class which mocks [SharedPreferencesService].
+/// A class which mocks [SettingsRepository].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockSharedPreferencesService extends _i1.Mock
-    implements _i7.SharedPreferencesService {
-  MockSharedPreferencesService() {
+class MockSettingsRepository extends _i1.Mock
+    implements _i7.SettingsRepository {
+  MockSettingsRepository() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i3.Future<_i8.ResultDart<void, Exception>> setThemeMode(int? value) =>
+  _i3.Future<_i8.ResultDart<void, Exception>> loadSettings() =>
       (super.noSuchMethod(
         Invocation.method(
-          #setThemeMode,
-          [value],
+          #loadSettings,
+          [],
         ),
         returnValue: _i3.Future<_i8.ResultDart<void, Exception>>.value(
             _i5.dummyValue<_i8.ResultDart<void, Exception>>(
           this,
           Invocation.method(
-            #setThemeMode,
-            [value],
+            #loadSettings,
+            [],
           ),
         )),
       ) as _i3.Future<_i8.ResultDart<void, Exception>>);
 
   @override
-  _i3.Future<_i8.ResultDart<int, Exception>> getThemeMode() =>
-      (super.noSuchMethod(
+  bool isApiConfigured() => (super.noSuchMethod(
         Invocation.method(
-          #getThemeMode,
+          #isApiConfigured,
           [],
         ),
-        returnValue: _i3.Future<_i8.ResultDart<int, Exception>>.value(
-            _i5.dummyValue<_i8.ResultDart<int, Exception>>(
-          this,
-          Invocation.method(
-            #getThemeMode,
-            [],
-          ),
-        )),
-      ) as _i3.Future<_i8.ResultDart<int, Exception>>);
+        returnValue: false,
+      ) as bool);
 
   @override
-  _i3.Future<_i8.ResultDart<void, Exception>> setReadeckApiHost(
-          String? value) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #setReadeckApiHost,
-          [value],
-        ),
-        returnValue: _i3.Future<_i8.ResultDart<void, Exception>>.value(
-            _i5.dummyValue<_i8.ResultDart<void, Exception>>(
-          this,
-          Invocation.method(
-            #setReadeckApiHost,
-            [value],
-          ),
-        )),
-      ) as _i3.Future<_i8.ResultDart<void, Exception>>);
-
-  @override
-  _i3.Future<_i8.ResultDart<String, Exception>> getReadeckApiHost() =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #getReadeckApiHost,
-          [],
-        ),
-        returnValue: _i3.Future<_i8.ResultDart<String, Exception>>.value(
-            _i5.dummyValue<_i8.ResultDart<String, Exception>>(
-          this,
-          Invocation.method(
-            #getReadeckApiHost,
-            [],
-          ),
-        )),
-      ) as _i3.Future<_i8.ResultDart<String, Exception>>);
-
-  @override
-  _i3.Future<_i8.ResultDart<void, Exception>> setReadeckApiToken(
-          String? value) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #setReadeckApiToken,
-          [value],
-        ),
-        returnValue: _i3.Future<_i8.ResultDart<void, Exception>>.value(
-            _i5.dummyValue<_i8.ResultDart<void, Exception>>(
-          this,
-          Invocation.method(
-            #setReadeckApiToken,
-            [value],
-          ),
-        )),
-      ) as _i3.Future<_i8.ResultDart<void, Exception>>);
-
-  @override
-  _i3.Future<_i8.ResultDart<String, Exception>> getReadeckApiToken() =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #getReadeckApiToken,
-          [],
-        ),
-        returnValue: _i3.Future<_i8.ResultDart<String, Exception>>.value(
-            _i5.dummyValue<_i8.ResultDart<String, Exception>>(
-          this,
-          Invocation.method(
-            #getReadeckApiToken,
-            [],
-          ),
-        )),
-      ) as _i3.Future<_i8.ResultDart<String, Exception>>);
-
-  @override
-  _i3.Future<_i8.ResultDart<void, Exception>> setOpenRouterApiKey(
-          String? value) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #setOpenRouterApiKey,
-          [value],
-        ),
-        returnValue: _i3.Future<_i8.ResultDart<void, Exception>>.value(
-            _i5.dummyValue<_i8.ResultDart<void, Exception>>(
-          this,
-          Invocation.method(
-            #setOpenRouterApiKey,
-            [value],
-          ),
-        )),
-      ) as _i3.Future<_i8.ResultDart<void, Exception>>);
-
-  @override
-  _i3.Future<_i8.ResultDart<String, Exception>> getOpenRouterApiKey() =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #getOpenRouterApiKey,
-          [],
-        ),
-        returnValue: _i3.Future<_i8.ResultDart<String, Exception>>.value(
-            _i5.dummyValue<_i8.ResultDart<String, Exception>>(
-          this,
-          Invocation.method(
-            #getOpenRouterApiKey,
-            [],
-          ),
-        )),
-      ) as _i3.Future<_i8.ResultDart<String, Exception>>);
-
-  @override
-  _i3.Future<_i8.ResultDart<void, Exception>> setSelectedOpenRouterModel(
-          String? value) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #setSelectedOpenRouterModel,
-          [value],
-        ),
-        returnValue: _i3.Future<_i8.ResultDart<void, Exception>>.value(
-            _i5.dummyValue<_i8.ResultDart<void, Exception>>(
-          this,
-          Invocation.method(
-            #setSelectedOpenRouterModel,
-            [value],
-          ),
-        )),
-      ) as _i3.Future<_i8.ResultDart<void, Exception>>);
-
-  @override
-  _i3.Future<_i8.ResultDart<String, Exception>> getSelectedOpenRouterModel() =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #getSelectedOpenRouterModel,
-          [],
-        ),
-        returnValue: _i3.Future<_i8.ResultDart<String, Exception>>.value(
-            _i5.dummyValue<_i8.ResultDart<String, Exception>>(
-          this,
-          Invocation.method(
-            #getSelectedOpenRouterModel,
-            [],
-          ),
-        )),
-      ) as _i3.Future<_i8.ResultDart<String, Exception>>);
-
-  @override
-  _i3.Future<_i8.ResultDart<void, Exception>> setReadingStats(
-    String? bookmarkId,
-    _i9.ReadingStats? stats,
+  _i3.Future<_i8.ResultDart<void, Exception>> saveApiConfig(
+    String? host,
+    String? token,
   ) =>
       (super.noSuchMethod(
         Invocation.method(
-          #setReadingStats,
+          #saveApiConfig,
           [
-            bookmarkId,
-            stats,
+            host,
+            token,
           ],
         ),
         returnValue: _i3.Future<_i8.ResultDart<void, Exception>>.value(
             _i5.dummyValue<_i8.ResultDart<void, Exception>>(
           this,
           Invocation.method(
-            #setReadingStats,
+            #saveApiConfig,
             [
-              bookmarkId,
-              stats,
+              host,
+              token,
             ],
           ),
         )),
       ) as _i3.Future<_i8.ResultDart<void, Exception>>);
 
   @override
-  _i3.Future<_i8.ResultDart<_i9.ReadingStats, Exception>> getReadingStats(
-          String? bookmarkId) =>
-      (super.noSuchMethod(
+  (String, String) getApiConfig() => (super.noSuchMethod(
         Invocation.method(
-          #getReadingStats,
-          [bookmarkId],
+          #getApiConfig,
+          [],
         ),
-        returnValue:
-            _i3.Future<_i8.ResultDart<_i9.ReadingStats, Exception>>.value(
-                _i5.dummyValue<_i8.ResultDart<_i9.ReadingStats, Exception>>(
-          this,
-          Invocation.method(
-            #getReadingStats,
-            [bookmarkId],
+        returnValue: (
+          _i5.dummyValue<String>(
+            this,
+            Invocation.method(
+              #getApiConfig,
+              [],
+            ),
           ),
-        )),
-      ) as _i3.Future<_i8.ResultDart<_i9.ReadingStats, Exception>>);
+          _i5.dummyValue<String>(
+            this,
+            Invocation.method(
+              #getApiConfig,
+              [],
+            ),
+          )
+        ),
+      ) as (String, String));
 
   @override
-  _i3.Future<_i8.ResultDart<void, Exception>> setTranslationProvider(
-          String? value) =>
+  int getThemeMode() => (super.noSuchMethod(
+        Invocation.method(
+          #getThemeMode,
+          [],
+        ),
+        returnValue: 0,
+      ) as int);
+
+  @override
+  _i3.Future<_i8.ResultDart<void, Exception>> saveThemeMode(int? themeMode) =>
       (super.noSuchMethod(
         Invocation.method(
-          #setTranslationProvider,
-          [value],
+          #saveThemeMode,
+          [themeMode],
         ),
         returnValue: _i3.Future<_i8.ResultDart<void, Exception>>.value(
             _i5.dummyValue<_i8.ResultDart<void, Exception>>(
           this,
           Invocation.method(
-            #setTranslationProvider,
-            [value],
+            #saveThemeMode,
+            [themeMode],
           ),
         )),
       ) as _i3.Future<_i8.ResultDart<void, Exception>>);
 
   @override
-  _i3.Future<_i8.ResultDart<String, Exception>> getTranslationProvider() =>
+  _i3.Future<_i8.ResultDart<void, Exception>> saveOpenRouterApiKey(
+          String? apiKey) =>
       (super.noSuchMethod(
+        Invocation.method(
+          #saveOpenRouterApiKey,
+          [apiKey],
+        ),
+        returnValue: _i3.Future<_i8.ResultDart<void, Exception>>.value(
+            _i5.dummyValue<_i8.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #saveOpenRouterApiKey,
+            [apiKey],
+          ),
+        )),
+      ) as _i3.Future<_i8.ResultDart<void, Exception>>);
+
+  @override
+  String getOpenRouterApiKey() => (super.noSuchMethod(
+        Invocation.method(
+          #getOpenRouterApiKey,
+          [],
+        ),
+        returnValue: _i5.dummyValue<String>(
+          this,
+          Invocation.method(
+            #getOpenRouterApiKey,
+            [],
+          ),
+        ),
+      ) as String);
+
+  @override
+  _i3.Future<_i8.ResultDart<void, Exception>> saveTranslationProvider(
+          String? provider) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #saveTranslationProvider,
+          [provider],
+        ),
+        returnValue: _i3.Future<_i8.ResultDart<void, Exception>>.value(
+            _i5.dummyValue<_i8.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #saveTranslationProvider,
+            [provider],
+          ),
+        )),
+      ) as _i3.Future<_i8.ResultDart<void, Exception>>);
+
+  @override
+  String getTranslationProvider() => (super.noSuchMethod(
         Invocation.method(
           #getTranslationProvider,
           [],
         ),
-        returnValue: _i3.Future<_i8.ResultDart<String, Exception>>.value(
-            _i5.dummyValue<_i8.ResultDart<String, Exception>>(
+        returnValue: _i5.dummyValue<String>(
           this,
           Invocation.method(
             #getTranslationProvider,
             [],
           ),
-        )),
-      ) as _i3.Future<_i8.ResultDart<String, Exception>>);
+        ),
+      ) as String);
 
   @override
-  _i3.Future<_i8.ResultDart<void, Exception>> setTranslationTargetLanguage(
-          String? value) =>
+  _i3.Future<_i8.ResultDart<void, Exception>> saveTranslationTargetLanguage(
+          String? language) =>
       (super.noSuchMethod(
         Invocation.method(
-          #setTranslationTargetLanguage,
-          [value],
+          #saveTranslationTargetLanguage,
+          [language],
         ),
         returnValue: _i3.Future<_i8.ResultDart<void, Exception>>.value(
             _i5.dummyValue<_i8.ResultDart<void, Exception>>(
           this,
           Invocation.method(
-            #setTranslationTargetLanguage,
-            [value],
+            #saveTranslationTargetLanguage,
+            [language],
           ),
         )),
       ) as _i3.Future<_i8.ResultDart<void, Exception>>);
 
   @override
-  _i3.Future<_i8.ResultDart<String, Exception>>
-      getTranslationTargetLanguage() => (super.noSuchMethod(
-            Invocation.method(
-              #getTranslationTargetLanguage,
-              [],
-            ),
-            returnValue: _i3.Future<_i8.ResultDart<String, Exception>>.value(
-                _i5.dummyValue<_i8.ResultDart<String, Exception>>(
-              this,
-              Invocation.method(
-                #getTranslationTargetLanguage,
-                [],
-              ),
-            )),
-          ) as _i3.Future<_i8.ResultDart<String, Exception>>);
+  String getTranslationTargetLanguage() => (super.noSuchMethod(
+        Invocation.method(
+          #getTranslationTargetLanguage,
+          [],
+        ),
+        returnValue: _i5.dummyValue<String>(
+          this,
+          Invocation.method(
+            #getTranslationTargetLanguage,
+            [],
+          ),
+        ),
+      ) as String);
 
   @override
-  _i3.Future<_i8.ResultDart<void, Exception>> setTranslationCacheEnabled(
-          bool? value) =>
+  _i3.Future<_i8.ResultDart<void, Exception>> saveTranslationCacheEnabled(
+          bool? enabled) =>
       (super.noSuchMethod(
         Invocation.method(
-          #setTranslationCacheEnabled,
-          [value],
+          #saveTranslationCacheEnabled,
+          [enabled],
         ),
         returnValue: _i3.Future<_i8.ResultDart<void, Exception>>.value(
             _i5.dummyValue<_i8.ResultDart<void, Exception>>(
           this,
           Invocation.method(
-            #setTranslationCacheEnabled,
-            [value],
+            #saveTranslationCacheEnabled,
+            [enabled],
           ),
         )),
       ) as _i3.Future<_i8.ResultDart<void, Exception>>);
 
   @override
-  _i3.Future<_i8.ResultDart<bool, Exception>> getTranslationCacheEnabled() =>
-      (super.noSuchMethod(
+  bool getTranslationCacheEnabled() => (super.noSuchMethod(
         Invocation.method(
           #getTranslationCacheEnabled,
           [],
         ),
-        returnValue: _i3.Future<_i8.ResultDart<bool, Exception>>.value(
-            _i5.dummyValue<_i8.ResultDart<bool, Exception>>(
+        returnValue: false,
+      ) as bool);
+
+  @override
+  _i3.Future<_i8.ResultDart<void, Exception>> saveSelectedOpenRouterModel(
+          String? modelId) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #saveSelectedOpenRouterModel,
+          [modelId],
+        ),
+        returnValue: _i3.Future<_i8.ResultDart<void, Exception>>.value(
+            _i5.dummyValue<_i8.ResultDart<void, Exception>>(
           this,
           Invocation.method(
-            #getTranslationCacheEnabled,
-            [],
+            #saveSelectedOpenRouterModel,
+            [modelId],
           ),
         )),
-      ) as _i3.Future<_i8.ResultDart<bool, Exception>>);
+      ) as _i3.Future<_i8.ResultDart<void, Exception>>);
+
+  @override
+  String getSelectedOpenRouterModel() => (super.noSuchMethod(
+        Invocation.method(
+          #getSelectedOpenRouterModel,
+          [],
+        ),
+        returnValue: _i5.dummyValue<String>(
+          this,
+          Invocation.method(
+            #getSelectedOpenRouterModel,
+            [],
+          ),
+        ),
+      ) as String);
 }

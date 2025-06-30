@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
+import 'package:readeck_app/data/repository/daily_read_history/daily_read_history_repository.dart';
 import 'package:readeck_app/data/repository/settings/settings_repository.dart';
 import 'package:readeck_app/ui/api_config/view_models/api_config_viewmodel.dart';
 import 'package:readeck_app/ui/api_config/widgets/api_config_page.dart';
@@ -151,8 +152,9 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
                   path: Routes.settings,
                   builder: (context, state) {
                     return ChangeNotifierProvider(
-                      create: (context) =>
-                          SettingsViewModel(context.read(), context.read()),
+                      create: (context) => SettingsViewModel(
+                          context.read<SettingsRepository>(),
+                          context.read<DailyReadHistoryRepository>()),
                       child: Consumer<SettingsViewModel>(
                         builder: (context, viewModel, child) {
                           return SettingsScreen(viewModel: viewModel);
@@ -178,13 +180,15 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
         GoRoute(
             path: Routes.aiSetting,
             builder: (context, state) {
-              final viewModel = AiSettingsViewModel(context.read());
+              final viewModel =
+                  AiSettingsViewModel(context.read(), context.read());
               return AiSettingsScreen(viewModel: viewModel);
             }),
         GoRoute(
             path: Routes.modelSelection,
             builder: (context, state) {
-              final viewModel = ModelSelectionViewModel(context.read());
+              final viewModel =
+                  ModelSelectionViewModel(context.read(), context.read());
               return ModelSelectionScreen(
                 viewModel: viewModel,
               );
@@ -227,14 +231,9 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
     );
 
 Future<String?> _redirect(BuildContext context, GoRouterState state) async {
-  final isApiConfigured =
-      await context.read<SettingsRepository>().isApiConfigured();
+  final isApiConfigured = context.read<SettingsRepository>().isApiConfigured();
 
-  if (isApiConfigured.isError()) {
-    return null;
-  }
-
-  if (!isApiConfigured.getOrDefault(false)) {
+  if (!isApiConfigured) {
     return Routes.apiConfigSetting;
   }
 

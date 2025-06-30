@@ -240,8 +240,8 @@ class BookmarkDetailViewModel extends ChangeNotifier {
       appLogger.i('开始AI翻译内容');
 
       // 检查OpenRouter API Key是否已配置
-      final apiKeyResult = await _settingsRepository.getOpenRouterApiKey();
-      if (apiKeyResult.isError() || apiKeyResult.getOrNull()?.isEmpty == true) {
+      final apiKey = _settingsRepository.getOpenRouterApiKey();
+      if (apiKey.isEmpty) {
         appLogger.w('OpenRouter API Key未配置，无法进行AI翻译');
         throw '请先在设置中配置OpenRouter API Key';
       }

@@ -54,8 +54,8 @@ class TranslationSettingsViewModel extends ChangeNotifier {
       _saveTranslationCacheEnabled,
     );
 
-    loadTranslationSettings = Command.createAsyncNoParam(
-      _loadTranslationSettingsAsync,
+    loadTranslationSettings = Command.createSyncNoParam(
+      _loadTranslationSettings,
       initialValue: null,
     )..execute();
 
@@ -109,34 +109,12 @@ class TranslationSettingsViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> _loadTranslationSettingsAsync() async {
-    // 加载翻译服务提供方
-    final providerResult = await _settingsRepository.getTranslationProvider();
-    if (providerResult.isSuccess()) {
-      _translationProvider = providerResult.getOrNull() ?? 'AI';
-    } else {
-      appLogger.e('获取翻译服务提供方失败', error: providerResult.exceptionOrNull()!);
-      _translationProvider = 'AI';
-    }
-
-    // 加载翻译目标语种
-    final languageResult =
-        await _settingsRepository.getTranslationTargetLanguage();
-    if (languageResult.isSuccess()) {
-      _translationTargetLanguage = languageResult.getOrNull() ?? '中文';
-    } else {
-      appLogger.e('获取翻译目标语种失败', error: languageResult.exceptionOrNull()!);
-      _translationTargetLanguage = '中文';
-    }
-
-    // 加载翻译缓存启用状态
-    final cacheResult = await _settingsRepository.getTranslationCacheEnabled();
-    if (cacheResult.isSuccess()) {
-      _translationCacheEnabled = cacheResult.getOrNull() ?? true;
-    } else {
-      appLogger.e('获取翻译缓存启用状态失败', error: cacheResult.exceptionOrNull()!);
-      _translationCacheEnabled = true;
-    }
+  void _loadTranslationSettings() {
+    // 由于SettingsRepository已经预加载，直接同步获取翻译设置
+    _translationProvider = _settingsRepository.getTranslationProvider();
+    _translationTargetLanguage =
+        _settingsRepository.getTranslationTargetLanguage();
+    _translationCacheEnabled = _settingsRepository.getTranslationCacheEnabled();
 
     notifyListeners();
   }

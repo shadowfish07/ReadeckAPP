@@ -6,7 +6,7 @@ import 'package:logger/logger.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:readeck_app/data/service/openrouter_api_client.dart';
-import 'package:readeck_app/data/service/shared_preference_service.dart';
+import 'package:readeck_app/data/repository/settings/settings_repository.dart';
 import 'package:readeck_app/main.dart';
 import 'package:readeck_app/utils/api_not_configured_exception.dart';
 import 'package:readeck_app/utils/network_error_exception.dart';
@@ -15,7 +15,7 @@ import 'package:result_dart/result_dart.dart';
 import 'openrouter_api_client_test.mocks.dart';
 
 // 生成 Mock 类
-@GenerateMocks([http.Client, SharedPreferencesService])
+@GenerateMocks([http.Client, SettingsRepository])
 void main() {
   // 为 Mockito 提供 dummy 值
   provideDummy<Result<String>>(Failure(Exception('dummy')));
@@ -27,7 +27,7 @@ void main() {
   group('OpenRouterApiClient Tests', () {
     late OpenRouterApiClient apiClient;
     late MockClient mockHttpClient;
-    late MockSharedPreferencesService mockSharedPreferencesService;
+    late MockSettingsRepository mockSettingsRepository;
     const testBaseUrl = 'https://openrouter.ai/api/v1';
     const testApiKey = 'test-api-key-123';
 
@@ -36,9 +36,9 @@ void main() {
       appLogger = Logger();
 
       mockHttpClient = MockClient();
-      mockSharedPreferencesService = MockSharedPreferencesService();
+      mockSettingsRepository = MockSettingsRepository();
       apiClient = OpenRouterApiClient(
-        mockSharedPreferencesService,
+        mockSettingsRepository,
         baseUrl: testBaseUrl,
         httpClient: mockHttpClient,
       );
@@ -51,11 +51,10 @@ void main() {
     group('Configuration Tests', () {
       test('should handle unconfigured API', () async {
         // Arrange
-        when(mockSharedPreferencesService.getOpenRouterApiKey())
-            .thenAnswer((_) async => const Success(''));
+        when(mockSettingsRepository.getOpenRouterApiKey()).thenReturn('');
 
         // Act
-        final isConfigured = await apiClient.isConfigured;
+        final isConfigured = apiClient.isConfigured;
 
         // Assert
         expect(isConfigured, false);
@@ -63,11 +62,11 @@ void main() {
 
       test('should handle configured API', () async {
         // Arrange
-        when(mockSharedPreferencesService.getOpenRouterApiKey())
-            .thenAnswer((_) async => const Success(testApiKey));
+        when(mockSettingsRepository.getOpenRouterApiKey())
+            .thenReturn(testApiKey);
 
         // Act
-        final isConfigured = await apiClient.isConfigured;
+        final isConfigured = apiClient.isConfigured;
 
         // Assert
         expect(isConfigured, true);
@@ -75,11 +74,10 @@ void main() {
 
       test('should handle null API key', () async {
         // Arrange
-        when(mockSharedPreferencesService.getOpenRouterApiKey())
-            .thenAnswer((_) async => Failure(Exception('Key not found')));
+        when(mockSettingsRepository.getOpenRouterApiKey()).thenReturn('');
 
         // Act
-        final isConfigured = await apiClient.isConfigured;
+        final isConfigured = apiClient.isConfigured;
 
         // Assert
         expect(isConfigured, false);
@@ -90,8 +88,7 @@ void main() {
       test('should return ApiNotConfiguredException when not configured',
           () async {
         // Arrange
-        when(mockSharedPreferencesService.getOpenRouterApiKey())
-            .thenAnswer((_) async => const Success(''));
+        when(mockSettingsRepository.getOpenRouterApiKey()).thenReturn('');
 
         // Act
         final stream = apiClient.streamChatCompletion(
@@ -112,8 +109,8 @@ void main() {
 
       test('should handle successful streaming response', () async {
         // Arrange
-        when(mockSharedPreferencesService.getOpenRouterApiKey())
-            .thenAnswer((_) async => const Success(testApiKey));
+        when(mockSettingsRepository.getOpenRouterApiKey())
+            .thenReturn(testApiKey);
 
         final mockStreamedResponse = http.StreamedResponse(
           Stream.fromIterable([
@@ -148,8 +145,8 @@ void main() {
 
       test('should handle HTTP error response', () async {
         // Arrange
-        when(mockSharedPreferencesService.getOpenRouterApiKey())
-            .thenAnswer((_) async => const Success(testApiKey));
+        when(mockSettingsRepository.getOpenRouterApiKey())
+            .thenReturn(testApiKey);
 
         final mockStreamedResponse = http.StreamedResponse(
           Stream.fromIterable([utf8.encode('Error message')]),
@@ -178,8 +175,8 @@ void main() {
 
       test('should handle malformed JSON in stream', () async {
         // Arrange
-        when(mockSharedPreferencesService.getOpenRouterApiKey())
-            .thenAnswer((_) async => const Success(testApiKey));
+        when(mockSettingsRepository.getOpenRouterApiKey())
+            .thenReturn(testApiKey);
 
         final mockStreamedResponse = http.StreamedResponse(
           Stream.fromIterable([
@@ -215,8 +212,8 @@ void main() {
 
       test('should handle network exception', () async {
         // Arrange
-        when(mockSharedPreferencesService.getOpenRouterApiKey())
-            .thenAnswer((_) async => const Success(testApiKey));
+        when(mockSettingsRepository.getOpenRouterApiKey())
+            .thenReturn(testApiKey);
 
         when(mockHttpClient.send(any)).thenThrow(Exception('Network error'));
 
@@ -242,8 +239,7 @@ void main() {
       test('should return ApiNotConfiguredException when not configured',
           () async {
         // Arrange
-        when(mockSharedPreferencesService.getOpenRouterApiKey())
-            .thenAnswer((_) async => const Success(''));
+        when(mockSettingsRepository.getOpenRouterApiKey()).thenReturn('');
 
         // Act
         final result = await apiClient.chatCompletion(
@@ -260,8 +256,8 @@ void main() {
 
       test('should handle successful chat completion', () async {
         // Arrange
-        when(mockSharedPreferencesService.getOpenRouterApiKey())
-            .thenAnswer((_) async => const Success(testApiKey));
+        when(mockSettingsRepository.getOpenRouterApiKey())
+            .thenReturn(testApiKey);
 
         final mockResponse = {
           'choices': [
@@ -295,8 +291,8 @@ void main() {
 
       test('should handle HTTP error response', () async {
         // Arrange
-        when(mockSharedPreferencesService.getOpenRouterApiKey())
-            .thenAnswer((_) async => const Success(testApiKey));
+        when(mockSettingsRepository.getOpenRouterApiKey())
+            .thenReturn(testApiKey);
 
         when(mockHttpClient.post(
           any,
@@ -322,8 +318,8 @@ void main() {
 
       test('should handle malformed response', () async {
         // Arrange
-        when(mockSharedPreferencesService.getOpenRouterApiKey())
-            .thenAnswer((_) async => const Success(testApiKey));
+        when(mockSettingsRepository.getOpenRouterApiKey())
+            .thenReturn(testApiKey);
 
         final mockResponse = {'invalid': 'response'};
 
@@ -351,8 +347,8 @@ void main() {
 
       test('should handle network exception', () async {
         // Arrange
-        when(mockSharedPreferencesService.getOpenRouterApiKey())
-            .thenAnswer((_) async => const Success(testApiKey));
+        when(mockSettingsRepository.getOpenRouterApiKey())
+            .thenReturn(testApiKey);
 
         when(mockHttpClient.post(
           any,
@@ -378,8 +374,7 @@ void main() {
       test('should return ApiNotConfiguredException when not configured',
           () async {
         // Arrange
-        when(mockSharedPreferencesService.getOpenRouterApiKey())
-            .thenAnswer((_) async => const Success(''));
+        when(mockSettingsRepository.getOpenRouterApiKey()).thenReturn('');
 
         // Act
         final stream = apiClient.streamCompletion(
@@ -398,8 +393,8 @@ void main() {
 
       test('should handle successful streaming completion', () async {
         // Arrange
-        when(mockSharedPreferencesService.getOpenRouterApiKey())
-            .thenAnswer((_) async => const Success(testApiKey));
+        when(mockSettingsRepository.getOpenRouterApiKey())
+            .thenReturn(testApiKey);
 
         final mockStreamedResponse = http.StreamedResponse(
           Stream.fromIterable([
@@ -433,8 +428,7 @@ void main() {
       test('should return ApiNotConfiguredException when not configured',
           () async {
         // Arrange
-        when(mockSharedPreferencesService.getOpenRouterApiKey())
-            .thenAnswer((_) async => const Success(''));
+        when(mockSettingsRepository.getOpenRouterApiKey()).thenReturn('');
 
         // Act
         final result = await apiClient.completion(
@@ -449,8 +443,8 @@ void main() {
 
       test('should handle successful completion', () async {
         // Arrange
-        when(mockSharedPreferencesService.getOpenRouterApiKey())
-            .thenAnswer((_) async => const Success(testApiKey));
+        when(mockSettingsRepository.getOpenRouterApiKey())
+            .thenReturn(testApiKey);
 
         final mockResponse = {
           'choices': [
@@ -483,8 +477,7 @@ void main() {
       test('should return ApiNotConfiguredException when not configured',
           () async {
         // Arrange
-        when(mockSharedPreferencesService.getOpenRouterApiKey())
-            .thenAnswer((_) async => const Success(''));
+        when(mockSettingsRepository.getOpenRouterApiKey()).thenReturn('');
 
         // Act
         final result = await apiClient.getModels();
@@ -496,8 +489,8 @@ void main() {
 
       test('should handle successful models retrieval', () async {
         // Arrange
-        when(mockSharedPreferencesService.getOpenRouterApiKey())
-            .thenAnswer((_) async => const Success(testApiKey));
+        when(mockSettingsRepository.getOpenRouterApiKey())
+            .thenReturn(testApiKey);
 
         final mockResponse = {
           'data': [
@@ -535,8 +528,8 @@ void main() {
 
       test('should handle HTTP error response', () async {
         // Arrange
-        when(mockSharedPreferencesService.getOpenRouterApiKey())
-            .thenAnswer((_) async => const Success(testApiKey));
+        when(mockSettingsRepository.getOpenRouterApiKey())
+            .thenReturn(testApiKey);
 
         when(mockHttpClient.get(
           any,
@@ -556,8 +549,8 @@ void main() {
 
       test('should handle malformed response', () async {
         // Arrange
-        when(mockSharedPreferencesService.getOpenRouterApiKey())
-            .thenAnswer((_) async => const Success(testApiKey));
+        when(mockSettingsRepository.getOpenRouterApiKey())
+            .thenReturn(testApiKey);
 
         final mockResponse = {'invalid': 'response'};
 
@@ -579,8 +572,8 @@ void main() {
 
       test('should handle network exception', () async {
         // Arrange
-        when(mockSharedPreferencesService.getOpenRouterApiKey())
-            .thenAnswer((_) async => const Success(testApiKey));
+        when(mockSettingsRepository.getOpenRouterApiKey())
+            .thenReturn(testApiKey);
 
         when(mockHttpClient.get(
           any,
@@ -600,8 +593,8 @@ void main() {
       test('should include all optional parameters in chat completion request',
           () async {
         // Arrange
-        when(mockSharedPreferencesService.getOpenRouterApiKey())
-            .thenAnswer((_) async => const Success(testApiKey));
+        when(mockSettingsRepository.getOpenRouterApiKey())
+            .thenReturn(testApiKey);
 
         final mockResponse = {
           'choices': [
@@ -652,8 +645,8 @@ void main() {
 
       test('should include stop parameter in completion request', () async {
         // Arrange
-        when(mockSharedPreferencesService.getOpenRouterApiKey())
-            .thenAnswer((_) async => const Success(testApiKey));
+        when(mockSettingsRepository.getOpenRouterApiKey())
+            .thenReturn(testApiKey);
 
         final mockResponse = {
           'choices': [
@@ -693,8 +686,8 @@ void main() {
     group('Headers Tests', () {
       test('should include correct headers in requests', () async {
         // Arrange
-        when(mockSharedPreferencesService.getOpenRouterApiKey())
-            .thenAnswer((_) async => const Success(testApiKey));
+        when(mockSettingsRepository.getOpenRouterApiKey())
+            .thenReturn(testApiKey);
 
         final mockResponse = {
           'choices': [

@@ -6,9 +6,11 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
 import 'config/dependencies.dart';
+import 'data/repository/settings/settings_repository.dart';
 import 'data/service/shared_preference_service.dart';
 import 'routing/router.dart';
 import 'ui/core/theme.dart';
+import 'ui/core/ui/error_page.dart';
 import 'main_viewmodel.dart';
 import 'utils/rotating_file_output.dart';
 
@@ -78,15 +80,89 @@ class MainApp extends StatefulWidget {
 
 class _MainAppState extends State<MainApp> {
   late GoRouter routerStore;
+  bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
-    routerStore = router(context.read());
     super.initState();
+    routerStore = router(context.read());
+    _initializeApp();
+  }
+
+  Future<void> _initializeApp() async {
+    try {
+      // 预加载设置配置
+      final settingsRepository = context.read<SettingsRepository>();
+      final result = await settingsRepository.loadSettings();
+
+      if (result.isError()) {
+        setState(() {
+          _errorMessage = '配置加载失败: ${result.exceptionOrNull()}';
+          _isLoading = false;
+        });
+        return;
+      }
+
+      appLogger.i('应用初始化完成');
+      setState(() {
+        _isLoading = false;
+      });
+    } catch (e) {
+      appLogger.e('应用初始化失败', error: e);
+      setState(() {
+        _errorMessage = '应用初始化失败: $e';
+        _isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    // 如果正在加载，显示加载界面
+    if (_isLoading) {
+      return MaterialApp(
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        home: const Scaffold(
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('正在加载应用配置...'),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    // 如果加载失败，显示错误界面
+    if (_errorMessage != null) {
+      return MaterialApp(
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        home: Scaffold(
+          body: ErrorPage.unknownError(
+            message: '应用初始化失败',
+            description: _errorMessage!,
+            buttonText: '重试',
+            onBack: () {
+              setState(() {
+                _isLoading = true;
+                _errorMessage = null;
+              });
+              _initializeApp();
+            },
+            error: Exception(_errorMessage!),
+          ),
+        ),
+      );
+    }
+
+    // 正常显示应用
     return Consumer<MainAppViewModel>(
       builder: (context, viewModel, child) {
         return MaterialApp.router(
