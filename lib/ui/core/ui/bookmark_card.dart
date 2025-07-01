@@ -16,7 +16,6 @@ class BookmarkCard extends StatefulWidget {
   final List<String>? availableLabels;
   final Future<List<String>> Function()? onLoadLabels;
   final ReadingStatsForView? readingStats;
-  final Future<ReadingStatsForView?> Function()? onLoadReadingStats;
 
   const BookmarkCard({
     super.key,
@@ -29,7 +28,6 @@ class BookmarkCard extends StatefulWidget {
     this.availableLabels,
     this.onLoadLabels,
     this.readingStats,
-    this.onLoadReadingStats,
   });
 
   @override
@@ -187,7 +185,7 @@ class _BookmarkCardState extends State<BookmarkCard> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     // 阅读统计信息
-                    _buildReadingStatsWidget(rootContext),
+                    _buildReadingStatsRow(rootContext, widget.readingStats),
                     // 阅读进度指示器
                     if (widget.bookmark.readProgress > 0) ...[
                       Row(
@@ -360,37 +358,13 @@ class _BookmarkCardState extends State<BookmarkCard> {
     }
   }
 
-  /// 构建阅读统计信息Widget
-  Widget _buildReadingStatsWidget(BuildContext context) {
-    // 如果已有同步数据，直接显示
-    if (widget.readingStats != null) {
-      return _buildReadingStatsRow(context, widget.readingStats!);
-    }
-
-    // 如果有异步加载函数，使用FutureBuilder
-    if (widget.onLoadReadingStats != null) {
-      return FutureBuilder<ReadingStatsForView?>(
-        future: widget.onLoadReadingStats!(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const SizedBox.shrink(); // 加载中不显示
-          }
-
-          if (snapshot.hasData && snapshot.data != null) {
-            return _buildReadingStatsRow(context, snapshot.data!);
-          }
-
-          return const SizedBox.shrink(); // 无数据时不显示
-        },
-      );
-    }
-
-    return const SizedBox.shrink(); // 无数据源时不显示
-  }
-
   /// 构建阅读统计信息行
   Widget _buildReadingStatsRow(
-      BuildContext context, ReadingStatsForView stats) {
+      BuildContext context, ReadingStatsForView? stats) {
+    if (stats == null) {
+      return const SizedBox.shrink();
+    }
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
