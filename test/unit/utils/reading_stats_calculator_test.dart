@@ -147,7 +147,7 @@ void main() {
         // Assert
         expect(result.isSuccess(), true);
         final (statsForView, characterCount) = result.getOrNull()!;
-        // Chinese: 标题(2) + 这是一段中文内容(7) + 。(1) + 列表项(3) + 列表项(3) + 。(1) = 17
+        // Chinese: 标题(2) + 这是一段中文内容(8) + 。(1) + 列表项(3) + 列表项(3) = 17
         // English: Test(1) + Title(1) + This(1) + is(1) + English(1) + content(1) + Item(1) + 1(1) + Item(1) + 2(1) = 10
         expect(characterCount.chineseCharCount, 17);
         expect(characterCount.englishCharCount, 10);
