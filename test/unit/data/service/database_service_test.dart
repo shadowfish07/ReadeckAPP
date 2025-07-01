@@ -387,6 +387,128 @@ void main() {
       });
     });
 
+    group('Database Schema and Migration Tests', () {
+      test('should create all tables on first installation', () async {
+        // Arrange - 创建一个新的数据库服务实例来模拟首次安装
+        final newDatabaseService = TestDatabaseService();
+
+        // Act - 打开数据库（触发onCreate）
+        await newDatabaseService.open();
+
+        // Assert - 验证数据库已打开
+        expect(newDatabaseService.isOpen(), true);
+
+        // 验证可以执行基本操作（间接验证表已创建）
+        final historyResult =
+            await newDatabaseService.insertDailyReadHistory(['test']);
+        expect(historyResult.isSuccess(), true);
+
+        final article = TestBookmarkArticleData.createSample();
+        final articleResult =
+            await newDatabaseService.insertOrUpdateBookmarkArticle(article);
+        expect(articleResult.isSuccess(), true);
+
+        // 清理
+        await newDatabaseService.clearAllData();
+      });
+
+      test('should handle database schema validation', () async {
+        // Arrange
+        final service = TestDatabaseService();
+        await service.open();
+
+        // Act & Assert - 验证表结构通过执行各种操作
+
+        // 测试每日阅读历史表
+        final historyResult =
+            await service.insertDailyReadHistory(TestBookmarkIds.sample1);
+        expect(historyResult.isSuccess(), true);
+
+        final getHistoryResult = await service.getDailyReadHistories();
+        expect(getHistoryResult.isSuccess(), true);
+        expect(getHistoryResult.getOrNull()!.isNotEmpty, true);
+
+        // 测试书签文章表
+        final article = TestBookmarkArticleData.createSample();
+        final articleResult =
+            await service.insertOrUpdateBookmarkArticle(article);
+        expect(articleResult.isSuccess(), true);
+
+        final getArticleResult =
+            await service.getBookmarkArticleByBookmarkId(article.bookmarkId);
+        expect(getArticleResult.isSuccess(), true);
+
+        // 清理
+        await service.clearAllData();
+      });
+
+      test('should maintain data integrity during operations', () async {
+        // Arrange
+        final service = TestDatabaseService();
+        await service.open();
+
+        // 插入测试数据
+        await service.insertDailyReadHistory(TestBookmarkIds.sample1);
+        await service.insertDailyReadHistory(TestBookmarkIds.sample2);
+
+        final article1 =
+            TestBookmarkArticleData.createSample(bookmarkId: 'test1');
+        final article2 =
+            TestBookmarkArticleData.createSample(bookmarkId: 'test2');
+        await service.insertOrUpdateBookmarkArticle(article1);
+        await service.insertOrUpdateBookmarkArticle(article2);
+
+        // Act - 验证数据完整性
+        final historiesResult = await service.getDailyReadHistories();
+        expect(historiesResult.isSuccess(), true);
+        expect(historiesResult.getOrNull()!.length, 2);
+
+        final article1Result =
+            await service.getBookmarkArticleByBookmarkId('test1');
+        expect(article1Result.isSuccess(), true);
+
+        final article2Result =
+            await service.getBookmarkArticleByBookmarkId('test2');
+        expect(article2Result.isSuccess(), true);
+
+        // 清理
+        await service.clearAllData();
+      });
+
+      test('should handle database constraints properly', () async {
+        // Arrange
+        final service = TestDatabaseService();
+        await service.open();
+
+        final article =
+            TestBookmarkArticleData.createSample(bookmarkId: 'unique-test');
+
+        // Act - 插入相同bookmarkId的文章（测试UNIQUE约束）
+        final firstInsert =
+            await service.insertOrUpdateBookmarkArticle(article);
+        expect(firstInsert.isSuccess(), true);
+
+        final updatedArticle = TestBookmarkArticleData.createSample(
+          bookmarkId: 'unique-test',
+          article: 'Updated content',
+        );
+
+        // 应该更新而不是插入新记录
+        final secondInsert =
+            await service.insertOrUpdateBookmarkArticle(updatedArticle);
+        expect(secondInsert.isSuccess(), true);
+
+        // 验证只有一条记录且内容已更新
+        final getResult =
+            await service.getBookmarkArticleByBookmarkId('unique-test');
+        expect(getResult.isSuccess(), true);
+        expect(getResult.getOrNull()!.article, 'Updated content');
+
+        // 清理
+        await service.clearAllData();
+      });
+    });
+
     group('Edge Cases and Error Handling', () {
       test('should handle very long article content', () async {
         // Arrange

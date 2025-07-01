@@ -1,5 +1,5 @@
-import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
-import 'package:readeck_app/data/service/shared_preference_service.dart';
+import 'package:readeck_app/data/repository/article/article_repository.dart';
+import 'package:readeck_app/data/repository/reading_stats/reading_stats_repository.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 
 import 'package:readeck_app/main.dart';
@@ -9,12 +9,10 @@ import 'package:url_launcher/url_launcher.dart';
 
 class BookmarkOperationUseCases {
   BookmarkOperationUseCases(
-      this._bookmarkRepository, this._sharedPreferencesService);
+      this._articleRepository, this._readingStatsRepository);
 
-  final BookmarkRepository _bookmarkRepository;
-  final SharedPreferencesService _sharedPreferencesService;
-  final ReadingStatsCalculator _readingStatsCalculator =
-      const ReadingStatsCalculator();
+  final ArticleRepository _articleRepository;
+  final ReadingStatsRepository _readingStatsRepository;
 
   AsyncResult<void> openUrl(String url) async {
     try {
@@ -66,9 +64,9 @@ class BookmarkOperationUseCases {
   }
 
   /// 为书签列表加载阅读统计数据
-  Future<Map<String, ReadingStats>> loadReadingStatsForBookmarks(
+  Future<Map<String, ReadingStatsForView>> loadReadingStatsForBookmarks(
       List<Bookmark> bookmarks) async {
-    final Map<String, ReadingStats> readingStats = {};
+    final Map<String, ReadingStatsForView> readingStats = {};
     for (final bookmark in bookmarks) {
       final stats = await loadReadingStatsForBookmark(bookmark);
       if (stats != null) {
@@ -79,38 +77,29 @@ class BookmarkOperationUseCases {
   }
 
   /// 为单个书签加载阅读统计数据
-  Future<ReadingStats?> loadReadingStatsForBookmark(Bookmark bookmark) async {
+  Future<ReadingStatsForView?> loadReadingStatsForBookmark(
+      Bookmark bookmark) async {
     try {
-      // 首先尝试从缓存中读取
+      // 首先尝试从数据库中读取
       final cachedStatsResult =
-          await _sharedPreferencesService.getReadingStats(bookmark.id);
+          await _readingStatsRepository.getReadingStats(bookmark.id);
       if (cachedStatsResult.isSuccess() &&
           cachedStatsResult.getOrNull() != null) {
-        appLogger.d('从缓存加载书签 ${bookmark.id} 的阅读统计数据');
+        appLogger.d('从数据库加载书签 ${bookmark.id} 的阅读统计数据');
         return cachedStatsResult.getOrNull()!;
       }
 
-      // 缓存中没有，获取文章内容并计算
+      // 数据库中没有，获取文章内容并计算
       final articleResult =
-          await _bookmarkRepository.getBookmarkArticle(bookmark.id);
+          await _articleRepository.getBookmarkArticle(bookmark.id);
       if (articleResult.isSuccess()) {
         final htmlContent = articleResult.getOrNull()!;
-        final statsResult =
-            _readingStatsCalculator.calculateReadingStats(htmlContent);
+        final statsResult = await _readingStatsRepository
+            .calculateAndSaveReadingStats(bookmark.id, htmlContent);
 
         if (statsResult.isSuccess()) {
           final stats = statsResult.getOrNull()!;
-
-          // 保存到缓存
-          final saveResult = await _sharedPreferencesService.setReadingStats(
-              bookmark.id, stats);
-          if (saveResult.isSuccess()) {
-            appLogger.i('成功缓存书签 ${bookmark.id} 的阅读统计数据');
-          } else {
-            appLogger.w(
-                '缓存书签 ${bookmark.id} 的阅读统计数据失败: ${saveResult.exceptionOrNull()}');
-          }
-
+          appLogger.i('成功计算并保存书签 ${bookmark.id} 的阅读统计数据');
           return stats;
         } else {
           appLogger.w(

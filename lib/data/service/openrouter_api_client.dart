@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'dart:async';
 import 'package:http/http.dart' as http;
-import 'package:readeck_app/data/service/shared_preference_service.dart';
+import 'package:readeck_app/data/repository/settings/settings_repository.dart';
+import 'package:readeck_app/domain/models/openrouter_model/openrouter_model.dart';
 import 'package:readeck_app/main.dart';
 import 'package:readeck_app/utils/api_not_configured_exception.dart';
 import 'package:readeck_app/utils/network_error_exception.dart';
@@ -10,13 +11,13 @@ import 'package:result_dart/result_dart.dart';
 /// OpenRouter API 客户端
 /// 提供与 OpenRouter API 的交互功能，支持流式聊天完成
 class OpenRouterApiClient {
-  OpenRouterApiClient(this._sharedPreferencesService,
+  OpenRouterApiClient(this._settingsRepository,
       {String? baseUrl, http.Client? httpClient})
       : _baseUrl = baseUrl ?? 'https://openrouter.ai/api/v1',
         _httpClient = httpClient ?? http.Client();
 
   final String _baseUrl;
-  final SharedPreferencesService _sharedPreferencesService;
+  final SettingsRepository? _settingsRepository;
   final http.Client _httpClient;
   String? _apiKey;
 
@@ -26,18 +27,15 @@ class OpenRouterApiClient {
   }
 
   /// 初始化API密钥
-  Future<void> _initApiKey() async {
-    if (_apiKey == null) {
-      final result = await _sharedPreferencesService.getOpenRouterApiKey();
-      if (result.isSuccess()) {
-        _apiKey = result.getOrNull();
-      }
+  void _initApiKey() {
+    if (_apiKey == null && _settingsRepository != null) {
+      _apiKey = _settingsRepository.getOpenRouterApiKey();
     }
   }
 
   /// 检查 API 是否已配置
-  Future<bool> get isConfigured async {
-    await _initApiKey();
+  bool get isConfigured {
+    _initApiKey();
     return _apiKey != null && _apiKey!.isNotEmpty;
   }
 
@@ -66,7 +64,7 @@ class OpenRouterApiClient {
     double? frequencyPenalty,
     double? presencePenalty,
   }) async* {
-    if (!(await isConfigured)) {
+    if (!isConfigured) {
       yield Failure(ApiNotConfiguredException());
       return;
     }
@@ -167,7 +165,7 @@ class OpenRouterApiClient {
     double? frequencyPenalty,
     double? presencePenalty,
   }) async {
-    if (!(await isConfigured)) {
+    if (!isConfigured) {
       return Failure(ApiNotConfiguredException());
     }
 
@@ -239,7 +237,7 @@ class OpenRouterApiClient {
     double? presencePenalty,
     List<String>? stop,
   }) async* {
-    if (!(await isConfigured)) {
+    if (!isConfigured) {
       yield Failure(ApiNotConfiguredException());
       return;
     }
@@ -343,7 +341,7 @@ class OpenRouterApiClient {
     double? presencePenalty,
     List<String>? stop,
   }) async {
-    if (!(await isConfigured)) {
+    if (!isConfigured) {
       return Failure(ApiNotConfiguredException());
     }
 
@@ -397,15 +395,22 @@ class OpenRouterApiClient {
   }
 
   /// 获取可用模型列表
-  AsyncResult<List<Map<String, dynamic>>> getModels() async {
-    if (!(await isConfigured)) {
-      return Failure(ApiNotConfiguredException());
-    }
-
+  ///
+  /// [category] - 可选的模型类别过滤参数
+  AsyncResult<List<OpenRouterModel>> getModels({String? category}) async {
     try {
-      final uri = Uri.parse('$_baseUrl/models');
+      final queryParams = <String, String>{};
+      if (category != null && category.isNotEmpty) {
+        queryParams['category'] = category;
+      }
+
+      final uri =
+          Uri.parse('$_baseUrl/models').replace(queryParameters: queryParams);
 
       appLogger.d('获取 OpenRouter 模型列表: $uri');
+      if (category != null) {
+        appLogger.d('过滤类别: $category');
+      }
 
       final response = await _httpClient.get(uri, headers: _headers);
 
@@ -415,7 +420,26 @@ class OpenRouterApiClient {
 
         if (models != null) {
           appLogger.d('成功获取 ${models.length} 个模型');
-          return Success(models.cast<Map<String, dynamic>>());
+          try {
+            final modelList = <OpenRouterModel>[];
+            for (final model in models) {
+              if (model != null && model is Map<String, dynamic>) {
+                try {
+                  final parsedModel = OpenRouterModel.fromJson(model);
+                  modelList.add(parsedModel);
+                } catch (e) {
+                  appLogger.w('跳过无效模型数据: $e, 模型数据: $model');
+                  // 跳过无法解析的模型，继续处理其他模型
+                  continue;
+                }
+              }
+            }
+            appLogger.d('成功解析 ${modelList.length} 个有效模型');
+            return Success(modelList);
+          } catch (e) {
+            appLogger.w('解析模型数据失败: $e');
+            return Failure(Exception('解析模型数据失败: $e'));
+          }
         } else {
           appLogger.w('模型列表响应格式异常: ${response.body}');
           return Failure(Exception('模型列表响应格式异常'));

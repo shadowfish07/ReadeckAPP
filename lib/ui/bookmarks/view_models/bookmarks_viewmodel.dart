@@ -87,9 +87,10 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
   final BookmarkOperationUseCases _bookmarkOperationUseCases;
   final LabelRepository _labelRepository;
 
-  final Map<String, ReadingStats> _readingStats = {};
+  // 移除本地缓存，改为通过Repository获取
   // 移除本地 _labels 变量，改用中心化存储
   final List<String> _bookmarkIds = [];
+  final Map<String, ReadingStatsForView> _readingStats = {};
   List<Bookmark> get _bookmarks => _bookmarkRepository
       .getCachedBookmarks(_bookmarkIds.where(_bookmarkIdFilter).toList())
       .whereType<Bookmark>()
@@ -123,13 +124,12 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
 
   List<String> get availableLabels => _labelRepository.labelNames;
 
-  /// 获取书签的阅读统计数据
-  ReadingStats? getReadingStats(String bookmarkId) {
-    return _readingStats[bookmarkId];
-  }
-
   Future<ResultDart<List<Bookmark>, Exception>> Function({int limit, int page})
       get _loadBookmarks;
+
+  ReadingStatsForView? getReadingStats(String bookmarkId) {
+    return _readingStats[bookmarkId];
+  }
 
   Future<List<Bookmark>> _load(int page) async {
     var limit = 10;
@@ -139,10 +139,8 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
     _resetBookmarks(bookmarks);
     _hasMoreData = bookmarks.length == limit;
 
-    // 加载阅读统计数据
-    final stats = await _bookmarkOperationUseCases
-        .loadReadingStatsForBookmarks(bookmarks);
-    _readingStats.addAll(stats);
+    _readingStats.addAll(await _bookmarkOperationUseCases
+        .loadReadingStatsForBookmarks(bookmarks));
 
     notifyListeners();
     return bookmarks;
@@ -160,10 +158,8 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
       _addBookmarkIds(newBookmarks);
       _hasMoreData = newBookmarks.length == limit;
 
-      // 加载新书签的阅读统计数据
-      final stats = await _bookmarkOperationUseCases
-          .loadReadingStatsForBookmarks(newBookmarks);
-      _readingStats.addAll(stats);
+      _readingStats.addAll(await _bookmarkOperationUseCases
+          .loadReadingStatsForBookmarks(newBookmarks));
     } else {
       _hasMoreData = false;
     }

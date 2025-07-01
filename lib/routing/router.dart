@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
+import 'package:readeck_app/data/repository/daily_read_history/daily_read_history_repository.dart';
 import 'package:readeck_app/data/repository/settings/settings_repository.dart';
 import 'package:readeck_app/ui/api_config/view_models/api_config_viewmodel.dart';
 import 'package:readeck_app/ui/api_config/widgets/api_config_page.dart';
@@ -11,10 +12,12 @@ import 'package:readeck_app/ui/daily_read/view_models/daily_read_viewmodel.dart'
 import 'package:readeck_app/ui/daily_read/widgets/daily_read_screen.dart';
 import 'package:readeck_app/ui/settings/view_models/about_viewmodel.dart';
 import 'package:readeck_app/ui/settings/view_models/ai_settings_viewmodel.dart';
+import 'package:readeck_app/ui/settings/view_models/model_selection_viewmodel.dart';
 import 'package:readeck_app/ui/settings/view_models/settings_viewmodel.dart';
 import 'package:readeck_app/ui/settings/view_models/translation_settings_viewmodel.dart';
 import 'package:readeck_app/ui/settings/widgets/about_page.dart';
 import 'package:readeck_app/ui/settings/widgets/ai_settings_screen.dart';
+import 'package:readeck_app/ui/settings/widgets/model_selection_screen.dart';
 import 'package:readeck_app/ui/settings/widgets/settings_screen.dart';
 import 'package:readeck_app/ui/settings/widgets/translation_settings_screen.dart';
 import 'package:readeck_app/ui/bookmarks/view_models/bookmarks_viewmodel.dart';
@@ -32,6 +35,7 @@ final Map<String, String> _routeTitleMap = {
   Routes.about: '关于',
   Routes.apiConfigSetting: 'API 配置',
   Routes.aiSetting: 'AI 设置',
+  Routes.modelSelection: '选择模型',
   Routes.translationSetting: '翻译设置',
   Routes.dailyRead: '每日阅读',
   Routes.unarchived: '未读',
@@ -148,8 +152,9 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
                   path: Routes.settings,
                   builder: (context, state) {
                     return ChangeNotifierProvider(
-                      create: (context) =>
-                          SettingsViewModel(context.read(), context.read()),
+                      create: (context) => SettingsViewModel(
+                          context.read<SettingsRepository>(),
+                          context.read<DailyReadHistoryRepository>()),
                       child: Consumer<SettingsViewModel>(
                         builder: (context, viewModel, child) {
                           return SettingsScreen(viewModel: viewModel);
@@ -175,13 +180,24 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
         GoRoute(
             path: Routes.aiSetting,
             builder: (context, state) {
-              final viewModel = AiSettingsViewModel(context.read());
+              final viewModel =
+                  AiSettingsViewModel(context.read(), context.read());
               return AiSettingsScreen(viewModel: viewModel);
+            }),
+        GoRoute(
+            path: Routes.modelSelection,
+            builder: (context, state) {
+              final viewModel =
+                  ModelSelectionViewModel(context.read(), context.read());
+              return ModelSelectionScreen(
+                viewModel: viewModel,
+              );
             }),
         GoRoute(
             path: Routes.translationSetting,
             builder: (context, state) {
-              final viewModel = TranslationSettingsViewModel(context.read());
+              final viewModel =
+                  TranslationSettingsViewModel(context.read(), context.read());
               return TranslationSettingsScreen(viewModel: viewModel);
             }),
         GoRoute(
@@ -195,6 +211,7 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
                 return ErrorPage.bookmarkNotFound();
               }
               final viewModel = BookmarkDetailViewModel(
+                context.read(),
                 context.read(),
                 context.read(),
                 context.read(),
@@ -214,14 +231,9 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
     );
 
 Future<String?> _redirect(BuildContext context, GoRouterState state) async {
-  final isApiConfigured =
-      await context.read<SettingsRepository>().isApiConfigured();
+  final isApiConfigured = context.read<SettingsRepository>().isApiConfigured();
 
-  if (isApiConfigured.isError()) {
-    return null;
-  }
-
-  if (!isApiConfigured.getOrDefault(false)) {
+  if (!isApiConfigured) {
     return Routes.apiConfigSetting;
   }
 

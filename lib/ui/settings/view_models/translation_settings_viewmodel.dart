@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_command/flutter_command.dart';
+import 'package:readeck_app/data/repository/article/article_repository.dart';
 import 'package:readeck_app/data/repository/settings/settings_repository.dart';
 import 'package:readeck_app/main.dart';
 
 class TranslationSettingsViewModel extends ChangeNotifier {
-  TranslationSettingsViewModel(this._settingsRepository) {
+  TranslationSettingsViewModel(
+      this._settingsRepository, this._articleRepository) {
     _initCommands();
   }
 
   final SettingsRepository _settingsRepository;
+  final ArticleRepository _articleRepository;
 
   String _translationProvider = 'AI';
   String _translationTargetLanguage = '中文';
@@ -51,8 +54,8 @@ class TranslationSettingsViewModel extends ChangeNotifier {
       _saveTranslationCacheEnabled,
     );
 
-    loadTranslationSettings = Command.createAsyncNoParam(
-      _loadTranslationSettingsAsync,
+    loadTranslationSettings = Command.createSyncNoParam(
+      _loadTranslationSettings,
       initialValue: null,
     )..execute();
 
@@ -82,7 +85,7 @@ class TranslationSettingsViewModel extends ChangeNotifier {
 
       // 切换目标语种时清空翻译缓存
       appLogger.i('切换翻译目标语种到: $language，开始清空翻译缓存');
-      final clearResult = await _settingsRepository.clearTranslationCache();
+      final clearResult = await _articleRepository.clearTranslationCache();
       if (clearResult.isSuccess()) {
         appLogger.i('翻译缓存清空成功');
       } else {
@@ -106,41 +109,19 @@ class TranslationSettingsViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> _loadTranslationSettingsAsync() async {
-    // 加载翻译服务提供方
-    final providerResult = await _settingsRepository.getTranslationProvider();
-    if (providerResult.isSuccess()) {
-      _translationProvider = providerResult.getOrNull() ?? 'AI';
-    } else {
-      appLogger.e('获取翻译服务提供方失败', error: providerResult.exceptionOrNull()!);
-      _translationProvider = 'AI';
-    }
-
-    // 加载翻译目标语种
-    final languageResult =
-        await _settingsRepository.getTranslationTargetLanguage();
-    if (languageResult.isSuccess()) {
-      _translationTargetLanguage = languageResult.getOrNull() ?? '中文';
-    } else {
-      appLogger.e('获取翻译目标语种失败', error: languageResult.exceptionOrNull()!);
-      _translationTargetLanguage = '中文';
-    }
-
-    // 加载翻译缓存启用状态
-    final cacheResult = await _settingsRepository.getTranslationCacheEnabled();
-    if (cacheResult.isSuccess()) {
-      _translationCacheEnabled = cacheResult.getOrNull() ?? true;
-    } else {
-      appLogger.e('获取翻译缓存启用状态失败', error: cacheResult.exceptionOrNull()!);
-      _translationCacheEnabled = true;
-    }
+  void _loadTranslationSettings() {
+    // 由于SettingsRepository已经预加载，直接同步获取翻译设置
+    _translationProvider = _settingsRepository.getTranslationProvider();
+    _translationTargetLanguage =
+        _settingsRepository.getTranslationTargetLanguage();
+    _translationCacheEnabled = _settingsRepository.getTranslationCacheEnabled();
 
     notifyListeners();
   }
 
   Future<void> _clearTranslationCacheAsync() async {
     appLogger.i('手动清空翻译缓存');
-    final result = await _settingsRepository.clearTranslationCache();
+    final result = await _articleRepository.clearTranslationCache();
     if (result.isSuccess()) {
       appLogger.i('翻译缓存清空成功');
     } else {

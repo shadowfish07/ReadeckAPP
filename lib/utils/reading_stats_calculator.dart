@@ -1,8 +1,9 @@
+import 'package:readeck_app/domain/models/reading_stats/reading_stats.dart';
 import 'package:result_dart/result_dart.dart';
 
 /// 阅读统计结果
-class ReadingStats {
-  const ReadingStats({
+class ReadingStatsForView {
+  const ReadingStatsForView({
     required this.readableCharCount,
     required this.estimatedReadingTimeMinutes,
   });
@@ -23,20 +24,26 @@ class ReadingStatsCalculator {
   ///
   /// [htmlContent] HTML内容字符串
   /// 返回包含可阅读字符数量和预计阅读时间的结果
-  Result<ReadingStats> calculateReadingStats(String htmlContent) {
+  Result<(ReadingStatsForView, CharacterCount)> calculateReadingStats(
+      String htmlContent) {
     try {
       // 移除HTML标签，保留文本内容
       final cleanText = _removeHtmlTags(htmlContent);
 
+      final characterCount = calculateCharacterCount(cleanText);
+
       // 计算可阅读字符数量
-      final readableCharCount = _countReadableCharacters(cleanText);
+      final readableCharCount = _countReadableCharacters(characterCount);
 
       // 计算预计阅读时间
-      final estimatedTime = _calculateReadingTime(cleanText);
+      final estimatedTime = calculateReadingTime(characterCount);
 
-      return Success(ReadingStats(
-        readableCharCount: readableCharCount,
-        estimatedReadingTimeMinutes: estimatedTime,
+      return Success((
+        ReadingStatsForView(
+          readableCharCount: readableCharCount,
+          estimatedReadingTimeMinutes: estimatedTime,
+        ),
+        characterCount,
       ));
     } catch (e) {
       return Failure(Exception("计算阅读统计时发生错误: $e"));
@@ -79,40 +86,12 @@ class ReadingStatsCalculator {
 
   /// 计算可阅读字符数量
   /// 对中文字符和英文单词进行不同的计数方式
-  int _countReadableCharacters(String text) {
-    if (text.isEmpty) return 0;
-
-    int count = 0;
-
-    // 分别处理中文字符和英文单词
-    final runes = text.runes.toList();
-
-    for (int i = 0; i < runes.length; i++) {
-      final char = String.fromCharCode(runes[i]);
-
-      // 判断是否为中文字符（包括中文标点）
-      if (_isChineseCharacter(char)) {
-        count++;
-      } else if (_isAlphanumeric(char)) {
-        // 对于英文字符，按单词计数
-        // 跳过当前单词的其余字符
-        while (i + 1 < runes.length &&
-            _isAlphanumeric(String.fromCharCode(runes[i + 1]))) {
-          i++;
-        }
-        count++; // 一个英文单词计为一个单位
-      }
-      // 忽略其他字符（空格、标点等）
-    }
-
-    return count;
+  int _countReadableCharacters(CharacterCount characterCount) {
+    return characterCount.chineseCharCount + characterCount.englishCharCount;
   }
 
-  /// 计算预计阅读时间（分钟）
-  /// 中文：平均每分钟300-500字，取400字
-  /// 英文：平均每分钟200-300词，取250词
-  double _calculateReadingTime(String text) {
-    if (text.isEmpty) return 0.0;
+  CharacterCount calculateCharacterCount(String text) {
+    if (text.isEmpty) return const CharacterCount();
 
     int chineseCharCount = 0;
     int englishWordCount = 0;
@@ -134,10 +113,18 @@ class ReadingStatsCalculator {
       }
     }
 
+    return CharacterCount(
+      chineseCharCount: chineseCharCount,
+      englishCharCount: englishWordCount,
+    );
+  }
+
+  /// 计算预计阅读时间（分钟）
+  double calculateReadingTime(CharacterCount characterCount) {
     // 中文阅读速度：400字/分钟
     // 英文阅读速度：250词/分钟
-    final chineseReadingTime = chineseCharCount / 400.0;
-    final englishReadingTime = englishWordCount / 250.0;
+    final chineseReadingTime = characterCount.chineseCharCount / 400.0;
+    final englishReadingTime = characterCount.englishCharCount / 250.0;
 
     return chineseReadingTime + englishReadingTime;
   }
