@@ -1,12 +1,15 @@
+import 'package:readeck_app/data/service/readeck_api_client.dart';
 import 'package:readeck_app/domain/models/bookmark/label_info.dart';
 import 'package:readeck_app/main.dart';
+import 'package:result_dart/result_dart.dart';
 
 /// 标签数据变化监听器类型定义
 typedef LabelChangeListener = void Function();
 
-class LabelUseCases {
-  LabelUseCases();
+class LabelRepository {
+  LabelRepository(this._readeckApiClient);
 
+  final ReadeckApiClient _readeckApiClient;
   final List<LabelInfo> _labels = [];
   final List<LabelChangeListener> _listeners = [];
 
@@ -39,21 +42,37 @@ class LabelUseCases {
     _notifyListeners();
   }
 
-  void insertOrUpdateLabels(List<LabelInfo> labels) {
+  void _insertOrUpdateLabels(List<LabelInfo> labels) {
     for (var label in labels) {
       insertOrUpdateLabel(label);
     }
   }
 
-  LabelInfo getLabel(String name) {
-    return _labels.firstWhere((l) => l.name == name, orElse: () {
-      appLogger.e('Label $name not found');
-      throw ArgumentError('Label not found');
-    });
+  LabelInfo? getCachedLabel(String name) {
+    try {
+      return _labels.firstWhere((l) => l.name == name);
+    } catch (e) {
+      appLogger.w('Label $name not found in cache');
+      return null;
+    }
   }
 
-  List<LabelInfo> getLabels(List<String> names) {
-    return names.map((name) => getLabel(name)).toList();
+  List<LabelInfo> getCachedLabels(List<String> names) {
+    return names
+        .map((name) => getCachedLabel(name))
+        .where((label) => label != null)
+        .cast<LabelInfo>()
+        .toList();
+  }
+
+  AsyncResult<List<LabelInfo>> loadLabels() async {
+    final result = await _readeckApiClient.getLabels();
+    if (result.isSuccess()) {
+      _insertOrUpdateLabels(result.getOrThrow());
+      return result;
+    }
+
+    return result;
   }
 
   /// 获取所有标签名称列表

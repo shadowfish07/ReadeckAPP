@@ -11,7 +11,7 @@ class ApiConfigViewModel {
   late Command save;
 
   AsyncResult<(String, String)> load() async {
-    return await _settingsRepository.getApiConfig();
+    return Success(_settingsRepository.getApiConfig());
   }
 
   Future<void> _save((String host, String token) params) async {

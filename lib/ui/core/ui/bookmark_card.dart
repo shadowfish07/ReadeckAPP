@@ -15,7 +15,7 @@ class BookmarkCard extends StatefulWidget {
   final Function(Bookmark bookmark, List<String> labels)? onUpdateLabels;
   final List<String>? availableLabels;
   final Future<List<String>> Function()? onLoadLabels;
-  final ReadingStats? readingStats;
+  final ReadingStatsForView? readingStats;
 
   const BookmarkCard({
     super.key,
@@ -185,47 +185,7 @@ class _BookmarkCardState extends State<BookmarkCard> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     // 阅读统计信息
-                    if (widget.readingStats != null) ...[
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.schedule_outlined,
-                            size: 14,
-                            color: Theme.of(rootContext).colorScheme.outline,
-                          ),
-                          const SizedBox(width: 2),
-                          Text(
-                            '${widget.readingStats!.estimatedReadingTimeMinutes.round()}分钟',
-                            style: Theme.of(rootContext)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(
-                                  color:
-                                      Theme.of(rootContext).colorScheme.outline,
-                                ),
-                          ),
-                          const SizedBox(width: 8),
-                          Icon(
-                            Icons.text_fields_outlined,
-                            size: 14,
-                            color: Theme.of(rootContext).colorScheme.outline,
-                          ),
-                          const SizedBox(width: 2),
-                          Text(
-                            '${widget.readingStats!.readableCharCount}字',
-                            style: Theme.of(rootContext)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(
-                                  color:
-                                      Theme.of(rootContext).colorScheme.outline,
-                                ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(width: 12),
-                    ],
+                    _buildReadingStatsRow(rootContext, widget.readingStats),
                     // 阅读进度指示器
                     if (widget.bookmark.readProgress > 0) ...[
                       Row(
@@ -396,5 +356,45 @@ class _BookmarkCardState extends State<BookmarkCard> {
         ),
       );
     }
+  }
+
+  /// 构建阅读统计信息行
+  Widget _buildReadingStatsRow(
+      BuildContext context, ReadingStatsForView? stats) {
+    if (stats == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          Icons.schedule_outlined,
+          size: 14,
+          color: Theme.of(context).colorScheme.outline,
+        ),
+        const SizedBox(width: 2),
+        Text(
+          '${stats.estimatedReadingTimeMinutes.round()}分钟',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.outline,
+              ),
+        ),
+        const SizedBox(width: 8),
+        Icon(
+          Icons.text_fields_outlined,
+          size: 14,
+          color: Theme.of(context).colorScheme.outline,
+        ),
+        const SizedBox(width: 2),
+        Text(
+          '${stats.readableCharCount}字',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.outline,
+              ),
+        ),
+        const SizedBox(width: 12),
+      ],
+    );
   }
 }

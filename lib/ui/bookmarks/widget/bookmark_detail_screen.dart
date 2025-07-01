@@ -10,8 +10,6 @@ import 'package:readeck_app/ui/core/ui/bookmark_labels_widget.dart';
 import 'package:readeck_app/ui/core/ui/error_page.dart';
 import 'package:readeck_app/ui/core/ui/label_edit_dialog.dart';
 import 'package:readeck_app/ui/core/ui/loading.dart';
-import 'package:readeck_app/utils/network_error_exception.dart';
-import 'package:readeck_app/utils/resource_not_found_exception.dart';
 
 class BookmarkDetailScreen extends StatefulWidget {
   const BookmarkDetailScreen({super.key, required this.viewModel});
@@ -27,17 +25,35 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
   bool _isAutoScrolling = false; // 标记是否正在自动滚动
   bool _isAutoScrolled = false;
   final GlobalKey _archiveCardKey = GlobalKey(); // 用于获取存档卡片高度
+  late ListenableSubscription _translateErrorSubscription;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+
+    // 监听翻译命令的错误
+    _translateErrorSubscription = widget
+        .viewModel.translateContentCommand.errors
+        .where((error) => error != null)
+        .listen((error, subscription) {
+      if (mounted && error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('AI翻译失败: ${error.error.toString()}'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    });
   }
 
   @override
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
+    _translateErrorSubscription.cancel();
     super.dispose();
   }
 
@@ -51,12 +67,121 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
           overflow: TextOverflow.ellipsis,
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.open_in_browser),
-            onPressed: () {
-              widget.viewModel.openUrl(widget.viewModel.bookmark.url);
+          PopupMenuButton<String>(
+            onSelected: (String value) {
+              switch (value) {
+                case 'open_browser':
+                  widget.viewModel.openUrl(widget.viewModel.bookmark.url);
+                  break;
+                case 'toggle_mark':
+                  _toggleBookmarkMarked();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Text(widget.viewModel.bookmark.isMarked
+                            ? '已取消喜爱'
+                            : '已标记喜爱')),
+                  );
+                  break;
+                case 'edit_labels':
+                  _showLabelEditDialog();
+                  break;
+                case 'ai_translate':
+                  widget.viewModel.translateContentCommand.execute();
+                  break;
+                case 'toggle_translation':
+                  widget.viewModel.toggleTranslation();
+                  break;
+                case 'archive':
+                  if (!widget.viewModel.bookmark.isArchived) {
+                    _archiveBookmark();
+                  }
+                  break;
+                case 'delete':
+                  _showDeleteConfirmDialog();
+                  break;
+              }
             },
-            tooltip: '在浏览器中打开',
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              const PopupMenuItem<String>(
+                value: 'open_browser',
+                child: ListTile(
+                  leading: Icon(Icons.open_in_browser),
+                  title: Text('在浏览器中打开'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: 'toggle_mark',
+                child: ListTile(
+                  leading: Icon(
+                    widget.viewModel.bookmark.isMarked
+                        ? Icons.favorite
+                        : Icons.favorite_border,
+                    color: widget.viewModel.bookmark.isMarked
+                        ? Theme.of(context).colorScheme.error
+                        : null,
+                  ),
+                  title: Text(
+                    widget.viewModel.bookmark.isMarked ? '取消喜爱' : '标记喜爱',
+                  ),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              const PopupMenuItem<String>(
+                value: 'edit_labels',
+                child: ListTile(
+                  leading: Icon(Icons.local_offer_outlined),
+                  title: Text('编辑标签'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              if (widget.viewModel.canStartTranslate &&
+                  !widget.viewModel.isTranslateMode)
+                const PopupMenuItem<String>(
+                  value: 'ai_translate',
+                  child: ListTile(
+                    leading: Icon(Icons.translate),
+                    title: Text('AI翻译'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              if (widget.viewModel.isTranslated)
+                PopupMenuItem<String>(
+                  value: 'toggle_translation',
+                  child: ListTile(
+                    leading: const Icon(Icons.swap_horiz),
+                    title: Text(
+                        widget.viewModel.isTranslateMode ? '显示原文' : '显示译文'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              if (!widget.viewModel.bookmark.isArchived)
+                const PopupMenuItem<String>(
+                  value: 'archive',
+                  child: ListTile(
+                    leading: Icon(Icons.archive),
+                    title: Text('完成阅读'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              const PopupMenuDivider(),
+              PopupMenuItem<String>(
+                value: 'delete',
+                child: ListTile(
+                  leading: Icon(
+                    Icons.delete_outline,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                  title: Text(
+                    '删除书签',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -78,17 +203,10 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
               return _buildContent(context, data);
             },
             onError: (context, error, _, __) {
-              switch (error) {
-                case ResourceNotFoundException _:
-                  return ErrorPage.bookmarkNotFound();
-                case NetworkErrorException _:
-                  return ErrorPage.networkError(
-                    error: error,
-                    onBack: () => viewModel.retry(),
-                  );
-                default:
-                  return ErrorPage.unknownError(error: Exception(error));
-              }
+              return ErrorPage.fromException(
+                error,
+                networkErrorRetry: () => viewModel.retry(),
+              );
             },
           );
         },
@@ -96,28 +214,33 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
     );
   }
 
-  Widget _buildContent(BuildContext context, String htmlContent,
+  Widget _buildContent(BuildContext context, String _,
       {bool isLoading = false}) {
-    if (htmlContent.isEmpty) {
-      return const Center(
-        child: Text(
-          '暂无内容',
-          style: TextStyle(fontSize: 16),
-        ),
-      );
+    if (widget.viewModel.articleHtml.isEmpty &&
+        widget.viewModel.isTranslateMode) {
+      return const Loading(text: "正在翻译中...");
     }
 
     return Stack(
       children: [
         SingleChildScrollView(
           controller: _scrollController,
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            bottom: 16,
+            top: 16 +
+                (widget.viewModel.isTranslateMode &&
+                        widget.viewModel.isTranslateBannerVisible
+                    ? 48
+                    : 0),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // HTML内容
               Html(
-                data: htmlContent,
+                data: widget.viewModel.articleHtml,
                 style: {
                   "body": Style(
                     margin: Margins.zero,
@@ -205,8 +328,39 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
                 ],
               ),
 
-              // 存档提示区域
-              if (!widget.viewModel.bookmark.isArchived)
+              if (widget.viewModel.isTranslating) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  alignment: Alignment.center,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '正在翻译...',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
+              // 存档提示区域，已存档或正在翻译时不展示
+              if (!widget.viewModel.bookmark.isArchived &&
+                  !widget.viewModel.isTranslating)
                 Container(
                   key: _archiveCardKey,
                   margin: const EdgeInsets.only(top: 32),
@@ -349,13 +503,108 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
               ),
             ),
           ),
+
+        // AI翻译状态指示器
+        if (widget.viewModel.isTranslating)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              color: Theme.of(context).colorScheme.primaryContainer,
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'AI正在翻译中...',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color:
+                              Theme.of(context).colorScheme.onPrimaryContainer,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+        // 翻译状态提示
+        if (widget.viewModel.isTranslateMode &&
+            widget.viewModel.isTranslateBannerVisible)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              color: Theme.of(context).colorScheme.secondaryContainer,
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.translate,
+                    size: 16,
+                    color: Theme.of(context).colorScheme.onSecondaryContainer,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '当前显示AI翻译内容',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSecondaryContainer,
+                        ),
+                  ),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: () => widget.viewModel.toggleTranslation(),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      minimumSize: const Size(0, 32),
+                    ),
+                    child: Text(
+                      '显示原文',
+                      style: TextStyle(
+                        color:
+                            Theme.of(context).colorScheme.onSecondaryContainer,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  IconButton(
+                    onPressed: () => widget.viewModel.hideTranslateBanner(),
+                    style: IconButton.styleFrom(
+                      padding: const EdgeInsets.all(4),
+                      minimumSize: const Size(24, 24),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    icon: Icon(
+                      Icons.close,
+                      size: 16,
+                      color: Theme.of(context).colorScheme.onSecondaryContainer,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
       ],
     );
   }
 
   void _onScroll() {
-    // 如果正在自动滚动，不触发进度更新
-    if (!_isAutoScrolling) {
+    // 如果正在自动滚动/翻译中，不触发进度更新
+    if (!_isAutoScrolling && !widget.viewModel.isTranslating) {
       _updateReadProgress();
     }
   }

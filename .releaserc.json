@@ -20,7 +20,7 @@
           { "type": "docs", "release": false },
           { "type": "style", "release": false },
           { "type": "chore", "release": false },
-          { "type": "refactor", "release": "patch" },
+          { "type": "refactor", "release": false },
           { "type": "test", "release": false },
           { "type": "build", "release": false },
           { "type": "ci", "release": false },
@@ -47,12 +47,6 @@
             { "type": "ci", "section": "👷 CI/CD", "hidden": true }
           ]
         }
-      }
-    ],
-    [
-      "@semantic-release/changelog",
-      {
-        "changelogFile": "CHANGELOG.md"
       }
     ],
     [

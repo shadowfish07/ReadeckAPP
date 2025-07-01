@@ -1,21 +1,25 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_command/flutter_command.dart';
+import 'package:readeck_app/data/repository/article/article_repository.dart';
 import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_operation_use_cases.dart';
-import 'package:readeck_app/domain/use_cases/bookmark_use_cases.dart';
-import 'package:readeck_app/domain/use_cases/label_use_cases.dart';
+import 'package:readeck_app/data/repository/label/label_repository.dart';
+import 'package:readeck_app/data/repository/settings/settings_repository.dart';
 import 'package:readeck_app/main.dart';
 
 class BookmarkDetailViewModel extends ChangeNotifier {
   BookmarkDetailViewModel(
       this._bookmarkRepository,
+      this._articleRepository,
       this._bookmarkOperationUseCases,
-      this._bookmarkUseCases,
-      this._labelUseCases,
+      this._labelRepository,
+      this._settingsRepository,
       this._bookmark) {
     // 注册标签数据变化监听器
-    _labelUseCases.addListener(_onLabelsChanged);
+    _labelRepository.addListener(_onLabelsChanged);
+    // 注册书签数据变化监听器
+    _bookmarkRepository.addListener(_onBookmarksChanged);
     loadArticleContent = Command.createAsync<void, String>(_loadArticleContent,
         initialValue: '', includeLastResultInCommandResults: true)
       ..execute();
@@ -36,13 +40,25 @@ class BookmarkDetailViewModel extends ChangeNotifier {
     deleteBookmarkCommand = Command.createAsyncNoParamNoResult(_deleteBookmark);
 
     loadLabels = Command.createAsyncNoParam(_loadLabels, initialValue: []);
+
+    translateContentCommand =
+        Command.createAsyncNoParamNoResult(_translateContent);
   }
 
-  final BookmarkUseCases _bookmarkUseCases;
   final BookmarkRepository _bookmarkRepository;
+  final ArticleRepository _articleRepository;
   final BookmarkOperationUseCases _bookmarkOperationUseCases;
-  final LabelUseCases _labelUseCases;
+  final LabelRepository _labelRepository;
+  final SettingsRepository _settingsRepository;
   Bookmark _bookmark;
+
+  // AI翻译相关状态
+  bool _isTranslating = false;
+  bool _isTranslated = false;
+  bool _isTranslateMode = false;
+  bool _isTranslateBannerVisible = true;
+  String _translatedContent = '';
+  String _originalContent = '';
 
   late Command<void, String> loadArticleContent;
   late Command<int, void> updateReadProgressCommand;
@@ -51,13 +67,21 @@ class BookmarkDetailViewModel extends ChangeNotifier {
   late Command<void, void> toggleMarkCommand;
   late Command<void, void> deleteBookmarkCommand;
   late Command<void, List<String>> loadLabels;
+  late Command<void, void> translateContentCommand;
 
   Bookmark get bookmark => _bookmark;
-  String get articleHtml => loadArticleContent.value;
+  String get articleHtml =>
+      _isTranslateMode ? _translatedContent : loadArticleContent.value;
   bool get isLoading => loadArticleContent.isExecuting.value;
+  bool get isTranslating => _isTranslating;
+  bool get isTranslated => _isTranslated;
+  bool get isTranslateMode => _isTranslateMode;
+  bool get isTranslateBannerVisible => _isTranslateBannerVisible;
+  bool get canStartTranslate =>
+      !_isTranslating && loadArticleContent.value.isNotEmpty && !_isTranslated;
 
   /// 获取可用的标签名称列表
-  List<String> get availableLabels => _labelUseCases.labelNames;
+  List<String> get availableLabels => _labelRepository.labelNames;
   Exception? get error {
     final commandError = loadArticleContent.errors.value?.error;
     if (commandError is Exception) {
@@ -69,7 +93,7 @@ class BookmarkDetailViewModel extends ChangeNotifier {
   }
 
   void _reloadBookmark() {
-    final newBookmark = _bookmarkUseCases.getBookmark(bookmark.id);
+    final newBookmark = _bookmarkRepository.getCachedBookmark(bookmark.id);
     if (newBookmark != null) {
       _bookmark = newBookmark;
       notifyListeners();
@@ -80,7 +104,7 @@ class BookmarkDetailViewModel extends ChangeNotifier {
     try {
       appLogger.i('Loading article content for bookmark: ${bookmark.id}');
 
-      final result = await _bookmarkRepository.getBookmarkArticle(bookmark.id);
+      final result = await _articleRepository.getBookmarkArticle(bookmark.id);
 
       if (result.isSuccess()) {
         final htmlContent = result.getOrThrow();
@@ -107,10 +131,8 @@ class BookmarkDetailViewModel extends ChangeNotifier {
       appLogger.i(
           'Updating read progress for bookmark: ${bookmark.id}, progress: $readProgress');
 
-      final result = await _bookmarkRepository.updateReadProgress(
-          bookmark.id, readProgress);
-      _bookmarkUseCases.insertOrUpdateBookmark(
-          bookmark.copyWith(readProgress: readProgress));
+      final result =
+          await _bookmarkRepository.updateReadProgress(bookmark, readProgress);
 
       _reloadBookmark();
 
@@ -140,8 +162,7 @@ class BookmarkDetailViewModel extends ChangeNotifier {
     try {
       appLogger.i('Archiving bookmark: ${bookmark.id}');
 
-      final result =
-          await _bookmarkOperationUseCases.toggleBookmarkArchived(bookmark);
+      final result = await _bookmarkRepository.toggleArchived(bookmark);
       _reloadBookmark();
 
       if (result.isSuccess()) {
@@ -161,8 +182,7 @@ class BookmarkDetailViewModel extends ChangeNotifier {
     try {
       appLogger.i('Toggling bookmark marked: ${bookmark.id}');
 
-      final result =
-          await _bookmarkOperationUseCases.toggleBookmarkMarked(bookmark);
+      final result = await _bookmarkRepository.toggleMarked(bookmark);
       _reloadBookmark();
 
       if (result.isSuccess()) {
@@ -179,31 +199,15 @@ class BookmarkDetailViewModel extends ChangeNotifier {
   }
 
   Future<void> _deleteBookmark() async {
-    try {
-      appLogger.i('Deleting bookmark: ${bookmark.id}');
-
-      final result =
-          await _bookmarkOperationUseCases.deleteBookmark(bookmark.id);
-
-      if (result.isSuccess()) {
-        appLogger.i('Successfully deleted bookmark');
-      } else {
-        final error = result.exceptionOrNull();
-        appLogger.e('Failed to delete bookmark: $error');
-        throw error ?? Exception('Failed to delete bookmark');
-      }
-    } catch (e) {
-      appLogger.e('Exception while deleting bookmark: $e');
-      rethrow;
-    }
+    appLogger.i('Deleting bookmark: ${bookmark.id}');
+    _bookmarkRepository.deleteBookmark(bookmark.id);
   }
 
   Future<void> updateBookmarkLabels(List<String> labels) async {
     try {
       appLogger.i('Updating bookmark labels: ${bookmark.id}');
 
-      final result = await _bookmarkOperationUseCases.updateBookmarkLabels(
-          bookmark, labels);
+      final result = await _bookmarkRepository.updateLabels(bookmark, labels);
       _reloadBookmark();
 
       if (result.isSuccess()) {
@@ -220,14 +224,92 @@ class BookmarkDetailViewModel extends ChangeNotifier {
   }
 
   Future<List<String>> _loadLabels() async {
-    final result = await _bookmarkRepository.getLabels();
+    final result = await _labelRepository.loadLabels();
     if (result.isSuccess()) {
-      _labelUseCases.insertOrUpdateLabels(result.getOrDefault([]));
-      return _labelUseCases.labelNames;
+      return _labelRepository.labelNames;
     }
 
     appLogger.e("Failed to load labels", error: result.exceptionOrNull()!);
     throw result.exceptionOrNull()!;
+  }
+
+  /// AI翻译内容（流式处理）
+  /// 通过Repository层进行翻译，优先从缓存获取翻译，如果缓存没有则使用AI翻译并写入缓存
+  Future<void> _translateContent() async {
+    try {
+      appLogger.i('开始AI翻译内容');
+
+      // 检查OpenRouter API Key是否已配置
+      final apiKey = _settingsRepository.getOpenRouterApiKey();
+      if (apiKey.isEmpty) {
+        appLogger.w('OpenRouter API Key未配置，无法进行AI翻译');
+        throw '请先在设置中配置OpenRouter API Key';
+      }
+
+      _isTranslateMode = true;
+      _isTranslating = true;
+      _translatedContent = ''; // 清空之前的翻译内容
+      notifyListeners();
+
+      // 保存原始内容
+      _originalContent = loadArticleContent.value;
+
+      // 通过Repository进行流式翻译
+      final translationStream = _articleRepository
+          .translateBookmarkContentStream(_bookmark.id, _originalContent);
+
+      await for (final result in translationStream) {
+        if (result.isSuccess()) {
+          _translatedContent = result.getOrThrow();
+          // 实时更新UI显示翻译进度
+          notifyListeners();
+          appLogger.d('翻译进度更新: ${_translatedContent.length} 字符');
+        } else {
+          _isTranslating = false;
+          notifyListeners();
+          final error = result.exceptionOrNull();
+          appLogger.e('翻译失败: ${_bookmark.id}', error: error);
+          throw error ?? Exception('翻译失败');
+        }
+      }
+
+      // 翻译完成
+      _isTranslated = true;
+      _isTranslating = false;
+      notifyListeners();
+      appLogger.i('翻译完成: ${_bookmark.id}');
+    } catch (e) {
+      _isTranslating = false;
+      notifyListeners();
+      appLogger.e('翻译异常: ${_bookmark.id}', error: e);
+      rethrow;
+    }
+  }
+
+  /// 切换显示原文/译文
+  void toggleTranslation() {
+    _isTranslateMode = !_isTranslateMode;
+    if (_isTranslateMode) {
+      _isTranslateBannerVisible = true;
+    }
+    notifyListeners();
+  }
+
+  /// 隐藏翻译横幅
+  void hideTranslateBanner() {
+    _isTranslateBannerVisible = false;
+    notifyListeners();
+  }
+
+  /// 重置翻译状态
+  void resetTranslation() {
+    _isTranslated = false;
+    _isTranslateMode = false;
+    _isTranslating = false;
+    _isTranslateBannerVisible = true;
+    _translatedContent = '';
+    _originalContent = '';
+    notifyListeners();
   }
 
   /// 标签数据变化回调
@@ -235,10 +317,22 @@ class BookmarkDetailViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 书签数据变化回调
+  void _onBookmarksChanged() {
+    // 更新当前书签数据
+    final updatedBookmark = _bookmarkRepository.getCachedBookmark(_bookmark.id);
+    if (updatedBookmark != null) {
+      _bookmark = updatedBookmark;
+      notifyListeners();
+    }
+  }
+
   @override
   void dispose() {
     // 移除标签数据变化监听器
-    _labelUseCases.removeListener(_onLabelsChanged);
+    _labelRepository.removeListener(_onLabelsChanged);
+    // 移除书签数据变化监听器
+    _bookmarkRepository.removeListener(_onBookmarksChanged);
     super.dispose();
   }
 }

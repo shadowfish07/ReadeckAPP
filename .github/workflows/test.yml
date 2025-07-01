@@ -1,0 +1,63 @@
+name: Test
+
+permissions:
+  contents: read
+  pull-requests: write
+  actions: read
+
+on:
+  pull_request:
+    branches:
+      - main
+      - beta
+  push:
+    branches:
+      - main
+      - beta
+  workflow_call:
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.32.2"
+          channel: "stable"
+          cache: true
+
+      - name: Cache Pub dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.pub-cache
+            .dart_tool
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Analyze code
+        run: flutter analyze
+
+      # 生成测试覆盖率报告
+      - name: Run tests with coverage
+        run: flutter test --coverage
+
+      # 上传覆盖率报告到 Codecov
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: coverage/lcov.info
+          flags: unittests
+          name: codecov-readeck
+          fail_ci_if_error: false

@@ -11,53 +11,19 @@ on:
     branches:
       - main
       - beta
-  pull_request:
-    branches:
-      - main
-      - beta
 
 jobs:
   test:
-    name: Test
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: "3.32.2"
-          channel: "stable"
-          cache: true
-
-      - name: Cache Pub dependencies
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.pub-cache
-            .dart_tool
-          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pub-
-
-      - name: Get dependencies
-        run: flutter pub get
-
-      - name: Analyze code
-        run: flutter analyze
-
-      - name: Run tests
-        run: flutter test
-
-      - name: Analyze code
-        run: flutter analyze
+    uses: ./.github/workflows/test.yml
+    permissions:
+      contents: read
+      pull-requests: write
+      actions: read
 
   release:
     name: Release
     runs-on: ubuntu-latest
+    needs: test
     if: |
       github.event_name == 'push' && 
       (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta') &&
@@ -139,7 +105,7 @@ jobs:
         id: semantic_release_dry
         run: |
           # Run semantic-release in dry-run mode to get the next version
-          NEXT_VERSION=$(npx semantic-release --dry-run --no-ci | grep -oP 'The next release version is \K[0-9]+\.[0-9]+\.[0-9]+' || echo "")
+          NEXT_VERSION=$(npx semantic-release --dry-run --no-ci | grep -oP 'The next release version is \K[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+\.[0-9]+)?' || echo "")
           if [ -n "$NEXT_VERSION" ]; then
             echo "next_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
             echo "has_release=true" >> $GITHUB_OUTPUT

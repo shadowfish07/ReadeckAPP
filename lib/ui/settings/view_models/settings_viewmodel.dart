@@ -1,9 +1,7 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_command/flutter_command.dart';
 import 'package:readeck_app/data/repository/daily_read_history/daily_read_history_repository.dart';
-import 'package:readeck_app/data/repository/theme/theme_repository.dart';
+import 'package:readeck_app/data/repository/settings/settings_repository.dart';
 import 'package:readeck_app/main.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:share_plus/share_plus.dart';
@@ -12,7 +10,8 @@ import 'dart:io';
 import '../../../utils/log_manager.dart';
 
 class SettingsViewModel extends ChangeNotifier {
-  SettingsViewModel(this._themeRepository, this._dailyReadHistoryRepository) {
+  SettingsViewModel(
+      this._settingsRepository, this._dailyReadHistoryRepository) {
     // 主题切换时整个页面都会重建，这里就不用监听了
     _initializeThemeMode();
     setThemeMode = Command.createAsyncNoResult<ThemeMode>(_setThemeMode);
@@ -20,7 +19,7 @@ class SettingsViewModel extends ChangeNotifier {
     clearOldLogs = Command.createAsyncNoResult<void>(_clearOldLogs);
     clearAllLogs = Command.createAsyncNoResult<void>(_clearAllLogs);
   }
-  final ThemeRepository _themeRepository;
+  final SettingsRepository _settingsRepository;
   final DailyReadHistoryRepository _dailyReadHistoryRepository;
 
   ThemeMode _themeMode = ThemeMode.system;
@@ -32,18 +31,23 @@ class SettingsViewModel extends ChangeNotifier {
   late Command clearOldLogs;
   late Command clearAllLogs;
 
-  Future<void> _initializeThemeMode() async {
-    final result = await _themeRepository.getThemeMode();
-    if (result.isSuccess()) {
-      _themeMode = result.getOrNull()!;
-      notifyListeners();
-    }
+  void _initializeThemeMode() {
+    // 由于SettingsRepository已经预加载，直接同步获取主题模式
+    final themeModeIndex = _settingsRepository.getThemeMode();
+    _themeMode = ThemeMode.values[themeModeIndex];
+    notifyListeners();
   }
 
   AsyncResult<void> _setThemeMode(ThemeMode themeMode) async {
     try {
-      await _themeRepository.setThemeMode(themeMode);
-      return const Success(unit);
+      final result = await _settingsRepository.saveThemeMode(themeMode.index);
+      if (result.isSuccess()) {
+        _themeMode = themeMode;
+        notifyListeners();
+        return const Success(unit);
+      } else {
+        return Failure(result.exceptionOrNull()!);
+      }
     } on Exception catch (e) {
       return Failure(e);
     }
@@ -144,19 +148,21 @@ class SettingsViewModel extends ChangeNotifier {
   /// 清理旧日志（保留30天）
   AsyncResult<void> _clearOldLogs(void _) async {
     final result = await LogManager.clearOldLogs(daysToKeep: 30);
-    return result.fold(
-      (success) => const Success(unit),
-      (failure) => Failure(failure),
-    );
+    if (result.isSuccess()) {
+      return const Success(unit);
+    } else {
+      return Failure(result.exceptionOrNull()!);
+    }
   }
 
   /// 清理所有日志（调试用）
   AsyncResult<void> _clearAllLogs(void _) async {
     final result = await LogManager.clearAllLogs();
-    return result.fold(
-      (success) => const Success(unit),
-      (failure) => Failure(failure),
-    );
+    if (result.isSuccess()) {
+      return const Success(unit);
+    } else {
+      return Failure(result.exceptionOrNull()!);
+    }
   }
 
   /// 过滤敏感信息

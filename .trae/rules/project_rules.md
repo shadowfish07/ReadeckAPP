@@ -2,7 +2,7 @@
 
 这个 APP 可以连接 Readeck 的数据，作为其手机端程序。
 
-完成代码变动后，你应当始终执行 `flutter analyze` 命令，进行代码检查和错误修复。
+完成代码变动后，你应当始终执行 `flutter analyze` 命令，进行代码检查和错误修复。但始终不要执行 `flutter run` 命令。
 
 所有样式都应使用主题，不允许存在硬编码颜色、字号等。
 
@@ -77,6 +77,114 @@ ReadeckApp 界面基于状态驱动：
 
 ```
 UI = f(State)
+```
+
+### 5. 分层依赖原则（Layered Dependency Principle）
+
+ReadeckApp 严格遵循分层依赖原则：
+
+- **ViewModel 不得直接依赖 Service 层**
+- **ViewModel 只能通过 Repository 层获取数据**
+- **Repository 层作为 ViewModel 和 Service 层之间的中介**
+- **确保数据访问逻辑集中在 Repository 层**
+- **提高代码的可测试性和可维护性**
+
+**正确的依赖关系：**
+
+```
+ViewModel → Repository → Service
+```
+
+**错误的依赖关系：**
+
+```
+ViewModel → Service (❌ 禁止)
+```
+
+### 6. 全局共享数据管理原则（Global Shared Data Management Principle）
+
+ReadeckApp 中的全局共享数据必须严格遵循单一数据源原则：
+
+- **全局共享的数据必须通过 Repository 层进行统一管理**
+- **Repository 层作为全局共享数据的唯一存储和访问入口**
+- **多个 ViewModel 共享同一数据时，必须通过同一个 Repository 实例**
+- **避免在多个地方维护相同的数据副本**
+- **确保数据的一致性和同步性**
+
+**正确的全局数据共享方式：**
+
+```
+ViewModel A → Repository (SSOT) ← ViewModel B
+ViewModel C → Repository (SSOT) ← ViewModel D
+```
+
+**错误的全局数据共享方式：**
+
+```
+ViewModel A → Local State (❌ 数据重复)
+ViewModel B → Local State (❌ 数据重复)
+```
+
+### 7. ViewModel 解耦原则（ViewModel Decoupling Principle）
+
+ReadeckApp 中的 ViewModel 必须严格遵循解耦原则：
+
+- **ViewModel 之间不得直接相互引用**
+- **ViewModel 不能持有其他 ViewModel 的实例**
+- **ViewModel 之间的通信必须通过 Repository 层进行**
+- **避免 ViewModel 之间的紧耦合关系**
+- **确保每个 ViewModel 的独立性和可测试性**
+
+**正确的 ViewModel 通信方式：**
+
+```
+ViewModel A → Repository → StreamController → ViewModel B
+```
+
+**错误的 ViewModel 通信方式：**
+
+```
+ViewModel A → ViewModel B (❌ 直接引用)
+```
+
+### 8. Repository 通知机制原则（Repository Notification Principle）
+
+ReadeckApp 中的 Repository 必须使用正确的通知机制：
+
+- **Repository 不得继承 ChangeNotifier**
+- **Repository 必须使用 StreamController 对外暴露数据变更**
+- **Repository 通过 Stream 通知数据变化，而非 ChangeNotifier**
+- **确保 Repository 层的职责单一性**
+- **避免 Repository 与 UI 层的直接耦合**
+
+**正确的 Repository 通知方式：**
+
+```dart
+class ExampleRepository {
+  final StreamController<void> _dataChangedController = StreamController<void>.broadcast();
+  
+  Stream<void> get dataChanged => _dataChangedController.stream;
+  
+  Future<void> saveData() async {
+    // 保存数据逻辑
+    _dataChangedController.add(null); // 通知数据变更
+  }
+  
+  void dispose() {
+    _dataChangedController.close();
+  }
+}
+```
+
+**错误的 Repository 通知方式：**
+
+```dart
+class ExampleRepository extends ChangeNotifier { // ❌ 禁止继承 ChangeNotifier
+  Future<void> saveData() async {
+    // 保存数据逻辑
+    notifyListeners(); // ❌ 禁止使用 notifyListeners
+  }
+}
 ```
 
 ---
@@ -160,6 +268,111 @@ graph TD
 4. **UI 状态使用 private setter + public getter**
 5. **在构造函数中初始化 Commands**
 6. **给 View 暴露的异步方法使用 Command 进行暴露**
+7. **使用全局 appLogger 记录日志**
+
+**日志记录最佳实践：**
+
+ViewModel 层应当使用全局的 `appLogger` 实例记录所有重要的操作和状态变化：
+
+- **数据获取**：记录数据请求的开始、成功和失败
+- **操作执行**：记录用户操作的执行过程
+- **错误处理**：记录详细的错误信息和堆栈跟踪
+- **状态变化**：记录关键的状态转换
+
+**示例代码：**
+
+```dart
+class BookmarkViewModel extends ChangeNotifier {
+  final BookmarkRepository _repository;
+
+  late final Command<void, Result<List<Bookmark>>> loadBookmarksCommand;
+
+  BookmarkViewModel(this._repository) {
+    loadBookmarksCommand = Command.createAsyncNoParam(() async {
+      appLogger.info('开始加载书签列表');
+
+      final result = await _repository.getBookmarks();
+
+      if (result.isSuccess()) {
+        final bookmarks = result.getOrNull()!;
+        appLogger.info('成功加载 ${bookmarks.length} 个书签');
+        _bookmarks = bookmarks;
+        notifyListeners();
+      } else {
+        final error = result.exceptionOrNull()!;
+        appLogger.error('加载书签失败', error: error);
+      }
+
+      return result;
+    });
+  }
+}
+```
+
+### Command 监听器使用规范
+
+**ReadeckApp Command 监听器最佳实践：**
+
+当需要在 Command 执行完成后进行页面导航或显示消息提示时，应使用 Command 监听器而非 CommandBuilder 的回调：
+
+1. **在 initState 中设置监听器**
+2. **分别监听 results 流和 errors 流**
+3. **在 dispose 中取消监听器订阅**
+4. **使用 mounted 检查确保 Widget 仍然存在**
+
+**示例代码：**
+
+```dart
+class AiSettingsScreen extends StatefulWidget {
+  @override
+  State<AiSettingsScreen> createState() => _AiSettingsScreenState();
+}
+
+class _AiSettingsScreenState extends State<AiSettingsScreen> {
+  late StreamSubscription _successSubscription;
+  late StreamSubscription _errorSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // 监听保存命令的成功结果（有返回值的场景）
+    _successSubscription = viewModel.saveApiKey.results.listen((result) {
+      if (mounted && result.isSuccess()) {
+        Navigator.of(context).pop();
+      }
+    });
+
+    // 监听保存命令的成功结果（无返回值的场景）
+    _successSubscriptionNoResult = viewModel.saveApiKey.listen((_) {
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    });
+
+    // 监听保存命令的错误
+    _errorSubscription = viewModel.saveApiKey.errors
+      .where((x) => x != null)
+      .listen((error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('保存失败: ${error.error.toString()}'),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        }
+      });
+  }
+
+  @override
+  void dispose() {
+    _successSubscription.cancel();
+    _errorSubscription.cancel();
+    super.dispose();
+  }
+}
+```
 
 ---
 
@@ -287,14 +500,15 @@ test_resources/                    # 测试资源
 
 ### ReadeckApp 强制要求
 
-| 规范             | 说明                                 | 示例                                         |
-| ---------------- | ------------------------------------ | -------------------------------------------- |
-| **分层架构**     | 严格按照 UI/逻辑/数据层组织代码      | Repository 不能直接被 View 使用              |
-| **MVVM 模式**    | 每个页面都有对应的 View 和 ViewModel | `ReadingListScreen` + `ReadingListViewModel` |
-| **Command 模式** | 所有用户交互都通过 Command 执行      | `loadArticlesCommand.execute()`              |
-| **Result 模式**  | 所有可能失败的操作都返回 Result      | `Future<Result<List<Article>>>`              |
-| **依赖注入**     | 使用 Provider 进行依赖管理           | 构造函数注入 Repository                      |
-| **不可变模型**   | 所有数据模型都使用 freezed           | `@freezed class Article`                     |
+| 规范                | 说明                                                         | 示例                                                                   |
+| ------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| **分层架构**        | 严格按照 UI/逻辑/数据层组织代码                              | Repository 不能直接被 View 使用                                        |
+| **MVVM 模式**       | 每个页面都有对应的 View 和 ViewModel                         | `ReadingListScreen` + `ReadingListViewModel`                           |
+| **Command 模式**    | 所有用户交互都通过 Command 执行                              | `loadArticlesCommand.execute()`                                        |
+| **Result 模式**     | 所有可能失败的操作都返回 Result                              | `Future<Result<List<Article>>>`                                        |
+| **Result 错误处理** | ViewModel 中使用 result_dart 工具函数处理错误，不使用 fold() | `result.isSuccess()`, `result.getOrNull()`, `result.exceptionOrNull()` |
+| **依赖注入**        | 使用 Provider 进行依赖管理                                   | 构造函数注入 Repository                                                |
+| **不可变模型**      | 所有数据模型都使用 freezed                                   | `@freezed class Article`                                               |
 
 ### ReadeckApp 推荐实践
 
@@ -308,6 +522,40 @@ test_resources/                    # 测试资源
 ### ReadeckApp 代码示例
 
 ---
+
+## 错误处理和错误页面规范
+
+### 统一错误页面组件
+
+ReadeckApp 项目必须使用统一的错误页面组件来处理各种错误状态，确保用户体验的一致性。
+
+**错误页面组件位置：**
+
+```
+lib/ui/core/ui/error_page.dart
+```
+
+### ErrorPage 组件使用规范
+
+**ReadeckApp ErrorPage 规范要点：**
+
+1. **统一错误处理入口**：所有错误状态都应使用 `ErrorPage` 组件
+2. **工厂方法优先**：优先使用预定义的工厂方法创建错误页面
+3. **异常类型映射**：使用 `ErrorPage.fromException()` 自动映射异常类型
+4. **主题一致性**：所有错误页面样式遵循应用主题
+5. **用户友好**：提供清晰的错误信息和操作指引
+
+### 使用示例
+
+```dart
+// Repository 层抛出特定异常
+if (response.statusCode == 404) {
+  throw ResourceNotFoundException('书签不存在');
+}
+
+// View 层自动处理
+final errorPage = ErrorPage.fromException(exception);
+```
 
 ## 测试策略
 

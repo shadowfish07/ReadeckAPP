@@ -230,12 +230,12 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
                       }
                     });
                   },
-                  readingStats: viewModel.getReadingStats(bookmark.id),
                   onCardTap: (bookmark) {
                     context.push(
                       Routes.bookmarkDetailWithId(bookmark.id),
                     );
                   },
+                  readingStats: widget.viewModel.getReadingStats(bookmark.id),
                   availableLabels: viewModel.availableLabels,
                   onLoadLabels: () => viewModel.loadLabels.executeWithFuture(),
                   onToggleArchive: (bookmark) {

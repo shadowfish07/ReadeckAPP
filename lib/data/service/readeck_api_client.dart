@@ -5,13 +5,16 @@ import 'package:readeck_app/domain/models/bookmark/label_info.dart';
 import 'package:http/http.dart' as http;
 import 'package:readeck_app/main.dart';
 import 'package:readeck_app/utils/api_not_configured_exception.dart';
+import 'package:readeck_app/utils/article_empty_exception.dart';
 import 'package:readeck_app/utils/network_error_exception.dart';
 import 'package:readeck_app/utils/resource_not_found_exception.dart';
 import 'package:result_dart/result_dart.dart';
 
 class ReadeckApiClient {
-  ReadeckApiClient(this._host, this._token);
+  ReadeckApiClient(this._host, this._token, {http.Client? httpClient})
+      : _httpClient = httpClient ?? http.Client();
 
+  final http.Client _httpClient;
   String? _host;
   String? _token;
 
@@ -21,8 +24,13 @@ class ReadeckApiClient {
     _token = token;
   }
 
+  /// 释放资源
+  void dispose() {
+    _httpClient.close();
+  }
+
   bool get _isConfigured =>
-      (_host != null && _host != '') || (_token != null && _token != '');
+      (_host != null && _host != '') && (_token != null && _token != '');
 
   Map<String, String> get _headers => {
         'Authorization': 'Bearer $_token',
@@ -126,7 +134,7 @@ class ReadeckApiClient {
     final uri = Uri.parse('$_host/api/bookmarks$queryString');
 
     try {
-      final response = await http.get(uri, headers: _headers);
+      final response = await _httpClient.get(uri, headers: _headers);
 
       if (response.statusCode == 200) {
         // 检查响应体是否为空或无效
@@ -225,7 +233,7 @@ class ReadeckApiClient {
         Uri.parse('$_host/api/bookmarks/${Uri.encodeComponent(bookmarkId)}');
 
     try {
-      final response = await http.patch(
+      final response = await _httpClient.patch(
         uri,
         headers: _headers,
         body: json.encode(requestBody),
@@ -276,7 +284,7 @@ class ReadeckApiClient {
     final uri = Uri.parse('$_host/api/bookmarks/labels');
 
     try {
-      final response = await http.get(uri, headers: _headers);
+      final response = await _httpClient.get(uri, headers: _headers);
 
       if (response.statusCode == 200) {
         // 检查响应体是否为空或无效
@@ -333,7 +341,7 @@ class ReadeckApiClient {
         '$_host/api/bookmarks/${Uri.encodeComponent(bookmarkId)}/article');
 
     try {
-      final response = await http.get(uri, headers: {
+      final response = await _httpClient.get(uri, headers: {
         'Authorization': 'Bearer $_token',
         'Accept': 'text/html',
       });
@@ -342,7 +350,7 @@ class ReadeckApiClient {
         // 检查响应体是否为空
         if (response.body.isEmpty) {
           appLogger.w("服务器返回空响应。uri: $uri");
-          return Failure(NetworkErrorException("服务器返回空响应", uri));
+          return const Failure(ArticleEmptyException());
         }
 
         appLogger.i(
@@ -380,11 +388,11 @@ class ReadeckApiClient {
         Uri.parse('$_host/api/bookmarks/${Uri.encodeComponent(bookmarkId)}');
 
     try {
-      final response = await http.delete(uri, headers: _headers);
+      final response = await _httpClient.delete(uri, headers: _headers);
 
       if (response.statusCode == 204) {
         appLogger.i('deleteBookmark success for bookmark: $bookmarkId');
-        return const Success(());
+        return const Success(unit);
       } else {
         appLogger.w("删除书签失败。uri: $uri, 状态码: ${response.statusCode}");
         return Failure(
