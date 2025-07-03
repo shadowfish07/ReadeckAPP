@@ -18,6 +18,14 @@ abstract final class AppTheme {
   static ThemeData lightTheme = ThemeData(
     colorScheme: _lightColorScheme,
     useMaterial3: true,
+    pageTransitionsTheme: const PageTransitionsTheme(
+      builders: <TargetPlatform, PageTransitionsBuilder>{
+        TargetPlatform.android: ZoomPageTransitionsBuilder(
+          // 修复路由返回时的 ink 动画残留问题
+          allowEnterRouteSnapshotting: false,
+        ),
+      },
+    ),
     appBarTheme: const AppBarTheme(
       centerTitle: false,
     ),
@@ -32,6 +40,13 @@ abstract final class AppTheme {
   static ThemeData darkTheme = ThemeData(
     colorScheme: _darkColorScheme,
     useMaterial3: true,
+    pageTransitionsTheme: const PageTransitionsTheme(
+      builders: <TargetPlatform, PageTransitionsBuilder>{
+        TargetPlatform.android: ZoomPageTransitionsBuilder(
+          allowEnterRouteSnapshotting: false,
+        ),
+      },
+    ),
     appBarTheme: const AppBarTheme(
       centerTitle: false,
     ),
