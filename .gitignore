@@ -58,3 +58,5 @@ coverage/
 
 # Release files
 release-files/
+
+.env
