@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_command/flutter_command.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
+import 'package:readeck_app/domain/models/bookmark_display_model/bookmark_display_model.dart';
 import 'package:readeck_app/routing/routes.dart';
 import 'package:readeck_app/ui/core/ui/bookmark_card.dart';
 import 'package:readeck_app/ui/core/ui/error_page.dart';
@@ -164,7 +164,7 @@ class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
     );
   }
 
-  RefreshIndicator _buildList(List<Bookmark> bookmarks) {
+  RefreshIndicator _buildList(List<BookmarkDisplayModel> bookmarks) {
     return RefreshIndicator(
       onRefresh: () async {
         await widget.viewModel.load.executeWithFuture(1);
@@ -214,8 +214,9 @@ class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
                 });
           }
 
+          final bookmarkModel = bookmarks[index];
           return BookmarkCard(
-            bookmark: bookmarks[index],
+            bookmark: bookmarkModel.bookmark,
             onOpenUrl: widget.viewModel.openUrl,
             onToggleMark: (bookmark) =>
                 widget.viewModel.toggleBookmarkMarked(bookmark),
@@ -233,7 +234,7 @@ class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
                 }
               });
             },
-            readingStats: widget.viewModel.getReadingStats(bookmarks[index].id),
+            readingStats: bookmarkModel.stats,
             onCardTap: (bookmark) {
               context.push(
                 Routes.bookmarkDetailWithId(bookmark.id),

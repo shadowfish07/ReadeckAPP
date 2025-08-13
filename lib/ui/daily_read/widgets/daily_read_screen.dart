@@ -210,9 +210,9 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
               padding: const EdgeInsets.all(16),
               itemCount: viewModel.unArchivedBookmarks.length,
               itemBuilder: (context, index) {
-                final bookmark = viewModel.unArchivedBookmarks[index];
+                final bookmarkModel = viewModel.unArchivedBookmarks[index];
                 return BookmarkCard(
-                  bookmark: bookmark,
+                  bookmark: bookmarkModel.bookmark,
                   onOpenUrl: viewModel.openUrl,
                   onToggleMark: (bookmark) =>
                       viewModel.toggleBookmarkMarked(bookmark),
@@ -235,7 +235,7 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
                       Routes.bookmarkDetailWithId(bookmark.id),
                     );
                   },
-                  readingStats: widget.viewModel.getReadingStats(bookmark.id),
+                  readingStats: bookmarkModel.stats,
                   availableLabels: viewModel.availableLabels,
                   onLoadLabels: () => viewModel.loadLabels.executeWithFuture(),
                   onToggleArchive: (bookmark) {

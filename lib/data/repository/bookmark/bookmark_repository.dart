@@ -1,7 +1,9 @@
 import 'dart:math';
 
+import 'package:readeck_app/data/repository/reading_stats/reading_stats_repository.dart';
 import 'package:readeck_app/data/service/readeck_api_client.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
+import 'package:readeck_app/domain/models/bookmark_display_model/bookmark_display_model.dart';
 import 'package:readeck_app/main.dart';
 import 'package:result_dart/result_dart.dart';
 
@@ -9,9 +11,10 @@ import 'package:result_dart/result_dart.dart';
 typedef BookmarkChangeListener = void Function();
 
 class BookmarkRepository {
-  BookmarkRepository(this._readeckApiClient);
+  BookmarkRepository(this._readeckApiClient, this._readingStatsRepository);
 
   final ReadeckApiClient _readeckApiClient;
+  final ReadingStatsRepository _readingStatsRepository;
 
   // 全局共享数据管理 - 单一数据源
   final List<Bookmark> _bookmarks = [];
@@ -92,21 +95,39 @@ class BookmarkRepository {
     _listeners.clear();
   }
 
-  AsyncResult<List<Bookmark>> loadBookmarksByIds(List<String> ids) async {
+  AsyncResult<List<BookmarkDisplayModel>> _wrapBookmarksWithStats(
+    List<Bookmark> bookmarks,
+  ) async {
+    final List<BookmarkDisplayModel> result = [];
+    for (var bookmark in bookmarks) {
+      final stats = await _readingStatsRepository.getReadingStats(bookmark.id);
+      if (stats.isSuccess()) {
+        result.add(BookmarkDisplayModel(
+            bookmark: bookmark, stats: stats.getOrThrow()));
+      } else {
+        result.add(BookmarkDisplayModel(bookmark: bookmark));
+      }
+    }
+
+    return Success(result);
+  }
+
+  AsyncResult<List<BookmarkDisplayModel>> loadBookmarksByIds(
+      List<String> ids) async {
     appLogger.i('开始根据ID加载书签，数量: ${ids.length}');
     final result = await _readeckApiClient.getBookmarks(ids: ids);
     if (result.isSuccess()) {
       final bookmarks = result.getOrThrow();
       appLogger.i('成功加载书签 ${bookmarks.length} 个');
       _insertOrUpdateCachedBookmarks(bookmarks);
-      return result;
+      return _wrapBookmarksWithStats(bookmarks);
     }
 
     appLogger.e('根据ID加载书签失败', error: result.exceptionOrNull());
-    return result;
+    return Failure(result.exceptionOrNull()!);
   }
 
-  AsyncResult<List<Bookmark>> loadUnarchivedBookmarks({
+  AsyncResult<List<BookmarkDisplayModel>> loadUnarchivedBookmarks({
     int limit = 10,
     int page = 1,
   }) async {
@@ -120,14 +141,14 @@ class BookmarkRepository {
       final bookmarks = result.getOrThrow();
       appLogger.i('成功加载未归档书签 ${bookmarks.length} 个');
       _insertOrUpdateCachedBookmarks(bookmarks);
-      return result;
+      return _wrapBookmarksWithStats(bookmarks);
     }
 
     appLogger.e('加载未归档书签失败', error: result.exceptionOrNull());
-    return result;
+    return Failure(result.exceptionOrNull()!);
   }
 
-  AsyncResult<List<Bookmark>> loadArchivedBookmarks({
+  AsyncResult<List<BookmarkDisplayModel>> loadArchivedBookmarks({
     int limit = 10,
     int page = 1,
   }) async {
@@ -141,14 +162,14 @@ class BookmarkRepository {
       final bookmarks = result.getOrThrow();
       appLogger.i('成功加载已归档书签 ${bookmarks.length} 个');
       _insertOrUpdateCachedBookmarks(bookmarks);
-      return result;
+      return _wrapBookmarksWithStats(bookmarks);
     }
 
     appLogger.e('加载已归档书签失败', error: result.exceptionOrNull());
-    return result;
+    return Failure(result.exceptionOrNull()!);
   }
 
-  AsyncResult<List<Bookmark>> loadMarkedBookmarks({
+  AsyncResult<List<BookmarkDisplayModel>> loadMarkedBookmarks({
     int limit = 10,
     int page = 1,
   }) async {
@@ -162,23 +183,25 @@ class BookmarkRepository {
       final bookmarks = result.getOrThrow();
       appLogger.i('成功加载已标记书签 ${bookmarks.length} 个');
       _insertOrUpdateCachedBookmarks(bookmarks);
-      return result;
+      return _wrapBookmarksWithStats(bookmarks);
     }
 
     appLogger.e('加载已标记书签失败', error: result.exceptionOrNull());
-    return result;
+    return Failure(result.exceptionOrNull()!);
   }
 
-  AsyncResult<List<Bookmark>> loadRandomUnarchivedBookmarks(
+  AsyncResult<List<BookmarkDisplayModel>> loadRandomUnarchivedBookmarks(
       int randomCount) async {
     appLogger.i('开始加载随机未归档书签，请求数量: $randomCount');
     final allBookmarks = await loadUnarchivedBookmarks(limit: 100);
 
     if (allBookmarks.isSuccess()) {
-      _insertOrUpdateCachedBookmarks(allBookmarks.getOrThrow());
+      _insertOrUpdateCachedBookmarks(
+          allBookmarks.getOrThrow().map((e) => e.bookmark).toList());
 
       // 随机打乱并取前5个
-      final shuffled = List<Bookmark>.from(allBookmarks.getOrDefault([]));
+      final shuffled =
+          List<BookmarkDisplayModel>.from(allBookmarks.getOrDefault([]));
       shuffled.shuffle(Random());
       final randomBookmarks = shuffled.take(5).toList();
 

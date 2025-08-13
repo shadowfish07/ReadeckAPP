@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_command/flutter_command.dart';
 import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
+import 'package:readeck_app/domain/models/bookmark_display_model/bookmark_display_model.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_operation_use_cases.dart';
 import 'package:readeck_app/data/repository/label/label_repository.dart';
 import 'package:readeck_app/main.dart';
@@ -13,17 +14,8 @@ class MarkedViewmodel extends BaseBookmarksViewmodel {
       super._labelRepository);
 
   @override
-  Future<ResultDart<List<Bookmark>, Exception>> Function({int limit, int page})
+  Future<Result<List<BookmarkDisplayModel>>> Function({int limit, int page})
       get _loadBookmarks => _bookmarkRepository.loadMarkedBookmarks;
-
-  @override
-  bool Function(String) get _bookmarkIdFilter => (id) {
-        final bookmark = super._bookmarkRepository.getCachedBookmark(id);
-        if (bookmark == null) {
-          return false;
-        }
-        return bookmark.isMarked;
-      };
 }
 
 class ArchivedViewmodel extends BaseBookmarksViewmodel {
@@ -31,17 +23,8 @@ class ArchivedViewmodel extends BaseBookmarksViewmodel {
       super._labelRepository);
 
   @override
-  Future<ResultDart<List<Bookmark>, Exception>> Function({int limit, int page})
+  Future<Result<List<BookmarkDisplayModel>>> Function({int limit, int page})
       get _loadBookmarks => _bookmarkRepository.loadArchivedBookmarks;
-
-  @override
-  bool Function(String) get _bookmarkIdFilter => (id) {
-        final bookmark = super._bookmarkRepository.getCachedBookmark(id);
-        if (bookmark == null) {
-          return false;
-        }
-        return bookmark.isArchived;
-      };
 }
 
 class UnarchivedViewmodel extends BaseBookmarksViewmodel {
@@ -49,26 +32,17 @@ class UnarchivedViewmodel extends BaseBookmarksViewmodel {
       super._bookmarkOperationUseCases, super._labelRepository);
 
   @override
-  Future<ResultDart<List<Bookmark>, Exception>> Function({int limit, int page})
+  Future<Result<List<BookmarkDisplayModel>>> Function({int limit, int page})
       get _loadBookmarks => _bookmarkRepository.loadUnarchivedBookmarks;
-
-  @override
-  bool Function(String) get _bookmarkIdFilter => (id) {
-        final bookmark = super._bookmarkRepository.getCachedBookmark(id);
-        if (bookmark == null) {
-          return false;
-        }
-        return !bookmark.isArchived;
-      };
 }
 
 abstract class BaseBookmarksViewmodel extends ChangeNotifier {
   BaseBookmarksViewmodel(this._bookmarkRepository,
       this._bookmarkOperationUseCases, this._labelRepository) {
-    load = Command.createAsync<int, List<Bookmark>>(_load,
+    load = Command.createAsync<int, List<BookmarkDisplayModel>>(_load,
         initialValue: [], includeLastResultInCommandResults: true)
       ..execute(1);
-    loadMore = Command.createAsync<int, List<Bookmark>>(_loadMore,
+    loadMore = Command.createAsync<int, List<BookmarkDisplayModel>>(_loadMore,
         initialValue: [], includeLastResultInCommandResults: true);
     openUrl = Command.createAsyncNoResult(_openUrl);
     toggleBookmarkMarked =
@@ -87,67 +61,47 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
   final BookmarkOperationUseCases _bookmarkOperationUseCases;
   final LabelRepository _labelRepository;
 
-  // 移除本地缓存，改为通过Repository获取
-  // 移除本地 _labels 变量，改用中心化存储
-  final List<String> _bookmarkIds = [];
-  final Map<String, ReadingStatsForView> _readingStats = {};
-  List<Bookmark> get _bookmarks => _bookmarkRepository
-      .getCachedBookmarks(_bookmarkIds.where(_bookmarkIdFilter).toList())
-      .whereType<Bookmark>()
-      .toList();
+  final List<BookmarkDisplayModel> _bookmarks = [];
   int _currentPage = 1;
   bool _hasMoreData = true;
-  late Command<int, List<Bookmark>> load;
-  late Command<int, List<Bookmark>> loadMore;
+  late Command<int, List<BookmarkDisplayModel>> load;
+  late Command<int, List<BookmarkDisplayModel>> loadMore;
   late Command<String, void> openUrl;
   late Command<Bookmark, void> toggleBookmarkMarked;
   late Command<Bookmark, void> toggleBookmarkArchived;
   late Command<void, List<String>> loadLabels;
 
-  bool Function(String) get _bookmarkIdFilter => (v) => true;
-
-  void _addBookmarkIds(List<Bookmark> bookmarks) {
-    _bookmarkIds.addAll(bookmarks.map((e) => e.id));
-  }
-
-  void _resetBookmarks(List<Bookmark> bookmarks) {
-    _bookmarkIds.clear();
-    _bookmarkIds.addAll(bookmarks.map((e) => e.id));
-  }
-
-  List<Bookmark> get bookmarks {
-    return _bookmarks;
-  }
+  List<BookmarkDisplayModel> get bookmarks => _bookmarks;
 
   bool get hasMoreData => _hasMoreData;
   bool get isLoadingMore => loadMore.isExecuting.value;
 
   List<String> get availableLabels => _labelRepository.labelNames;
 
-  Future<ResultDart<List<Bookmark>, Exception>> Function({int limit, int page})
+  Future<Result<List<BookmarkDisplayModel>>> Function({int limit, int page})
       get _loadBookmarks;
 
   ReadingStatsForView? getReadingStats(String bookmarkId) {
-    return _readingStats[bookmarkId];
+    return _bookmarks
+        .firstWhere((element) => element.bookmark.id == bookmarkId)
+        .stats;
   }
 
-  Future<List<Bookmark>> _load(int page) async {
+  Future<List<BookmarkDisplayModel>> _load(int page) async {
     var limit = 10;
     _currentPage = page;
     final result = await _loadBookmarks(limit: limit, page: page);
-    final bookmarks = result.getOrThrow();
-    _resetBookmarks(bookmarks);
-    _hasMoreData = bookmarks.length == limit;
-
-    _readingStats.addAll(await _bookmarkOperationUseCases
-        .loadReadingStatsForBookmarks(bookmarks));
+    final newBookmarks = result.getOrThrow();
+    _bookmarks.clear();
+    _bookmarks.addAll(newBookmarks);
+    _hasMoreData = newBookmarks.length == limit;
 
     notifyListeners();
-    return bookmarks;
+    return _bookmarks;
   }
 
-  Future<List<Bookmark>> _loadMore(int page) async {
-    if (!_hasMoreData) return _bookmarkRepository.bookmarks;
+  Future<List<BookmarkDisplayModel>> _loadMore(int page) async {
+    if (!_hasMoreData) return _bookmarks;
 
     var limit = 10;
     _currentPage = page;
@@ -155,17 +109,14 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
     final newBookmarks = result.getOrThrow();
 
     if (newBookmarks.isNotEmpty) {
-      _addBookmarkIds(newBookmarks);
+      _bookmarks.addAll(newBookmarks);
       _hasMoreData = newBookmarks.length == limit;
-
-      _readingStats.addAll(await _bookmarkOperationUseCases
-          .loadReadingStatsForBookmarks(newBookmarks));
     } else {
       _hasMoreData = false;
     }
 
     notifyListeners();
-    return _bookmarkRepository.bookmarks;
+    return _bookmarks;
   }
 
   void loadNextPage() {
@@ -224,6 +175,10 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
 
   /// 书签数据变化回调
   void _onBookmarksChanged() {
+    // This is a bit tricky. A full reload might be too much.
+    // For now, just notify listeners, and the UI will rebuild.
+    // A more sophisticated approach might be needed if performance is an issue.
+    load.execute(1); // Reload the list
     notifyListeners();
   }
 
