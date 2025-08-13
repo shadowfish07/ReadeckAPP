@@ -523,6 +523,30 @@ test_resources/                    # 测试资源
 
 ---
 
+## Development Workflow
+
+### Commit Messages
+
+This project uses [semantic-release](https://github.com/semantic-release/semantic-release) to automate version management and package publishing. Therefore, all commit messages must follow the [Conventional Commits specification](https://www.conventionalcommits.org/en/v1.0.0/).
+
+-   **chore**: For commits that do not modify the source code or test files (e.g., changes to build scripts, documentation, or project configuration).
+-   **feat**: For new features.
+-   **fix**: For bug fixes.
+-   **refactor**: For code refactoring that does not change external behavior.
+-   **docs**: For documentation changes.
+-   **style**: For code style changes (e.g., formatting).
+-   **test**: For adding or modifying tests.
+-   **perf**: For performance improvements.
+-   **ci**: For changes to CI configuration files and scripts.
+-   **build**: For changes that affect the build system or external dependencies.
+-   **revert**: For reverting a previous commit.
+
+### Test-Driven Development (TDD)
+
+This project follows a Test-Driven Development (TDD) approach. All new features or bug fixes should start with writing a failing unit test that describes the desired functionality or reproduces the bug. Only after the test is written should the implementation code be written to make the test pass.
+
+---
+
 ## 错误处理和错误页面规范
 
 ### 统一错误页面组件
