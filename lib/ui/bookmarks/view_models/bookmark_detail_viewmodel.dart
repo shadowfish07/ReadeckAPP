@@ -3,6 +3,7 @@ import 'package:flutter_command/flutter_command.dart';
 import 'package:readeck_app/data/repository/article/article_repository.dart';
 import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
+
 import 'package:readeck_app/domain/use_cases/bookmark_operation_use_cases.dart';
 import 'package:readeck_app/data/repository/label/label_repository.dart';
 import 'package:readeck_app/data/repository/settings/settings_repository.dart';
@@ -93,9 +94,9 @@ class BookmarkDetailViewModel extends ChangeNotifier {
   }
 
   void _reloadBookmark() {
-    final newBookmark = _bookmarkRepository.getCachedBookmark(bookmark.id);
-    if (newBookmark != null) {
-      _bookmark = newBookmark;
+    final newBookmarkModel = _bookmarkRepository.getCachedBookmark(bookmark.id);
+    if (newBookmarkModel != null) {
+      _bookmark = newBookmarkModel.bookmark;
       notifyListeners();
     }
   }
@@ -320,9 +321,10 @@ class BookmarkDetailViewModel extends ChangeNotifier {
   /// 书签数据变化回调
   void _onBookmarksChanged() {
     // 更新当前书签数据
-    final updatedBookmark = _bookmarkRepository.getCachedBookmark(_bookmark.id);
-    if (updatedBookmark != null) {
-      _bookmark = updatedBookmark;
+    final updatedBookmarkModel =
+        _bookmarkRepository.getCachedBookmark(_bookmark.id);
+    if (updatedBookmarkModel != null) {
+      _bookmark = updatedBookmarkModel.bookmark;
       notifyListeners();
     }
   }

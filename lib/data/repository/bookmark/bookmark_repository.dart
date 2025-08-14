@@ -17,11 +17,11 @@ class BookmarkRepository {
   final ReadingStatsRepository _readingStatsRepository;
 
   // 全局共享数据管理 - 单一数据源
-  final List<Bookmark> _bookmarks = [];
+  final List<BookmarkDisplayModel> _bookmarks = [];
   final List<BookmarkChangeListener> _listeners = [];
 
   /// 获取所有缓存的书签（只读）
-  List<Bookmark> get bookmarks => List.unmodifiable(_bookmarks);
+  List<BookmarkDisplayModel> get bookmarks => List.unmodifiable(_bookmarks);
 
   /// 添加数据变化监听器
   void addListener(BookmarkChangeListener listener) {
@@ -44,8 +44,10 @@ class BookmarkRepository {
   }
 
   /// 插入或更新单个书签到缓存
-  void _insertOrUpdateBookmark(Bookmark bookmark, {bool batch = false}) {
-    final index = _bookmarks.indexWhere((b) => b.id == bookmark.id);
+  void _insertOrUpdateBookmark(BookmarkDisplayModel bookmark,
+      {bool batch = false}) {
+    final index =
+        _bookmarks.indexWhere((b) => b.bookmark.id == bookmark.bookmark.id);
     if (index != -1) {
       _bookmarks[index] = bookmark;
     } else {
@@ -57,7 +59,7 @@ class BookmarkRepository {
   }
 
   /// 批量插入或更新书签到缓存
-  void _insertOrUpdateCachedBookmarks(List<Bookmark> bookmarks) {
+  void _insertOrUpdateCachedBookmarks(List<BookmarkDisplayModel> bookmarks) {
     appLogger.i('批量更新缓存书签，数量: ${bookmarks.length}');
     for (var bookmark in bookmarks) {
       _insertOrUpdateBookmark(bookmark, batch: true);
@@ -66,13 +68,16 @@ class BookmarkRepository {
   }
 
   /// 从缓存获取单个书签
-  Bookmark? getCachedBookmark(String id) {
-    final bookmark = _bookmarks.where((b) => b.id == id).firstOrNull;
-    return bookmark;
+  BookmarkDisplayModel? getCachedBookmark(String id) {
+    final index = _bookmarks.indexWhere((b) => b.bookmark.id == id);
+    if (index != -1) {
+      return _bookmarks[index];
+    }
+    return null;
   }
 
   /// 从缓存获取多个书签
-  List<Bookmark?> getCachedBookmarks(List<String> ids) {
+  List<BookmarkDisplayModel?> getCachedBookmarks(List<String> ids) {
     appLogger.d('从缓存批量获取书签，请求数量: ${ids.length}');
     final result = ids.map((id) => getCachedBookmark(id)).toList();
     final foundCount = result.where((b) => b != null).length;
@@ -83,7 +88,7 @@ class BookmarkRepository {
   /// 从缓存删除书签
   void _deleteCachedBookmark(String id) {
     final removedCount = _bookmarks.length;
-    _bookmarks.removeWhere((b) => b.id == id);
+    _bookmarks.removeWhere((b) => b.bookmark.id == id);
     final actualRemovedCount = removedCount - _bookmarks.length;
     appLogger.i('从缓存删除书签: $id, 删除数量: $actualRemovedCount');
     _notifyListeners();
@@ -109,19 +114,25 @@ class BookmarkRepository {
     );
     return Success(models);
   }
+
   AsyncResult<List<BookmarkDisplayModel>> loadBookmarksByIds(
       List<String> ids) async {
     appLogger.i('开始根据ID加载书签，数量: ${ids.length}');
     final result = await _readeckApiClient.getBookmarks(ids: ids);
-    if (result.isSuccess()) {
-      final bookmarks = result.getOrThrow();
-      appLogger.i('成功加载书签 ${bookmarks.length} 个');
-      _insertOrUpdateCachedBookmarks(bookmarks);
-      return _wrapBookmarksWithStats(bookmarks);
-    }
-
-    appLogger.e('根据ID加载书签失败', error: result.exceptionOrNull());
-    return Failure(result.exceptionOrNull()!);
+    return result.fold(
+      (bookmarks) async {
+        appLogger.i('成功加载书签 ${bookmarks.length} 个');
+        final modelsResult = await _wrapBookmarksWithStats(bookmarks);
+        if (modelsResult.isSuccess()) {
+          _insertOrUpdateCachedBookmarks(modelsResult.getOrThrow());
+        }
+        return modelsResult;
+      },
+      (error) {
+        appLogger.e('根据ID加载书签失败', error: error);
+        return Failure(error);
+      },
+    );
   }
 
   AsyncResult<List<BookmarkDisplayModel>> loadUnarchivedBookmarks({
@@ -134,15 +145,20 @@ class BookmarkRepository {
       limit: limit,
       offset: (page - 1) * limit,
     );
-    if (result.isSuccess()) {
-      final bookmarks = result.getOrThrow();
-      appLogger.i('成功加载未归档书签 ${bookmarks.length} 个');
-      _insertOrUpdateCachedBookmarks(bookmarks);
-      return _wrapBookmarksWithStats(bookmarks);
-    }
-
-    appLogger.e('加载未归档书签失败', error: result.exceptionOrNull());
-    return Failure(result.exceptionOrNull()!);
+    return result.fold(
+      (bookmarks) async {
+        appLogger.i('成功加载未归档书签 ${bookmarks.length} 个');
+        final modelsResult = await _wrapBookmarksWithStats(bookmarks);
+        if (modelsResult.isSuccess()) {
+          _insertOrUpdateCachedBookmarks(modelsResult.getOrThrow());
+        }
+        return modelsResult;
+      },
+      (error) {
+        appLogger.e('加载未归档书签失败', error: error);
+        return Failure(error);
+      },
+    );
   }
 
   AsyncResult<List<BookmarkDisplayModel>> loadArchivedBookmarks({
@@ -155,15 +171,20 @@ class BookmarkRepository {
       limit: limit,
       offset: (page - 1) * limit,
     );
-    if (result.isSuccess()) {
-      final bookmarks = result.getOrThrow();
-      appLogger.i('成功加载已归档书签 ${bookmarks.length} 个');
-      _insertOrUpdateCachedBookmarks(bookmarks);
-      return _wrapBookmarksWithStats(bookmarks);
-    }
-
-    appLogger.e('加载已归档书签失败', error: result.exceptionOrNull());
-    return Failure(result.exceptionOrNull()!);
+    return result.fold(
+      (bookmarks) async {
+        appLogger.i('成功加载已归档书签 ${bookmarks.length} 个');
+        final modelsResult = await _wrapBookmarksWithStats(bookmarks);
+        if (modelsResult.isSuccess()) {
+          _insertOrUpdateCachedBookmarks(modelsResult.getOrThrow());
+        }
+        return modelsResult;
+      },
+      (error) {
+        appLogger.e('加载已归档书签失败', error: error);
+        return Failure(error);
+      },
+    );
   }
 
   AsyncResult<List<BookmarkDisplayModel>> loadMarkedBookmarks({
@@ -176,38 +197,40 @@ class BookmarkRepository {
       limit: limit,
       offset: (page - 1) * limit,
     );
-    if (result.isSuccess()) {
-      final bookmarks = result.getOrThrow();
-      appLogger.i('成功加载已标记书签 ${bookmarks.length} 个');
-      _insertOrUpdateCachedBookmarks(bookmarks);
-      return _wrapBookmarksWithStats(bookmarks);
-    }
-
-    appLogger.e('加载已标记书签失败', error: result.exceptionOrNull());
-    return Failure(result.exceptionOrNull()!);
+    return result.fold(
+      (bookmarks) async {
+        appLogger.i('成功加载已标记书签 ${bookmarks.length} 个');
+        final modelsResult = await _wrapBookmarksWithStats(bookmarks);
+        if (modelsResult.isSuccess()) {
+          _insertOrUpdateCachedBookmarks(modelsResult.getOrThrow());
+        }
+        return modelsResult;
+      },
+      (error) {
+        appLogger.e('加载已标记书签失败', error: error);
+        return Failure(error);
+      },
+    );
   }
 
   AsyncResult<List<BookmarkDisplayModel>> loadRandomUnarchivedBookmarks(
       int randomCount) async {
     appLogger.i('开始加载随机未归档书签，请求数量: $randomCount');
-    final allBookmarks = await loadUnarchivedBookmarks(limit: 100);
+    final allBookmarksResult = await loadUnarchivedBookmarks(limit: 100);
 
-    if (allBookmarks.isSuccess()) {
-      _insertOrUpdateCachedBookmarks(
-          allBookmarks.getOrThrow().map((e) => e.bookmark).toList());
-
+    if (allBookmarksResult.isSuccess()) {
+      final allBookmarks = allBookmarksResult.getOrThrow();
       // 随机打乱并取前5个
-      final shuffled =
-          List<BookmarkDisplayModel>.from(allBookmarks.getOrDefault([]));
+      final shuffled = List<BookmarkDisplayModel>.from(allBookmarks);
       shuffled.shuffle(Random());
-      final randomBookmarks = shuffled.take(5).toList();
+      final randomBookmarks = shuffled.take(randomCount).toList();
 
       appLogger.i('成功获取随机未归档书签 ${randomBookmarks.length} 个');
       return Success(randomBookmarks);
     }
 
-    appLogger.w('获取所有未读书签失败: $allBookmarks');
-    return allBookmarks;
+    appLogger.w('获取所有未读书签失败: $allBookmarksResult');
+    return allBookmarksResult;
   }
 
   AsyncResult<void> toggleMarked(Bookmark bookmark) async {
@@ -219,7 +242,14 @@ class BookmarkRepository {
       isMarked: newMarkedState,
     );
     if (result.isSuccess()) {
-      _insertOrUpdateBookmark(bookmark.copyWith(isMarked: newMarkedState));
+      final existingModel = getCachedBookmark(bookmark.id);
+      final updatedBookmark = bookmark.copyWith(isMarked: newMarkedState);
+      _insertOrUpdateBookmark(
+        BookmarkDisplayModel(
+          bookmark: updatedBookmark,
+          stats: existingModel?.stats,
+        ),
+      );
       appLogger.i('书签标记状态切换成功: ${bookmark.id}');
     } else {
       appLogger.e('书签标记状态切换失败: ${bookmark.id}',
@@ -237,7 +267,14 @@ class BookmarkRepository {
       isArchived: newArchivedState,
     );
     if (result.isSuccess()) {
-      _insertOrUpdateBookmark(bookmark.copyWith(isArchived: newArchivedState));
+      final existingModel = getCachedBookmark(bookmark.id);
+      final updatedBookmark = bookmark.copyWith(isArchived: newArchivedState);
+      _insertOrUpdateBookmark(
+        BookmarkDisplayModel(
+          bookmark: updatedBookmark,
+          stats: existingModel?.stats,
+        ),
+      );
       appLogger.i('书签归档状态切换成功: ${bookmark.id}');
     } else {
       appLogger.e('书签归档状态切换失败: ${bookmark.id}',
@@ -254,7 +291,14 @@ class BookmarkRepository {
     );
 
     if (result.isSuccess()) {
-      _insertOrUpdateBookmark(bookmark.copyWith(labels: labels));
+      final existingModel = getCachedBookmark(bookmark.id);
+      final updatedBookmark = bookmark.copyWith(labels: labels);
+      _insertOrUpdateBookmark(
+        BookmarkDisplayModel(
+          bookmark: updatedBookmark,
+          stats: existingModel?.stats,
+        ),
+      );
       appLogger.i('书签标签更新成功: ${bookmark.id}');
       return const Success(unit);
     }
@@ -273,7 +317,14 @@ class BookmarkRepository {
     );
 
     if (result.isSuccess()) {
-      _insertOrUpdateBookmark(bookmark.copyWith(readProgress: readProgress));
+      final existingModel = getCachedBookmark(bookmark.id);
+      final updatedBookmark = bookmark.copyWith(readProgress: readProgress);
+      _insertOrUpdateBookmark(
+        BookmarkDisplayModel(
+          bookmark: updatedBookmark,
+          stats: existingModel?.stats,
+        ),
+      );
       appLogger.i('书签阅读进度更新成功: ${bookmark.id}');
       return const Success(unit);
     }

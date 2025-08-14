@@ -19,7 +19,7 @@ class DailyReadViewModel extends ChangeNotifier {
     this._labelRepository,
   ) {
     load = Command.createAsync<bool, List<BookmarkDisplayModel>>(_load,
-        initialValue: [])
+        includeLastResultInCommandResults: true, initialValue: [])
       ..execute(false);
     openUrl = Command.createAsyncNoResult<String>(_openUrl);
     toggleBookmarkArchived =
@@ -47,10 +47,15 @@ class DailyReadViewModel extends ChangeNotifier {
   late Command<Bookmark, void> toggleBookmarkMarked;
   late Command<void, List<String>> loadLabels;
 
-  final List<BookmarkDisplayModel> _bookmarks = [];
+  final List<BookmarkDisplayModel> _todayBookmarks = [];
   bool _isNoMore = false;
   bool get isNoMore => _isNoMore;
-  List<BookmarkDisplayModel> get bookmarks => _bookmarks;
+  List<BookmarkDisplayModel> get bookmarks => _bookmarkRepository.bookmarks
+      .where((x) =>
+          _todayBookmarks
+              .indexWhere((today) => today.bookmark.id == x.bookmark.id) !=
+          -1)
+      .toList();
 
   List<BookmarkDisplayModel> get unArchivedBookmarks =>
       bookmarks.where((element) => !element.bookmark.isArchived).toList();
@@ -59,8 +64,8 @@ class DailyReadViewModel extends ChangeNotifier {
 
   ReadingStatsForView? getReadingStats(String bookmarkId) {
     final idx =
-        _bookmarks.indexWhere((element) => element.bookmark.id == bookmarkId);
-    return idx == -1 ? null : _bookmarks[idx].stats;
+        bookmarks.indexWhere((element) => element.bookmark.id == bookmarkId);
+    return idx == -1 ? null : bookmarks[idx].stats;
   }
 
   Future<void> _openUrl(String url) async {
@@ -68,11 +73,6 @@ class DailyReadViewModel extends ChangeNotifier {
     if (result.isError()) {
       throw result.exceptionOrNull()!;
     }
-  }
-
-  void _resetBookmarks(List<BookmarkDisplayModel> bookmarks) {
-    _bookmarks.clear();
-    _bookmarks.addAll(bookmarks);
   }
 
   Future<List<BookmarkDisplayModel>> _load(bool refresh) async {
@@ -96,8 +96,8 @@ class DailyReadViewModel extends ChangeNotifier {
             final result =
                 await _bookmarkRepository.loadBookmarksByIds(todayBookmarkIds);
             if (result.isSuccess()) {
-              final loadedBookmarks = result.getOrDefault([]);
-              _resetBookmarks(loadedBookmarks);
+              _todayBookmarks.clear();
+              _todayBookmarks.addAll(result.getOrDefault([]));
               return unArchivedBookmarks;
             }
 
@@ -109,7 +109,7 @@ class DailyReadViewModel extends ChangeNotifier {
       }
     }
 
-    // 今天没有访问过 or 强制刷新
+    // 今天没有访问过 or 刷新新的一组
     final result = await _bookmarkRepository.loadRandomUnarchivedBookmarks(5);
     if (result.isSuccess()) {
       final newBookmarks = result.getOrDefault([]);
@@ -117,7 +117,8 @@ class DailyReadViewModel extends ChangeNotifier {
         _isNoMore = true;
         return unArchivedBookmarks;
       }
-      _resetBookmarks(newBookmarks);
+      _todayBookmarks.addAll(result.getOrDefault([]));
+      _isNoMore = false;
       //异步存到数据库
       _saveTodayBookmarks(newBookmarks);
       return unArchivedBookmarks;
@@ -191,7 +192,7 @@ class DailyReadViewModel extends ChangeNotifier {
 
   /// 书签数据变化回调
   void _onBookmarksChanged() {
-    load.execute(true); // force refresh
+    load.execute(false);
     notifyListeners();
   }
 

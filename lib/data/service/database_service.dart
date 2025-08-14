@@ -170,10 +170,9 @@ class DatabaseService {
       final count = await _database!.update(
         _kTableDailyReadHistory,
         obj.toJson(),
-        where: '$_kColumnId = ?',
-        whereArgs: [obj.id],
+        where: 'date(\'$_kColumnCreatedDate\') = date(\'now\', \'localtime\')',
       );
-      appLogger.i("Updated daily read history with id: ${obj.id}. data: $obj");
+      appLogger.i("Updated daily read history for today. data: $obj");
       return Success(count);
     } on Exception catch (e) {
       appLogger.e("Failed to update daily read history. data: $obj", error: e);
