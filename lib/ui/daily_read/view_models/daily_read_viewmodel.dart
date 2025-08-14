@@ -58,9 +58,9 @@ class DailyReadViewModel extends ChangeNotifier {
   List<String> get availableLabels => _labelRepository.labelNames;
 
   ReadingStatsForView? getReadingStats(String bookmarkId) {
-    return _bookmarks
-        .firstWhere((element) => element.bookmark.id == bookmarkId)
-        .stats;
+    final idx =
+        _bookmarks.indexWhere((element) => element.bookmark.id == bookmarkId);
+    return idx == -1 ? null : _bookmarks[idx].stats;
   }
 
   Future<void> _openUrl(String url) async {

@@ -162,14 +162,14 @@ ReadeckApp 中的 Repository 必须使用正确的通知机制：
 ```dart
 class ExampleRepository {
   final StreamController<void> _dataChangedController = StreamController<void>.broadcast();
-  
+
   Stream<void> get dataChanged => _dataChangedController.stream;
-  
+
   Future<void> saveData() async {
     // 保存数据逻辑
     _dataChangedController.add(null); // 通知数据变更
   }
-  
+
   void dispose() {
     _dataChangedController.close();
   }
@@ -521,8 +521,6 @@ test_resources/                    # 测试资源
 
 ### ReadeckApp 代码示例
 
----
-
 ## 错误处理和错误页面规范
 
 ### 统一错误页面组件
@@ -595,3 +593,25 @@ ReadeckApp 项目严格遵循 Flutter 官方推荐的架构模式，结合以下
 - **清晰的代码结构**
 
 通过遵循本规范，ReadeckApp 项目将具备良好的可维护性、可测试性和可扩展性，为后续开发和维护提供坚实的基础。
+
+## Development Workflow
+
+### Commit Messages
+
+This project uses [semantic-release](https://github.com/semantic-release/semantic-release) to automate version management and package publishing. Therefore, all commit messages must follow the [Conventional Commits specification](https://www.conventionalcommits.org/en/v1.0.0/).
+
+- **chore**: For commits that do not modify the source code or test files (e.g., changes to build scripts, documentation, or project configuration).
+- **feat**: For new features.
+- **fix**: For bug fixes.
+- **refactor**: For code refactoring that does not change external behavior.
+- **docs**: For documentation changes.
+- **style**: For code style changes (e.g., formatting).
+- **test**: For adding or modifying tests.
+- **perf**: For performance improvements.
+- **ci**: For changes to CI configuration files and scripts.
+- **build**: For changes that affect the build system or external dependencies.
+- **revert**: For reverting a previous commit.
+
+### Test-Driven Development (TDD)
+
+This project follows a Test-Driven Development (TDD) approach. All new features or bug fixes should start with writing a failing unit test that describes the desired functionality or reproduces the bug. Only after the test is written should the implementation code be written to make the test pass.

@@ -82,9 +82,9 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
       get _loadBookmarks;
 
   ReadingStatsForView? getReadingStats(String bookmarkId) {
-    return _bookmarks
-        .firstWhere((element) => element.bookmark.id == bookmarkId)
-        .stats;
+    final idx =
+        _bookmarks.indexWhere((element) => element.bookmark.id == bookmarkId);
+    return idx == -1 ? null : _bookmarks[idx].stats;
   }
 
   Future<List<BookmarkDisplayModel>> _load(int page) async {
