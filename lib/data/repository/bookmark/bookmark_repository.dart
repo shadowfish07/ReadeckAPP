@@ -98,20 +98,17 @@ class BookmarkRepository {
   AsyncResult<List<BookmarkDisplayModel>> _wrapBookmarksWithStats(
     List<Bookmark> bookmarks,
   ) async {
-    final List<BookmarkDisplayModel> result = [];
-    for (var bookmark in bookmarks) {
-      final stats = await _readingStatsRepository.getReadingStats(bookmark.id);
-      if (stats.isSuccess()) {
-        result.add(BookmarkDisplayModel(
-            bookmark: bookmark, stats: stats.getOrThrow()));
-      } else {
-        result.add(BookmarkDisplayModel(bookmark: bookmark));
-      }
-    }
-
-    return Success(result);
+    final models = await Future.wait(
+      bookmarks.map((b) async {
+        final statsRes = await _readingStatsRepository.getReadingStats(b.id);
+        return statsRes.isSuccess()
+            ? BookmarkDisplayModel(bookmark: b, stats: statsRes.getOrThrow())
+            : BookmarkDisplayModel(bookmark: b);
+      }),
+      eagerError: false,
+    );
+    return Success(models);
   }
-
   AsyncResult<List<BookmarkDisplayModel>> loadBookmarksByIds(
       List<String> ids) async {
     appLogger.i('开始根据ID加载书签，数量: ${ids.length}');
