@@ -229,7 +229,7 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
         return CommandBuilder(
           command: viewModel.load,
           whileExecuting: (context, lastValue, param) {
-            if (lastValue == null) {
+            if (lastValue != null && lastValue.isEmpty) {
               return const Loading(text: '正在加载今日推荐');
             }
 
