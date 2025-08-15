@@ -290,7 +290,9 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
                   ),
                 },
                 onLinkTap: (url, attributes, element) async {
-                  widget.viewModel.openUrl(widget.viewModel.bookmark.url);
+                  if (url != null) {
+                    widget.viewModel.openUrl.execute(url);
+                  }
                 },
                 extensions: [
                   const AudioHtmlExtension(),
