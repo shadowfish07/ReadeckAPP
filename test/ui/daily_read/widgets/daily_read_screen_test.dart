@@ -94,7 +94,8 @@ void main() {
       expect(find.text('Second Bookmark Title'), findsOneWidget);
     });
 
-    testWidgets('should display loading indicator when loading',
+    testWidgets(
+        'should display loading indicator when loading with empty initial value',
         (WidgetTester tester) async {
       // Arrange
       // Create a real Command that matches the ViewModel configuration
@@ -126,6 +127,57 @@ void main() {
       expect(find.text('正在加载今日推荐'), findsOneWidget);
 
       // Wait for the command to complete to avoid pending timer issues
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets(
+        'should NOT display loading indicator when re-executing with existing data',
+        (WidgetTester tester) async {
+      // Arrange
+      final existingBookmarks = [
+        BookmarkDisplayModel(
+          bookmark: Bookmark(
+            id: '1',
+            url: 'https://example.com',
+            title: 'Existing Bookmark',
+            isArchived: false,
+            isMarked: false,
+            labels: [],
+            created: DateTime.now(),
+            readProgress: 0,
+          ),
+        ),
+      ];
+
+      final loadCommand = Command.createAsync<bool, List<BookmarkDisplayModel>>(
+        (param) async {
+          // Simulate loading time
+          await Future.delayed(const Duration(milliseconds: 100));
+          return existingBookmarks;
+        },
+        includeLastResultInCommandResults: true,
+        initialValue: existingBookmarks, // Command has existing data
+      );
+
+      when(mockDailyReadViewModel.load).thenReturn(loadCommand);
+      when(mockDailyReadViewModel.unArchivedBookmarks)
+          .thenReturn(existingBookmarks);
+      when(mockDailyReadViewModel.isNoMore).thenReturn(false);
+      when(mockDailyReadViewModel.availableLabels).thenReturn([]);
+      when(mockDailyReadViewModel.getReadingStats(any)).thenReturn(null);
+
+      // Start the command while it has existing data
+      loadCommand.execute(true); // Force refresh
+
+      // Act
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pump(const Duration(milliseconds: 10));
+
+      // Assert - should NOT show loading when command is executing but has existing data
+      expect(find.text('正在加载今日推荐'), findsNothing);
+      expect(find.text('Existing Bookmark'), findsOneWidget);
+
+      // Wait for command to complete
       await tester.pumpAndSettle();
     });
 
