@@ -122,112 +122,74 @@ void main() {
       );
     });
 
-    test('should open URL when bookmark has no reading stats', () async {
+    test('should delegate tap handling to use case for bookmark without stats',
+        () {
       // Arrange
       viewModel.bookmarks.clear();
       viewModel.bookmarks.add(bookmarkModelWithoutStats);
 
-      when(mockBookmarkOperationUseCases.openUrl(testBookmarkWithoutStats.url))
-          .thenAnswer((_) async => const Success(true));
-
       // Act
       viewModel.handleBookmarkTap(bookmarkModelWithoutStats);
 
-      // Wait for command execution
-      await Future.delayed(Duration.zero);
-
       // Assert
-      verify(mockBookmarkOperationUseCases
-              .openUrl(testBookmarkWithoutStats.url))
-          .called(1);
+      verify(mockBookmarkOperationUseCases.handleBookmarkTap(
+        bookmark: bookmarkModelWithoutStats,
+        onNavigateToDetail: anyNamed('onNavigateToDetail'),
+      )).called(1);
     });
 
-    test('should call navigation callback when bookmark has reading stats',
-        () async {
+    test('should delegate tap handling to use case for bookmark with stats',
+        () {
       // Arrange
       viewModel.bookmarks.clear();
       viewModel.bookmarks.add(bookmarkModelWithStats);
 
-      bool navigationCallbackCalled = false;
-      Bookmark? callbackBookmark;
-
-      viewModel.setNavigateToDetailCallback((bookmark) {
-        navigationCallbackCalled = true;
-        callbackBookmark = bookmark;
-      });
-
       // Act
       viewModel.handleBookmarkTap(bookmarkModelWithStats);
 
-      // Wait for any async operations
-      await Future.delayed(Duration.zero);
-
       // Assert
-      expect(navigationCallbackCalled, true);
-      expect(callbackBookmark, testBookmarkWithStats);
-
-      // Verify that openUrl was NOT called
-      verifyNever(mockBookmarkOperationUseCases.openUrl(any));
+      verify(mockBookmarkOperationUseCases.handleBookmarkTap(
+        bookmark: bookmarkModelWithStats,
+        onNavigateToDetail: anyNamed('onNavigateToDetail'),
+      )).called(1);
     });
 
-    test('should open URL when bookmark is not found in current list',
-        () async {
+    test('should delegate tap handling to use case for not-found bookmark', () {
       // Arrange
       viewModel.bookmarks.clear(); // Empty list
 
-      when(mockBookmarkOperationUseCases.openUrl(testBookmarkWithoutStats.url))
-          .thenAnswer((_) async => const Success(true));
-
       // Act
       viewModel.handleBookmarkTap(bookmarkModelWithoutStats);
 
-      // Wait for command execution
-      await Future.delayed(Duration.zero);
-
       // Assert
-      verify(mockBookmarkOperationUseCases
-              .openUrl(testBookmarkWithoutStats.url))
-          .called(1);
+      verify(mockBookmarkOperationUseCases.handleBookmarkTap(
+        bookmark: bookmarkModelWithoutStats,
+        onNavigateToDetail: anyNamed('onNavigateToDetail'),
+      )).called(1);
     });
 
-    test('should handle mixed scenarios correctly', () async {
+    test('should delegate tap handling to use case in mixed scenarios', () {
       // Arrange
-      viewModel.bookmarks.clear();
       viewModel.bookmarks
           .addAll([bookmarkModelWithStats, bookmarkModelWithoutStats]);
 
-      bool navigationCallbackCalled = false;
-      Bookmark? callbackBookmark;
-
-      viewModel.setNavigateToDetailCallback((bookmark) {
-        navigationCallbackCalled = true;
-        callbackBookmark = bookmark;
-      });
-
-      when(mockBookmarkOperationUseCases.openUrl(testBookmarkWithoutStats.url))
-          .thenAnswer((_) async => const Success(true));
-
       // Act - Test bookmark with stats
       viewModel.handleBookmarkTap(bookmarkModelWithStats);
-      await Future.delayed(Duration.zero);
 
-      // Assert navigation callback was called
-      expect(navigationCallbackCalled, true);
-      expect(callbackBookmark, testBookmarkWithStats);
-
-      // Reset
-      navigationCallbackCalled = false;
-      callbackBookmark = null;
+      // Assert
+      verify(mockBookmarkOperationUseCases.handleBookmarkTap(
+        bookmark: bookmarkModelWithStats,
+        onNavigateToDetail: anyNamed('onNavigateToDetail'),
+      )).called(1);
 
       // Act - Test bookmark without stats
       viewModel.handleBookmarkTap(bookmarkModelWithoutStats);
-      await Future.delayed(Duration.zero);
 
-      // Assert URL was opened
-      verify(mockBookmarkOperationUseCases
-              .openUrl(testBookmarkWithoutStats.url))
-          .called(1);
-      expect(navigationCallbackCalled, false); // Callback should not be called
+      // Assert
+      verify(mockBookmarkOperationUseCases.handleBookmarkTap(
+        bookmark: bookmarkModelWithoutStats,
+        onNavigateToDetail: anyNamed('onNavigateToDetail'),
+      )).called(1);
     });
   });
 
@@ -243,15 +205,21 @@ void main() {
     test('should set navigation callback successfully', () {
       // Arrange
       bool callbackCalled = false;
-
-      // Act
       viewModel.setNavigateToDetailCallback((bookmark) {
         callbackCalled = true;
       });
 
-      // Manually trigger the private method to test callback
-      viewModel.bookmarks.clear();
-      viewModel.bookmarks.add(bookmarkModelWithStats);
+      when(mockBookmarkOperationUseCases.handleBookmarkTap(
+        bookmark: anyNamed('bookmark'),
+        onNavigateToDetail: anyNamed('onNavigateToDetail'),
+      )).thenAnswer((realInvocation) {
+        final onNavigateToDetail =
+            realInvocation.namedArguments[const Symbol('onNavigateToDetail')]
+                as void Function(Bookmark);
+        onNavigateToDetail(bookmarkModelWithStats.bookmark);
+      });
+
+      // Act
       viewModel.handleBookmarkTap(bookmarkModelWithStats);
 
       // Assert
@@ -259,27 +227,39 @@ void main() {
     });
 
     test('should handle null callback gracefully', () {
-      // Arrange
-      viewModel.bookmarks.clear();
-      viewModel.bookmarks.add(bookmarkModelWithStats);
+      // The _onNavigateToDetail callback is not set, so it's null.
+      when(mockBookmarkOperationUseCases.handleBookmarkTap(
+        bookmark: anyNamed('bookmark'),
+        onNavigateToDetail: anyNamed('onNavigateToDetail'),
+      )).thenAnswer((realInvocation) {
+        final onNavigateToDetail =
+            realInvocation.namedArguments[const Symbol('onNavigateToDetail')]
+                as void Function(Bookmark);
+        // This should trigger _navigateToDetail in the viewmodel, which should
+        // handle the null _onNavigateToDetail callback gracefully.
+        onNavigateToDetail(bookmarkModelWithStats.bookmark);
+      });
 
-      // Set callback to an empty function, then replace it
-      viewModel.setNavigateToDetailCallback((bookmark) {});
-      viewModel.setNavigateToDetailCallback((_) {});
-
-      // Act - should not throw when callback is null
+      // Act & Assert
       expect(() => viewModel.handleBookmarkTap(bookmarkModelWithStats),
           returnsNormally);
     });
 
     test('should call callback with correct bookmark', () {
       // Arrange
-      viewModel.bookmarks.clear();
-      viewModel.bookmarks.add(bookmarkModelWithStats);
-
       Bookmark? receivedBookmark;
       viewModel.setNavigateToDetailCallback((bookmark) {
         receivedBookmark = bookmark;
+      });
+
+      when(mockBookmarkOperationUseCases.handleBookmarkTap(
+        bookmark: anyNamed('bookmark'),
+        onNavigateToDetail: anyNamed('onNavigateToDetail'),
+      )).thenAnswer((realInvocation) {
+        final onNavigateToDetail =
+            realInvocation.namedArguments[const Symbol('onNavigateToDetail')]
+                as void Function(Bookmark);
+        onNavigateToDetail(testBookmarkWithStats);
       });
 
       // Act
@@ -329,26 +309,6 @@ void main() {
       expect(stats1, isNotNull);
       expect(stats1?.readableCharCount, mockReadingStats.readableCharCount);
       expect(stats2, isNull);
-    });
-
-    test('should call openUrl use case through command', () async {
-      // Arrange
-      viewModel.bookmarks.clear();
-      viewModel.bookmarks.add(bookmarkModelWithoutStats);
-
-      when(mockBookmarkOperationUseCases.openUrl(testBookmarkWithoutStats.url))
-          .thenAnswer((_) async => const Success(true));
-
-      // Act
-      viewModel.handleBookmarkTap(bookmarkModelWithoutStats);
-
-      // Wait for command execution
-      await Future.delayed(Duration.zero);
-
-      // Assert - command should have been called
-      verify(mockBookmarkOperationUseCases
-              .openUrl(testBookmarkWithoutStats.url))
-          .called(1);
     });
   });
 }
