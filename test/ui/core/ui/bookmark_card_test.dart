@@ -3,6 +3,7 @@ import 'package:flutter_command/flutter_command.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:logger/logger.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
+import 'package:readeck_app/domain/models/bookmark_display_model/bookmark_display_model.dart';
 import 'package:readeck_app/main.dart';
 import 'package:readeck_app/ui/core/ui/bookmark_card.dart';
 import 'package:readeck_app/ui/core/ui/label_edit_dialog.dart';
@@ -13,7 +14,7 @@ void main() {
     appLogger = Logger();
   });
   late Command mockOpenUrlCommand;
-  late Bookmark testBookmark;
+  late BookmarkDisplayModel testBookmarkDisplayModel;
   late List<String> availableLabels;
   bool updateLabelsCalled = false;
 
@@ -22,15 +23,17 @@ void main() {
     mockOpenUrlCommand = Command.createAsyncNoResult<String>((_) async {});
     updateLabelsCalled = false;
 
-    testBookmark = Bookmark(
-      id: '1',
-      url: 'https://example.com',
-      title: 'Test Article',
-      isArchived: false,
-      isMarked: false,
-      labels: ['existing-label'],
-      created: DateTime.now(),
-      readProgress: 50,
+    testBookmarkDisplayModel = BookmarkDisplayModel(
+      bookmark: Bookmark(
+        id: '1',
+        url: 'https://example.com',
+        title: 'Test Article',
+        isArchived: false,
+        isMarked: false,
+        labels: ['existing-label'],
+        created: DateTime.now(),
+        readProgress: 50,
+      ),
     );
 
     availableLabels = ['label1', 'label2', 'existing-label'];
@@ -43,7 +46,7 @@ void main() {
     return MaterialApp(
       home: Scaffold(
         body: BookmarkCard(
-          bookmark: testBookmark,
+          bookmarkDisplayModel: testBookmarkDisplayModel,
           onOpenUrl: mockOpenUrlCommand,
           onUpdateLabels: onUpdateLabels ??
               (bookmark, labels) {
@@ -209,7 +212,7 @@ void main() {
       final widget = MaterialApp(
         home: Scaffold(
           body: BookmarkCard(
-            bookmark: testBookmark,
+            bookmarkDisplayModel: testBookmarkDisplayModel,
             onOpenUrl: mockOpenUrlCommand,
             onToggleArchive: (bookmark) {
               archiveCalled = true;
@@ -245,7 +248,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: BookmarkCard(
-              bookmark: testBookmark,
+              bookmarkDisplayModel: testBookmarkDisplayModel,
               onOpenUrl: mockOpenUrlCommand,
               onCardTap: (bookmark) {
                 cardTapCalled = true;
@@ -261,7 +264,7 @@ void main() {
 
       // Assert
       expect(cardTapCalled, true);
-      expect(cardTapBookmark, testBookmark);
+      expect(cardTapBookmark, testBookmarkDisplayModel.bookmark);
     });
 
     testWidgets('should handle null onCardTap gracefully', (tester) async {
@@ -270,7 +273,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: BookmarkCard(
-              bookmark: testBookmark,
+              bookmarkDisplayModel: testBookmarkDisplayModel,
               onOpenUrl: mockOpenUrlCommand,
               // onCardTap is null
             ),

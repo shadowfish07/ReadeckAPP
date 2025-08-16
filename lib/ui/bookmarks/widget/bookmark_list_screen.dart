@@ -229,7 +229,7 @@ class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
 
           final bookmarkModel = bookmarks[index];
           return BookmarkCard(
-            bookmark: bookmarkModel.bookmark,
+            bookmarkDisplayModel: bookmarkModel,
             onOpenUrl: widget.viewModel.openUrl,
             onCardTap: widget.viewModel.handleBookmarkTap,
             onToggleMark: (bookmark) =>
@@ -247,7 +247,6 @@ class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
                 }
               });
             },
-            readingStats: bookmarkModel.stats,
             availableLabels: widget.viewModel.availableLabels,
             onLoadLabels: () => widget.viewModel.loadLabels.executeWithFuture(),
             onToggleArchive: (bookmark) {

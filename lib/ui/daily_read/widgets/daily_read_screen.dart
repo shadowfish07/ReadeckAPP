@@ -196,7 +196,7 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
       itemBuilder: (context, index) {
         final bookmarkModel = widget.viewModel.unArchivedBookmarks[index];
         return BookmarkCard(
-          bookmark: bookmarkModel.bookmark,
+          bookmarkDisplayModel: bookmarkModel,
           onOpenUrl: widget.viewModel.openUrl,
           onToggleMark: (bookmark) =>
               widget.viewModel.toggleBookmarkMarked(bookmark),
@@ -214,7 +214,6 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
             });
           },
           onCardTap: widget.viewModel.handleBookmarkTap,
-          readingStats: bookmarkModel.stats,
           availableLabels: widget.viewModel.availableLabels,
           onLoadLabels: () => widget.viewModel.loadLabels.executeWithFuture(),
           onToggleArchive: (bookmark) {
