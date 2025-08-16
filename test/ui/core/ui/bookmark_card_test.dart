@@ -194,5 +194,37 @@ void main() {
       // Assert
       expect(find.byIcon(Icons.archive_outlined), findsOneWidget);
     });
+
+    testWidgets('should show success toast when bookmark is archived',
+        (WidgetTester tester) async {
+      bool archiveCalled = false;
+
+      // Create widget with archive callback
+      final widget = MaterialApp(
+        home: Scaffold(
+          body: BookmarkCard(
+            bookmark: testBookmark,
+            onOpenUrl: mockOpenUrlCommand,
+            onToggleArchive: (bookmark) {
+              archiveCalled = true;
+            },
+            availableLabels: availableLabels,
+          ),
+        ),
+      );
+
+      // Act
+      await tester.pumpWidget(widget);
+      await tester.pumpAndSettle();
+
+      // Tap archive button
+      await tester.tap(find.byIcon(Icons.archive_outlined));
+      await tester.pumpAndSettle();
+
+      // Assert
+      expect(archiveCalled, isTrue);
+      expect(find.text('已标记归档'), findsOneWidget);
+      expect(find.byType(SnackBar), findsOneWidget);
+    });
   });
 }
