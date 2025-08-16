@@ -1,6 +1,7 @@
 import 'package:readeck_app/data/repository/article/article_repository.dart';
 import 'package:readeck_app/data/repository/reading_stats/reading_stats_repository.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
+import 'package:readeck_app/domain/models/bookmark_display_model/bookmark_display_model.dart';
 
 import 'package:readeck_app/main.dart';
 import 'package:readeck_app/utils/reading_stats_calculator.dart';
@@ -113,5 +114,20 @@ class BookmarkOperationUseCases {
       appLogger.e('处理书签 ${bookmark.id} 的阅读统计数据时发生错误: $e');
     }
     return null;
+  }
+
+  void handleBookmarkTap({
+    required BookmarkDisplayModel bookmark,
+    required void Function(Bookmark) onNavigateToDetail,
+  }) {
+    appLogger.i('处理书签点击: ${bookmark.bookmark.title}');
+
+    if (bookmark.stats == null) {
+      appLogger.i('书签没有阅读统计数据，可能文章内容为空，使用浏览器打开: ${bookmark.bookmark.url}');
+      openUrl(bookmark.bookmark.url);
+    } else {
+      appLogger.i('书签有阅读统计数据，触发详情页导航');
+      onNavigateToDetail(bookmark.bookmark);
+    }
   }
 }

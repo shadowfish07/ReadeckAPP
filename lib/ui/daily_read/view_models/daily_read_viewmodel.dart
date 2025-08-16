@@ -157,21 +157,10 @@ class DailyReadViewModel extends ChangeNotifier {
   }
 
   void handleBookmarkTap(BookmarkDisplayModel bookmark) {
-    appLogger.i('处理书签点击: ${bookmark.bookmark.title}');
-
-    final bookmarkModel = bookmarks.firstWhere(
-      (model) => model.bookmark.id == bookmark.bookmark.id,
-      orElse: () =>
-          BookmarkDisplayModel(bookmark: bookmark.bookmark, stats: null),
+    _bookmarkOperationUseCases.handleBookmarkTap(
+      bookmark: bookmark,
+      onNavigateToDetail: _navigateToDetail,
     );
-
-    if (bookmarkModel.stats == null) {
-      appLogger.i('书签没有阅读统计数据，可能文章内容为空，使用浏览器打开: ${bookmark.bookmark.url}');
-      openUrl.execute(bookmark.bookmark.url);
-    } else {
-      appLogger.i('书签有阅读统计数据，触发详情页导航');
-      _navigateToDetail(bookmark.bookmark);
-    }
   }
 
   Future<void> _toggleBookmarkArchived(BookmarkDisplayModel bookmark) async {
