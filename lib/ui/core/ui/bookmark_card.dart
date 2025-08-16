@@ -1,25 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_command/flutter_command.dart';
-import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
+import 'package:readeck_app/domain/models/bookmark_display_model/bookmark_display_model.dart';
+import 'package:readeck_app/main.dart';
 import 'package:readeck_app/ui/core/ui/bookmark_labels_widget.dart';
 import 'package:readeck_app/ui/core/ui/label_edit_dialog.dart';
+import 'package:readeck_app/ui/core/ui/snack_bar_helper.dart';
 import 'package:readeck_app/utils/reading_stats_calculator.dart';
 
 class BookmarkCard extends StatefulWidget {
-  final Bookmark bookmark;
+  final BookmarkDisplayModel bookmarkDisplayModel;
   final Command onOpenUrl;
-  final Function(Bookmark bookmark)? onCardTap;
-  final Function(Bookmark bookmark)? onToggleMark;
-  final Function(Bookmark bookmark)? onToggleArchive;
-  final Function(Bookmark bookmark, List<String> labels)? onUpdateLabels;
+  final Function(BookmarkDisplayModel bookmark)? onCardTap;
+  final Function(BookmarkDisplayModel bookmark)? onToggleMark;
+  final Function(BookmarkDisplayModel bookmark)? onToggleArchive;
+  final Function(BookmarkDisplayModel bookmark, List<String> labels)?
+      onUpdateLabels;
   final List<String>? availableLabels;
   final Future<List<String>> Function()? onLoadLabels;
-  final ReadingStatsForView? readingStats;
 
   const BookmarkCard({
     super.key,
-    required this.bookmark,
+    required this.bookmarkDisplayModel,
     required this.onOpenUrl,
     this.onCardTap,
     this.onToggleMark,
@@ -27,7 +29,6 @@ class BookmarkCard extends StatefulWidget {
     this.onUpdateLabels,
     this.availableLabels,
     this.onLoadLabels,
-    this.readingStats,
   });
 
   @override
@@ -38,26 +39,18 @@ class _BookmarkCardState extends State<BookmarkCard> {
   @override
   didChangeDependencies() {
     widget.onOpenUrl.errors.where((x) => x != null).listen((error, _) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error.toString()),
-          backgroundColor: Theme.of(context).colorScheme.error,
-          duration: const Duration(seconds: 5),
-          action: SnackBarAction(
-            label: '复制链接',
-            textColor: Theme.of(context).colorScheme.onError,
-            onPressed: () async {
-              await Clipboard.setData(ClipboardData(text: widget.bookmark.url));
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('链接已复制到剪贴板'),
-                    duration: Duration(seconds: 2),
-                  ),
-                );
-              }
-            },
-          ),
+      SnackBarHelper.showError(
+        context,
+        error.toString(),
+        action: SnackBarAction(
+          label: '复制链接',
+          onPressed: () async {
+            await Clipboard.setData(
+                ClipboardData(text: widget.bookmarkDisplayModel.bookmark.url));
+            if (mounted) {
+              SnackBarHelper.showSuccess(context, '链接已复制到剪贴板');
+            }
+          },
         ),
       );
     });
@@ -66,7 +59,7 @@ class _BookmarkCardState extends State<BookmarkCard> {
 
   @override
   Widget build(BuildContext rootContext) {
-    final isArchived = widget.bookmark.isArchived;
+    final isArchived = widget.bookmarkDisplayModel.bookmark.isArchived;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -75,9 +68,7 @@ class _BookmarkCardState extends State<BookmarkCard> {
           ? Theme.of(rootContext).colorScheme.surfaceContainerLow
           : null,
       child: InkWell(
-        onTap: () {
-          widget.onCardTap?.call(widget.bookmark);
-        },
+        onTap: _handleCardTap,
         borderRadius: BorderRadius.circular(12),
         child: Opacity(
           opacity: isArchived ? 0.7 : 1.0,
@@ -91,13 +82,14 @@ class _BookmarkCardState extends State<BookmarkCard> {
                   children: [
                     Expanded(
                       child: Text(
-                        widget.bookmark.title,
+                        widget.bookmarkDisplayModel.bookmark.title,
                         style: Theme.of(rootContext)
                             .textTheme
                             .titleMedium
                             ?.copyWith(
                               fontWeight: FontWeight.w500,
-                              color: widget.bookmark.isArchived
+                              color: widget
+                                      .bookmarkDisplayModel.bookmark.isArchived
                                   ? Theme.of(rootContext)
                                       .colorScheme
                                       .onSurface
@@ -115,7 +107,8 @@ class _BookmarkCardState extends State<BookmarkCard> {
                 // 站点名称和创建时间
                 Row(
                   children: [
-                    if (widget.bookmark.siteName != null) ...[
+                    if (widget.bookmarkDisplayModel.bookmark.siteName !=
+                        null) ...[
                       Icon(
                         Icons.language,
                         size: 16,
@@ -125,12 +118,13 @@ class _BookmarkCardState extends State<BookmarkCard> {
                       Expanded(
                         child: InkWell(
                           onTap: () {
-                            final url = widget.bookmark.url;
+                            final url =
+                                widget.bookmarkDisplayModel.bookmark.url;
                             widget.onOpenUrl(url);
                           },
                           borderRadius: BorderRadius.circular(4),
                           child: Text(
-                            widget.bookmark.siteName!,
+                            widget.bookmarkDisplayModel.bookmark.siteName!,
                             style: Theme.of(rootContext)
                                 .textTheme
                                 .bodyMedium
@@ -145,7 +139,7 @@ class _BookmarkCardState extends State<BookmarkCard> {
                     ],
                     const Spacer(),
                     Text(
-                      _formatDate(widget.bookmark.created),
+                      _formatDate(widget.bookmarkDisplayModel.bookmark.created),
                       style: Theme.of(rootContext)
                           .textTheme
                           .bodySmall
@@ -157,11 +151,12 @@ class _BookmarkCardState extends State<BookmarkCard> {
                 ),
 
                 // 描述
-                if (widget.bookmark.description != null &&
-                    widget.bookmark.description!.isNotEmpty) ...[
+                if (widget.bookmarkDisplayModel.bookmark.description != null &&
+                    widget.bookmarkDisplayModel.bookmark.description!
+                        .isNotEmpty) ...[
                   const SizedBox(height: 8),
                   Text(
-                    widget.bookmark.description!,
+                    widget.bookmarkDisplayModel.bookmark.description!,
                     style: Theme.of(rootContext).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(rootContext).colorScheme.outline,
                         ),
@@ -171,10 +166,10 @@ class _BookmarkCardState extends State<BookmarkCard> {
                 ],
 
                 // 标签
-                if (widget.bookmark.labels.isNotEmpty) ...[
+                if (widget.bookmarkDisplayModel.bookmark.labels.isNotEmpty) ...[
                   const SizedBox(height: 12),
                   BookmarkLabelsWidget(
-                    labels: widget.bookmark.labels,
+                    labels: widget.bookmarkDisplayModel.bookmark.labels,
                     isOnDarkBackground: false,
                   ),
                 ],
@@ -185,9 +180,11 @@ class _BookmarkCardState extends State<BookmarkCard> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     // 阅读统计信息
-                    _buildReadingStatsRow(rootContext, widget.readingStats),
+                    _buildReadingStatsRow(
+                        rootContext, widget.bookmarkDisplayModel.stats),
                     // 阅读进度指示器
-                    if (widget.bookmark.readProgress > 0) ...[
+                    if (widget.bookmarkDisplayModel.bookmark.readProgress >
+                        0) ...[
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -195,7 +192,9 @@ class _BookmarkCardState extends State<BookmarkCard> {
                             width: 12,
                             height: 12,
                             child: CircularProgressIndicator(
-                              value: widget.bookmark.readProgress / 100.0,
+                              value: widget.bookmarkDisplayModel.bookmark
+                                      .readProgress /
+                                  100.0,
                               strokeWidth: 2,
                               color: Theme.of(rootContext).colorScheme.primary,
                               backgroundColor: Theme.of(rootContext)
@@ -206,7 +205,7 @@ class _BookmarkCardState extends State<BookmarkCard> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            '${widget.bookmark.readProgress}%',
+                            '${widget.bookmarkDisplayModel.bookmark.readProgress}%',
                             style: Theme.of(rootContext)
                                 .textTheme
                                 .bodySmall
@@ -222,7 +221,8 @@ class _BookmarkCardState extends State<BookmarkCard> {
                     // 标记喜爱按钮
                     IconButton(
                       onPressed: widget.onToggleMark != null
-                          ? () => widget.onToggleMark!(widget.bookmark)
+                          ? () =>
+                              widget.onToggleMark!(widget.bookmarkDisplayModel)
                           : null,
                       style: IconButton.styleFrom(
                         minimumSize: const Size(32, 32),
@@ -231,11 +231,11 @@ class _BookmarkCardState extends State<BookmarkCard> {
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                       icon: Icon(
-                        widget.bookmark.isMarked
+                        widget.bookmarkDisplayModel.bookmark.isMarked
                             ? Icons.favorite
                             : Icons.favorite_border,
                         size: 20,
-                        color: widget.bookmark.isMarked
+                        color: widget.bookmarkDisplayModel.bookmark.isMarked
                             ? Theme.of(rootContext).colorScheme.error
                             : Theme.of(rootContext)
                                 .colorScheme
@@ -278,14 +278,14 @@ class _BookmarkCardState extends State<BookmarkCard> {
                     IconButton(
                       onPressed: widget.onToggleArchive != null
                           ? () {
-                              widget.onToggleArchive!(widget.bookmark);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(widget.bookmark.isArchived
-                                      ? '已取消归档'
-                                      : '已标记归档'),
-                                  duration: const Duration(seconds: 2),
-                                ),
+                              widget.onToggleArchive!(
+                                  widget.bookmarkDisplayModel);
+                              SnackBarHelper.showSuccess(
+                                context,
+                                widget.bookmarkDisplayModel.bookmark.isArchived
+                                    ? '已取消归档'
+                                    : '已标记归档',
+                                duration: const Duration(seconds: 2),
                               );
                             }
                           : null,
@@ -296,11 +296,11 @@ class _BookmarkCardState extends State<BookmarkCard> {
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                       icon: Icon(
-                        widget.bookmark.isArchived
+                        widget.bookmarkDisplayModel.bookmark.isArchived
                             ? Icons.unarchive
                             : Icons.archive_outlined,
                         size: 20,
-                        color: widget.bookmark.isArchived
+                        color: widget.bookmarkDisplayModel.bookmark.isArchived
                             ? Theme.of(rootContext)
                                 .colorScheme
                                 .onSurfaceVariant
@@ -309,7 +309,9 @@ class _BookmarkCardState extends State<BookmarkCard> {
                                 .colorScheme
                                 .onSurfaceVariant,
                       ),
-                      tooltip: widget.bookmark.isArchived ? '取消归档' : '归档',
+                      tooltip: widget.bookmarkDisplayModel.bookmark.isArchived
+                          ? '取消归档'
+                          : '归档',
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(
                         minWidth: 32,
@@ -324,6 +326,12 @@ class _BookmarkCardState extends State<BookmarkCard> {
         ),
       ),
     );
+  }
+
+  /// 处理卡片点击事件
+  void _handleCardTap() {
+    appLogger.i('处理书签卡片点击: ${widget.bookmarkDisplayModel.bookmark.title}');
+    widget.onCardTap?.call(widget.bookmarkDisplayModel);
   }
 
   String _formatDate(DateTime date) {
@@ -349,9 +357,22 @@ class _BookmarkCardState extends State<BookmarkCard> {
       showDialog<void>(
         context: context,
         builder: (dialogContext) => LabelEditDialog(
-          bookmark: widget.bookmark,
+          bookmark: widget.bookmarkDisplayModel.bookmark,
           availableLabels: labels,
-          onUpdateLabels: widget.onUpdateLabels!,
+          onUpdateLabels: (bookmark, labels) async {
+            try {
+              if (widget.onUpdateLabels != null) {
+                widget.onUpdateLabels!(widget.bookmarkDisplayModel, labels);
+                if (context.mounted) {
+                  SnackBarHelper.showSuccess(context, '标签已更新');
+                }
+              }
+            } catch (e) {
+              if (context.mounted) {
+                SnackBarHelper.showError(context, '更新标签失败: $e');
+              }
+            }
+          },
           onLoadLabels: widget.onLoadLabels,
         ),
       );

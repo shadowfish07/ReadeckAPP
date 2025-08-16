@@ -417,6 +417,23 @@ class MockBookmarkOperationUseCases extends _i1.Mock
         ),
         returnValue: _i4.Future<_i9.ReadingStatsForView?>.value(),
       ) as _i4.Future<_i9.ReadingStatsForView?>);
+
+  @override
+  void handleBookmarkTap({
+    required _i3.BookmarkDisplayModel? bookmark,
+    required void Function(_i7.Bookmark)? onNavigateToDetail,
+  }) =>
+      super.noSuchMethod(
+        Invocation.method(
+          #handleBookmarkTap,
+          [],
+          {
+            #bookmark: bookmark,
+            #onNavigateToDetail: onNavigateToDetail,
+          },
+        ),
+        returnValueForMissingStub: null,
+      );
 }
 
 /// A class which mocks [LabelRepository].

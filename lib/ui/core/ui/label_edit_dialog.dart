@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
+import 'package:readeck_app/ui/core/ui/snack_bar_helper.dart';
 
 class LabelEditDialog extends StatefulWidget {
   final Bookmark bookmark;
@@ -69,11 +70,9 @@ class _LabelEditDialogState extends State<LabelEditDialog> {
             _isLoading = false;
           }
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('加载标签失败: $e'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
+        SnackBarHelper.showError(
+          context,
+          '加载标签失败: $e',
         );
       }
     }

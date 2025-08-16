@@ -13,6 +13,7 @@ import 'package:readeck_app/ui/core/ui/error_page.dart';
 import 'package:readeck_app/ui/core/ui/loading.dart';
 import 'package:readeck_app/ui/daily_read/view_models/daily_read_viewmodel.dart';
 import 'package:readeck_app/utils/network_error_exception.dart';
+import 'package:readeck_app/ui/core/ui/snack_bar_helper.dart';
 
 class DailyReadScreen extends StatefulWidget {
   const DailyReadScreen({super.key, required this.viewModel});
@@ -35,6 +36,15 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
     );
     // 设置书签归档回调
     widget.viewModel.setOnBookmarkArchivedCallback(_onBookmarkArchived);
+    // 设置导航回调
+    widget.viewModel.setNavigateToDetailCallback((bookmark) {
+      if (mounted) {
+        context.push(
+          Routes.bookmarkDetailWithId(bookmark.id),
+          extra: {'bookmark': bookmark},
+        );
+      }
+    });
   }
 
   @override
@@ -43,6 +53,7 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
     _confettiController.dispose();
     // 清除回调
     widget.viewModel.setOnBookmarkArchivedCallback(null);
+    widget.viewModel.setNavigateToDetailCallback((_) {});
     super.dispose();
   }
 
@@ -54,10 +65,9 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
         '加载书签失败',
         error: error,
       );
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('加载书签失败'),
-        ),
+      SnackBarHelper.showError(
+        context,
+        '加载书签失败',
       );
     });
     widget.viewModel.toggleBookmarkArchived.errors
@@ -67,10 +77,9 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
         '切换书签归档状态失败',
         error: error,
       );
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('切换书签归档状态失败'),
-        ),
+      SnackBarHelper.showError(
+        context,
+        '切换书签归档状态失败',
       );
     });
     widget.viewModel.toggleBookmarkMarked.errors
@@ -80,10 +89,9 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
         '切换书签标记状态失败',
         error: error,
       );
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('切换书签标记状态失败'),
-        ),
+      SnackBarHelper.showError(
+        context,
+        '切换书签标记状态失败',
       );
     });
   }
@@ -188,34 +196,28 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
       itemBuilder: (context, index) {
         final bookmarkModel = widget.viewModel.unArchivedBookmarks[index];
         return BookmarkCard(
-          bookmark: bookmarkModel.bookmark,
+          bookmarkDisplayModel: bookmarkModel,
           onOpenUrl: widget.viewModel.openUrl,
           onToggleMark: (bookmark) =>
-              widget.viewModel.toggleBookmarkMarked(bookmark),
+              widget.viewModel.toggleBookmarkMarked(bookmarkModel),
           onUpdateLabels: (bookmark, labels) {
             widget.viewModel
-                .updateBookmarkLabels(bookmark, labels)
+                .updateBookmarkLabels(bookmarkModel, labels)
                 .catchError((error) {
               if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('更新标签失败: $error'),
-                    duration: const Duration(seconds: 3),
-                  ),
+                SnackBarHelper.showError(
+                  context,
+                  '更新标签失败: $error',
+                  duration: const Duration(seconds: 3),
                 );
               }
             });
           },
-          onCardTap: (bookmark) {
-            context.push(
-              Routes.bookmarkDetailWithId(bookmark.id),
-            );
-          },
-          readingStats: bookmarkModel.stats,
+          onCardTap: widget.viewModel.handleBookmarkTap,
           availableLabels: widget.viewModel.availableLabels,
           onLoadLabels: () => widget.viewModel.loadLabels.executeWithFuture(),
           onToggleArchive: (bookmark) {
-            widget.viewModel.toggleBookmarkArchived(bookmark);
+            widget.viewModel.toggleBookmarkArchived(bookmarkModel);
           },
         );
       },

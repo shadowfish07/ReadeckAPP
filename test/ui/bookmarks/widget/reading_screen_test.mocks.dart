@@ -8,12 +8,12 @@ import 'dart:ui' as _i8;
 
 import 'package:flutter_command/flutter_command.dart' as _i2;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:readeck_app/domain/models/bookmark/bookmark.dart' as _i5;
+import 'package:readeck_app/domain/models/bookmark/bookmark.dart' as _i6;
 import 'package:readeck_app/domain/models/bookmark_display_model/bookmark_display_model.dart'
     as _i4;
 import 'package:readeck_app/ui/bookmarks/view_models/bookmarks_viewmodel.dart'
     as _i3;
-import 'package:readeck_app/utils/reading_stats_calculator.dart' as _i6;
+import 'package:readeck_app/utils/reading_stats_calculator.dart' as _i5;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -78,24 +78,24 @@ class MockReadingViewmodel extends _i1.Mock implements _i3.ReadingViewmodel {
       ) as _i2.Command<String, void>);
 
   @override
-  _i2.Command<_i5.Bookmark, void> get toggleBookmarkMarked =>
+  _i2.Command<_i4.BookmarkDisplayModel, void> get toggleBookmarkMarked =>
       (super.noSuchMethod(
         Invocation.getter(#toggleBookmarkMarked),
-        returnValue: _FakeCommand_0<_i5.Bookmark, void>(
+        returnValue: _FakeCommand_0<_i4.BookmarkDisplayModel, void>(
           this,
           Invocation.getter(#toggleBookmarkMarked),
         ),
-      ) as _i2.Command<_i5.Bookmark, void>);
+      ) as _i2.Command<_i4.BookmarkDisplayModel, void>);
 
   @override
-  _i2.Command<_i5.Bookmark, void> get toggleBookmarkArchived =>
+  _i2.Command<_i4.BookmarkDisplayModel, void> get toggleBookmarkArchived =>
       (super.noSuchMethod(
         Invocation.getter(#toggleBookmarkArchived),
-        returnValue: _FakeCommand_0<_i5.Bookmark, void>(
+        returnValue: _FakeCommand_0<_i4.BookmarkDisplayModel, void>(
           this,
           Invocation.getter(#toggleBookmarkArchived),
         ),
-      ) as _i2.Command<_i5.Bookmark, void>);
+      ) as _i2.Command<_i4.BookmarkDisplayModel, void>);
 
   @override
   _i2.Command<void, List<String>> get loadLabels => (super.noSuchMethod(
@@ -161,7 +161,7 @@ class MockReadingViewmodel extends _i1.Mock implements _i3.ReadingViewmodel {
 
   @override
   set toggleBookmarkMarked(
-          _i2.Command<_i5.Bookmark, void>? _toggleBookmarkMarked) =>
+          _i2.Command<_i4.BookmarkDisplayModel, void>? _toggleBookmarkMarked) =>
       super.noSuchMethod(
         Invocation.setter(
           #toggleBookmarkMarked,
@@ -172,7 +172,8 @@ class MockReadingViewmodel extends _i1.Mock implements _i3.ReadingViewmodel {
 
   @override
   set toggleBookmarkArchived(
-          _i2.Command<_i5.Bookmark, void>? _toggleBookmarkArchived) =>
+          _i2.Command<_i4.BookmarkDisplayModel, void>?
+              _toggleBookmarkArchived) =>
       super.noSuchMethod(
         Invocation.setter(
           #toggleBookmarkArchived,
@@ -198,11 +199,11 @@ class MockReadingViewmodel extends _i1.Mock implements _i3.ReadingViewmodel {
       ) as bool);
 
   @override
-  _i6.ReadingStatsForView? getReadingStats(String? bookmarkId) =>
+  _i5.ReadingStatsForView? getReadingStats(String? bookmarkId) =>
       (super.noSuchMethod(Invocation.method(
         #getReadingStats,
         [bookmarkId],
-      )) as _i6.ReadingStatsForView?);
+      )) as _i5.ReadingStatsForView?);
 
   @override
   void loadNextPage() => super.noSuchMethod(
@@ -214,8 +215,28 @@ class MockReadingViewmodel extends _i1.Mock implements _i3.ReadingViewmodel {
       );
 
   @override
+  void handleBookmarkTap(_i4.BookmarkDisplayModel? bookmark) =>
+      super.noSuchMethod(
+        Invocation.method(
+          #handleBookmarkTap,
+          [bookmark],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void setNavigateToDetailCallback(void Function(_i6.Bookmark)? callback) =>
+      super.noSuchMethod(
+        Invocation.method(
+          #setNavigateToDetailCallback,
+          [callback],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
   _i7.Future<void> updateBookmarkLabels(
-    _i5.Bookmark? bookmark,
+    _i4.BookmarkDisplayModel? bookmark,
     List<String>? labels,
   ) =>
       (super.noSuchMethod(

@@ -45,7 +45,7 @@ List<SingleChildWidget> providers(String host, String token) {
     Provider(create: (context) => ReadingStatsRepository(context.read())),
     Provider(
         create: (context) =>
-            BookmarkRepository(context.read(), context.read())),
+            BookmarkRepository(context.read(), context.read(), context.read())),
     Provider(create: (context) => DailyReadHistoryRepository(context.read())),
     Provider(create: (context) => LabelRepository(context.read())),
     Provider(

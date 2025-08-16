@@ -22,10 +22,10 @@ class DailyReadViewModel extends ChangeNotifier {
         includeLastResultInCommandResults: true, initialValue: [])
       ..execute(false);
     openUrl = Command.createAsyncNoResult<String>(_openUrl);
-    toggleBookmarkArchived =
-        Command.createAsyncNoResult<Bookmark>(_toggleBookmarkArchived);
-    toggleBookmarkMarked =
-        Command.createAsyncNoResult<Bookmark>(_toggleBookmarkMarked);
+    toggleBookmarkArchived = Command.createAsyncNoResult<BookmarkDisplayModel>(
+        _toggleBookmarkArchived);
+    toggleBookmarkMarked = Command.createAsyncNoResult<BookmarkDisplayModel>(
+        _toggleBookmarkMarked);
     loadLabels = Command.createAsyncNoParam(_loadLabels, initialValue: []);
 
     // 注册书签数据变化监听器
@@ -35,6 +35,7 @@ class DailyReadViewModel extends ChangeNotifier {
   }
 
   VoidCallback? _onBookmarkArchivedCallback;
+  void Function(Bookmark)? _onNavigateToDetail;
 
   final BookmarkRepository _bookmarkRepository;
   final DailyReadHistoryRepository _dailyReadHistoryRepository;
@@ -43,8 +44,8 @@ class DailyReadViewModel extends ChangeNotifier {
 
   late Command<bool, List<BookmarkDisplayModel>> load;
   late Command<String, void> openUrl;
-  late Command<Bookmark, void> toggleBookmarkArchived;
-  late Command<Bookmark, void> toggleBookmarkMarked;
+  late Command<BookmarkDisplayModel, void> toggleBookmarkArchived;
+  late Command<BookmarkDisplayModel, void> toggleBookmarkMarked;
   late Command<void, List<String>> loadLabels;
 
   final List<BookmarkDisplayModel> _todayBookmarks = [];
@@ -147,8 +148,23 @@ class DailyReadViewModel extends ChangeNotifier {
     _onBookmarkArchivedCallback = callback;
   }
 
-  Future<void> _toggleBookmarkArchived(Bookmark bookmark) async {
-    final result = await _bookmarkRepository.toggleArchived(bookmark);
+  void setNavigateToDetailCallback(void Function(Bookmark) callback) {
+    _onNavigateToDetail = callback;
+  }
+
+  void _navigateToDetail(Bookmark bookmark) {
+    _onNavigateToDetail?.call(bookmark);
+  }
+
+  void handleBookmarkTap(BookmarkDisplayModel bookmark) {
+    _bookmarkOperationUseCases.handleBookmarkTap(
+      bookmark: bookmark,
+      onNavigateToDetail: _navigateToDetail,
+    );
+  }
+
+  Future<void> _toggleBookmarkArchived(BookmarkDisplayModel bookmark) async {
+    final result = await _bookmarkRepository.toggleArchived(bookmark.bookmark);
 
     if (result.isError()) {
       appLogger.e("Failed to toggle bookmark archived",
@@ -159,8 +175,8 @@ class DailyReadViewModel extends ChangeNotifier {
     _onBookmarkArchivedCallback?.call();
   }
 
-  Future<void> _toggleBookmarkMarked(Bookmark bookmark) async {
-    final result = await _bookmarkRepository.toggleMarked(bookmark);
+  Future<void> _toggleBookmarkMarked(BookmarkDisplayModel bookmark) async {
+    final result = await _bookmarkRepository.toggleMarked(bookmark.bookmark);
 
     if (result.isError()) {
       appLogger.e("Failed to toggle bookmark marked",
@@ -180,8 +196,9 @@ class DailyReadViewModel extends ChangeNotifier {
   }
 
   Future<void> updateBookmarkLabels(
-      Bookmark bookmark, List<String> labels) async {
-    final result = await _bookmarkRepository.updateLabels(bookmark, labels);
+      BookmarkDisplayModel bookmark, List<String> labels) async {
+    final result =
+        await _bookmarkRepository.updateLabels(bookmark.bookmark, labels);
 
     if (result.isError()) {
       appLogger.e("Failed to update bookmark labels",

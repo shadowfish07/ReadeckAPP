@@ -54,10 +54,10 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
     loadMore = Command.createAsync<int, List<BookmarkDisplayModel>>(_loadMore,
         initialValue: [], includeLastResultInCommandResults: true);
     openUrl = Command.createAsyncNoResult(_openUrl);
-    toggleBookmarkMarked =
-        Command.createAsyncNoResult<Bookmark>(_toggleBookmarkMarked);
-    toggleBookmarkArchived =
-        Command.createAsyncNoResult<Bookmark>(_toggleBookmarkArchived);
+    toggleBookmarkMarked = Command.createAsyncNoResult<BookmarkDisplayModel>(
+        _toggleBookmarkMarked);
+    toggleBookmarkArchived = Command.createAsyncNoResult<BookmarkDisplayModel>(
+        _toggleBookmarkArchived);
     loadLabels = Command.createAsyncNoParam(_loadLabels, initialValue: []);
 
     // 注册书签数据变化监听器
@@ -76,8 +76,8 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
   late Command<int, List<BookmarkDisplayModel>> load;
   late Command<int, List<BookmarkDisplayModel>> loadMore;
   late Command<String, void> openUrl;
-  late Command<Bookmark, void> toggleBookmarkMarked;
-  late Command<Bookmark, void> toggleBookmarkArchived;
+  late Command<BookmarkDisplayModel, void> toggleBookmarkMarked;
+  late Command<BookmarkDisplayModel, void> toggleBookmarkArchived;
   late Command<void, List<String>> loadLabels;
 
   List<BookmarkDisplayModel> get bookmarks => _bookmarks;
@@ -141,8 +141,29 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
     }
   }
 
-  Future<void> _toggleBookmarkMarked(Bookmark bookmark) async {
-    final result = await _bookmarkRepository.toggleMarked(bookmark);
+  /// 处理书签点击，根据文章内容状态决定打开方式
+  void handleBookmarkTap(BookmarkDisplayModel bookmark) {
+    _bookmarkOperationUseCases.handleBookmarkTap(
+      bookmark: bookmark,
+      onNavigateToDetail: _navigateToDetail,
+    );
+  }
+
+  /// 触发详情页导航的回调
+  void Function(Bookmark)? _onNavigateToDetail;
+
+  /// 设置详情页导航回调
+  void setNavigateToDetailCallback(void Function(Bookmark) callback) {
+    _onNavigateToDetail = callback;
+  }
+
+  /// 导航到详情页
+  void _navigateToDetail(Bookmark bookmark) {
+    _onNavigateToDetail?.call(bookmark);
+  }
+
+  Future<void> _toggleBookmarkMarked(BookmarkDisplayModel bookmark) async {
+    final result = await _bookmarkRepository.toggleMarked(bookmark.bookmark);
 
     if (result.isError()) {
       appLogger.e("Failed to toggle bookmark marked",
@@ -151,8 +172,8 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
     }
   }
 
-  Future<void> _toggleBookmarkArchived(Bookmark bookmark) async {
-    final result = await _bookmarkRepository.toggleArchived(bookmark);
+  Future<void> _toggleBookmarkArchived(BookmarkDisplayModel bookmark) async {
+    final result = await _bookmarkRepository.toggleArchived(bookmark.bookmark);
 
     if (result.isError()) {
       appLogger.e("Failed to toggle bookmark archived",
@@ -172,8 +193,9 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
   }
 
   Future<void> updateBookmarkLabels(
-      Bookmark bookmark, List<String> labels) async {
-    final result = await _bookmarkRepository.updateLabels(bookmark, labels);
+      BookmarkDisplayModel bookmark, List<String> labels) async {
+    final result =
+        await _bookmarkRepository.updateLabels(bookmark.bookmark, labels);
 
     if (result.isError()) {
       appLogger.e("Failed to update bookmark labels",

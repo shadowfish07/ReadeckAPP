@@ -11,6 +11,13 @@ on:
     branches:
       - main
       - beta
+  workflow_dispatch:
+    inputs:
+      skip_approval:
+        description: '跳过手动确认步骤'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   test:
@@ -20,15 +27,35 @@ jobs:
       pull-requests: write
       actions: read
 
-  release:
-    name: Release
+  approval:
+    name: Manual Approval Required
     runs-on: ubuntu-latest
     needs: test
     if: |
       github.event_name == 'push' && 
       (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta') &&
       !contains(github.event.head_commit.message, '[skip ci]') &&
-      !contains(github.event.head_commit.message, 'chore: sync beta with main')
+      !contains(github.event.head_commit.message, 'chore: sync beta with main') &&
+      !github.event.inputs.skip_approval
+    environment: production-approval
+    steps:
+      - name: Manual approval checkpoint
+        run: |
+          echo "等待手动确认部署..."
+          echo "分支: ${{ github.ref }}"
+          echo "提交: ${{ github.event.head_commit.message }}"
+          echo "提交者: ${{ github.event.head_commit.author.name }}"
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: [test, approval]
+    if: |
+      (github.event_name == 'push' && 
+       (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta') &&
+       !contains(github.event.head_commit.message, '[skip ci]') &&
+       !contains(github.event.head_commit.message, 'chore: sync beta with main')) ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.skip_approval == 'true')
 
     steps:
       - name: Checkout code

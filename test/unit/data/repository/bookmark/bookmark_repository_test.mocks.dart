@@ -7,6 +7,8 @@ import 'dart:async' as _i3;
 
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i6;
+import 'package:readeck_app/data/repository/article/article_repository.dart'
+    as _i10;
 import 'package:readeck_app/data/repository/reading_stats/reading_stats_repository.dart'
     as _i8;
 import 'package:readeck_app/data/service/readeck_api_client.dart' as _i2;
@@ -323,6 +325,84 @@ class MockReadingStatsRepository extends _i1.Mock
           Invocation.method(
             #deleteReadingStats,
             [bookmarkId],
+          ),
+        )),
+      ) as _i3.Future<_i4.ResultDart<void, Exception>>);
+}
+
+/// A class which mocks [ArticleRepository].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockArticleRepository extends _i1.Mock implements _i10.ArticleRepository {
+  MockArticleRepository() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i3.Future<_i4.ResultDart<String, Exception>> getBookmarkArticle(
+          String? bookmarkId) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getBookmarkArticle,
+          [bookmarkId],
+        ),
+        returnValue: _i3.Future<_i4.ResultDart<String, Exception>>.value(
+            _i6.dummyValue<_i4.ResultDart<String, Exception>>(
+          this,
+          Invocation.method(
+            #getBookmarkArticle,
+            [bookmarkId],
+          ),
+        )),
+      ) as _i3.Future<_i4.ResultDart<String, Exception>>);
+
+  @override
+  _i3.Future<_i4.ResultDart<void, Exception>> deleteBookmarkArticle(
+          String? bookmarkId) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #deleteBookmarkArticle,
+          [bookmarkId],
+        ),
+        returnValue: _i3.Future<_i4.ResultDart<void, Exception>>.value(
+            _i6.dummyValue<_i4.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #deleteBookmarkArticle,
+            [bookmarkId],
+          ),
+        )),
+      ) as _i3.Future<_i4.ResultDart<void, Exception>>);
+
+  @override
+  _i3.Stream<_i4.ResultDart<String, Exception>> translateBookmarkContentStream(
+    String? bookmarkId,
+    String? originalContent,
+  ) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #translateBookmarkContentStream,
+          [
+            bookmarkId,
+            originalContent,
+          ],
+        ),
+        returnValue: _i3.Stream<_i4.ResultDart<String, Exception>>.empty(),
+      ) as _i3.Stream<_i4.ResultDart<String, Exception>>);
+
+  @override
+  _i3.Future<_i4.ResultDart<void, Exception>> clearTranslationCache() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #clearTranslationCache,
+          [],
+        ),
+        returnValue: _i3.Future<_i4.ResultDart<void, Exception>>.value(
+            _i6.dummyValue<_i4.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #clearTranslationCache,
+            [],
           ),
         )),
       ) as _i3.Future<_i4.ResultDart<void, Exception>>);

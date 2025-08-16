@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:readeck_app/data/repository/article/article_repository.dart';
 import 'package:readeck_app/data/repository/reading_stats/reading_stats_repository.dart';
 import 'package:readeck_app/data/service/readeck_api_client.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
@@ -11,10 +12,12 @@ import 'package:result_dart/result_dart.dart';
 typedef BookmarkChangeListener = void Function();
 
 class BookmarkRepository {
-  BookmarkRepository(this._readeckApiClient, this._readingStatsRepository);
+  BookmarkRepository(this._readeckApiClient, this._readingStatsRepository,
+      this._articleRepository);
 
   final ReadeckApiClient _readeckApiClient;
   final ReadingStatsRepository _readingStatsRepository;
+  final ArticleRepository _articleRepository;
 
   // 全局共享数据管理 - 单一数据源
   final List<BookmarkDisplayModel> _bookmarks = [];
@@ -105,7 +108,35 @@ class BookmarkRepository {
   ) async {
     final models = await Future.wait(
       bookmarks.map((b) async {
-        final statsRes = await _readingStatsRepository.getReadingStats(b.id);
+        // 首先尝试从数据库中读取已有的阅读统计数据
+        var statsRes = await _readingStatsRepository.getReadingStats(b.id);
+
+        // 如果数据库中没有，尝试获取文章内容并计算
+        if (statsRes.isError()) {
+          try {
+            final articleResult =
+                await _articleRepository.getBookmarkArticle(b.id);
+            if (articleResult.isSuccess()) {
+              final htmlContent = articleResult.getOrThrow();
+              final calculateResult = await _readingStatsRepository
+                  .calculateAndSaveReadingStats(b.id, htmlContent);
+
+              if (calculateResult.isSuccess()) {
+                statsRes = Success(calculateResult.getOrThrow());
+                appLogger.d('成功为书签 ${b.id} 计算并保存阅读统计数据');
+              } else {
+                appLogger.w(
+                    '计算书签 ${b.id} 的阅读统计数据失败: ${calculateResult.exceptionOrNull()}');
+              }
+            } else {
+              appLogger.w(
+                  '获取书签 ${b.id} 的文章内容失败: ${articleResult.exceptionOrNull()}');
+            }
+          } catch (e) {
+            appLogger.e('处理书签 ${b.id} 的阅读统计数据时发生错误: $e');
+          }
+        }
+
         return statsRes.isSuccess()
             ? BookmarkDisplayModel(bookmark: b, stats: statsRes.getOrThrow())
             : BookmarkDisplayModel(bookmark: b);

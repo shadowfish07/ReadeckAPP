@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:readeck_app/main.dart';
 import 'package:readeck_app/routing/routes.dart';
 import 'package:readeck_app/ui/settings/view_models/ai_settings_viewmodel.dart';
+import 'package:readeck_app/ui/core/ui/snack_bar_helper.dart';
 
 class AiSettingsScreen extends StatefulWidget {
   const AiSettingsScreen({super.key, required this.viewModel});
@@ -43,11 +44,9 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
       appLogger.e('保存 API 键错误: $error');
       if (mounted && error != null) {
         // 保存失败，显示错误提示
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('保存失败：${error.error.toString()}'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
+        SnackBarHelper.showError(
+          context,
+          '保存失败：${error.error.toString()}',
         );
       }
     });
