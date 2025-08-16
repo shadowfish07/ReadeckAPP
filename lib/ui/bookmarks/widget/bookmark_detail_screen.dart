@@ -10,6 +10,7 @@ import 'package:readeck_app/ui/core/ui/bookmark_labels_widget.dart';
 import 'package:readeck_app/ui/core/ui/error_page.dart';
 import 'package:readeck_app/ui/core/ui/label_edit_dialog.dart';
 import 'package:readeck_app/ui/core/ui/loading.dart';
+import 'package:readeck_app/ui/core/ui/snack_bar_helper.dart';
 
 class BookmarkDetailScreen extends StatefulWidget {
   const BookmarkDetailScreen({super.key, required this.viewModel});
@@ -38,12 +39,9 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
         .where((error) => error != null)
         .listen((error, subscription) {
       if (mounted && error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('AI翻译失败: ${error.error.toString()}'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-            behavior: SnackBarBehavior.floating,
-          ),
+        SnackBarHelper.showError(
+          context,
+          'AI翻译失败: ${error.error.toString()}',
         );
       }
     });
@@ -75,11 +73,9 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
                   break;
                 case 'toggle_mark':
                   _toggleBookmarkMarked();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                        content: Text(widget.viewModel.bookmark.isMarked
-                            ? '已取消喜爱'
-                            : '已标记喜爱')),
+                  SnackBarHelper.showInfo(
+                    context,
+                    widget.viewModel.bookmark.isMarked ? '已取消喜爱' : '已标记喜爱',
                   );
                   break;
                 case 'edit_labels':
@@ -688,12 +684,9 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
       await widget.viewModel.archiveBookmarkCommand.executeWithFuture();
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('已成功归档'),
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            behavior: SnackBarBehavior.floating,
-          ),
+        SnackBarHelper.showSuccess(
+          context,
+          '已成功归档',
         );
 
         Navigator.of(context).pop();
@@ -701,12 +694,9 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
     } catch (e) {
       // 显示错误提示
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('归档失败: ${e.toString()}'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-            behavior: SnackBarBehavior.floating,
-          ),
+        SnackBarHelper.showError(
+          context,
+          '归档失败: ${e.toString()}',
         );
       }
     }
@@ -717,8 +707,9 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
       await widget.viewModel.toggleMarkCommand.executeWithFuture();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('操作失败: $e')),
+        SnackBarHelper.showError(
+          context,
+          '操作失败: $e',
         );
       }
     }
@@ -735,14 +726,16 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
             try {
               await widget.viewModel.updateBookmarkLabels(labels);
               if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('标签已更新')),
+                SnackBarHelper.showSuccess(
+                  context,
+                  '标签已更新',
                 );
               }
             } catch (e) {
               if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('更新标签失败: $e')),
+                SnackBarHelper.showError(
+                  context,
+                  '更新标签失败: $e',
                 );
               }
             }
@@ -787,15 +780,17 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
     try {
       await widget.viewModel.deleteBookmarkCommand.executeWithFuture();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('书签已删除')),
+        SnackBarHelper.showSuccess(
+          context,
+          '书签已删除',
         );
         Navigator.of(context).pop(); // 删除成功后返回上一页
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('删除失败: $e')),
+        SnackBarHelper.showError(
+          context,
+          '删除失败: $e',
         );
       }
     }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_command/flutter_command.dart';
 import 'package:readeck_app/main.dart';
 import 'package:readeck_app/ui/settings/view_models/translation_settings_viewmodel.dart';
+import 'package:readeck_app/ui/core/ui/snack_bar_helper.dart';
 
 class TranslationSettingsScreen extends StatefulWidget {
   const TranslationSettingsScreen({super.key, required this.viewModel});
@@ -29,11 +30,9 @@ class _TranslationSettingsScreenState extends State<TranslationSettingsScreen> {
     _providerSuccessSubscription =
         widget.viewModel.saveTranslationProvider.listen((result, _) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('翻译服务提供方保存成功'),
-            backgroundColor: Theme.of(context).colorScheme.primary,
-          ),
+        SnackBarHelper.showSuccess(
+          context,
+          '翻译服务提供方保存成功',
         );
       }
     });
@@ -43,11 +42,9 @@ class _TranslationSettingsScreenState extends State<TranslationSettingsScreen> {
         .listen((error, _) {
       appLogger.e('保存翻译服务提供方错误: $error');
       if (mounted && error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('保存失败：${error.error.toString()}'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
+        SnackBarHelper.showError(
+          context,
+          '保存失败：${error.error.toString()}',
         );
       }
     });
@@ -56,11 +53,9 @@ class _TranslationSettingsScreenState extends State<TranslationSettingsScreen> {
     _languageSuccessSubscription =
         widget.viewModel.saveTranslationTargetLanguage.listen((result, _) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('翻译目标语种保存成功'),
-            backgroundColor: Theme.of(context).colorScheme.primary,
-          ),
+        SnackBarHelper.showSuccess(
+          context,
+          '翻译目标语种保存成功',
         );
       }
     });
@@ -71,11 +66,9 @@ class _TranslationSettingsScreenState extends State<TranslationSettingsScreen> {
         .listen((error, _) {
       appLogger.e('保存翻译目标语种错误: $error');
       if (mounted && error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('保存失败：${error.error.toString()}'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
+        SnackBarHelper.showError(
+          context,
+          '保存失败：${error.error.toString()}',
         );
       }
     });
@@ -84,11 +77,9 @@ class _TranslationSettingsScreenState extends State<TranslationSettingsScreen> {
     _cacheSuccessSubscription =
         widget.viewModel.saveTranslationCacheEnabled.listen((result, _) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('翻译缓存设置保存成功'),
-            backgroundColor: Theme.of(context).colorScheme.primary,
-          ),
+        SnackBarHelper.showSuccess(
+          context,
+          '翻译缓存设置保存成功',
         );
       }
     });
@@ -99,11 +90,9 @@ class _TranslationSettingsScreenState extends State<TranslationSettingsScreen> {
         .listen((error, _) {
       appLogger.e('保存翻译缓存设置错误: $error');
       if (mounted && error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('保存失败：${error.error.toString()}'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
+        SnackBarHelper.showError(
+          context,
+          '保存失败：${error.error.toString()}',
         );
       }
     });
@@ -186,10 +175,9 @@ class _TranslationSettingsScreenState extends State<TranslationSettingsScreen> {
               trailing: const Icon(Icons.chevron_right),
               onTap: () {
                 // 目前只支持AI，所以暂时不提供选择
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('目前只支持 AI 翻译服务'),
-                  ),
+                SnackBarHelper.showInfo(
+                  context,
+                  '目前只支持 AI 翻译服务',
                 );
               },
             ),

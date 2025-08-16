@@ -9,6 +9,7 @@ import 'package:readeck_app/ui/core/ui/error_page.dart';
 import 'package:readeck_app/ui/core/ui/loading.dart';
 import 'package:readeck_app/ui/bookmarks/view_models/bookmarks_viewmodel.dart';
 import 'package:readeck_app/utils/network_error_exception.dart';
+import 'package:readeck_app/ui/core/ui/snack_bar_helper.dart';
 
 /// 书签列表页面的文案配置
 class BookmarkListTexts {
@@ -225,11 +226,10 @@ class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
                   .updateBookmarkLabels(bookmark, labels)
                   .catchError((error) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('更新标签失败: $error'),
-                      duration: const Duration(seconds: 3),
-                    ),
+                  SnackBarHelper.showError(
+                    context,
+                    '更新标签失败: $error',
+                    duration: const Duration(seconds: 3),
                   );
                 }
               });

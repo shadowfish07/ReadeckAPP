@@ -4,6 +4,7 @@ import 'package:flutter_command/flutter_command.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 import 'package:readeck_app/ui/core/ui/bookmark_labels_widget.dart';
 import 'package:readeck_app/ui/core/ui/label_edit_dialog.dart';
+import 'package:readeck_app/ui/core/ui/snack_bar_helper.dart';
 import 'package:readeck_app/utils/reading_stats_calculator.dart';
 
 class BookmarkCard extends StatefulWidget {
@@ -38,26 +39,17 @@ class _BookmarkCardState extends State<BookmarkCard> {
   @override
   didChangeDependencies() {
     widget.onOpenUrl.errors.where((x) => x != null).listen((error, _) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error.toString()),
-          backgroundColor: Theme.of(context).colorScheme.error,
-          duration: const Duration(seconds: 5),
-          action: SnackBarAction(
-            label: '复制链接',
-            textColor: Theme.of(context).colorScheme.onError,
-            onPressed: () async {
-              await Clipboard.setData(ClipboardData(text: widget.bookmark.url));
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('链接已复制到剪贴板'),
-                    duration: Duration(seconds: 2),
-                  ),
-                );
-              }
-            },
-          ),
+      SnackBarHelper.showError(
+        context,
+        error.toString(),
+        action: SnackBarAction(
+          label: '复制链接',
+          onPressed: () async {
+            await Clipboard.setData(ClipboardData(text: widget.bookmark.url));
+            if (mounted) {
+              SnackBarHelper.showSuccess(context, '链接已复制到剪贴板');
+            }
+          },
         ),
       );
     });
@@ -279,13 +271,10 @@ class _BookmarkCardState extends State<BookmarkCard> {
                       onPressed: widget.onToggleArchive != null
                           ? () {
                               widget.onToggleArchive!(widget.bookmark);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(widget.bookmark.isArchived
-                                      ? '已取消归档'
-                                      : '已标记归档'),
-                                  duration: const Duration(seconds: 2),
-                                ),
+                              SnackBarHelper.showSuccess(
+                                context,
+                                widget.bookmark.isArchived ? '已取消归档' : '已标记归档',
+                                duration: const Duration(seconds: 2),
                               );
                             }
                           : null,
@@ -351,7 +340,20 @@ class _BookmarkCardState extends State<BookmarkCard> {
         builder: (dialogContext) => LabelEditDialog(
           bookmark: widget.bookmark,
           availableLabels: labels,
-          onUpdateLabels: widget.onUpdateLabels!,
+          onUpdateLabels: (bookmark, labels) async {
+            try {
+              if (widget.onUpdateLabels != null) {
+                widget.onUpdateLabels!(bookmark, labels);
+                if (context.mounted) {
+                  SnackBarHelper.showSuccess(context, '标签已更新');
+                }
+              }
+            } catch (e) {
+              if (context.mounted) {
+                SnackBarHelper.showError(context, '更新标签失败: $e');
+              }
+            }
+          },
           onLoadLabels: widget.onLoadLabels,
         ),
       );
