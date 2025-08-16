@@ -117,7 +117,7 @@ class BookmarkRepository {
             final articleResult =
                 await _articleRepository.getBookmarkArticle(b.id);
             if (articleResult.isSuccess()) {
-              final htmlContent = articleResult.getOrNull()!;
+              final htmlContent = articleResult.getOrThrow();
               final calculateResult = await _readingStatsRepository
                   .calculateAndSaveReadingStats(b.id, htmlContent);
 
