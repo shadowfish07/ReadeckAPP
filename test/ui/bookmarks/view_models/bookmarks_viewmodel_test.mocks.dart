@@ -212,6 +212,38 @@ class MockBookmarkRepository extends _i1.Mock
 
   @override
   _i4.Future<_i5.ResultDart<List<_i3.BookmarkDisplayModel>, Exception>>
+      loadReadingBookmarks({
+    int? limit = 10,
+    int? page = 1,
+  }) =>
+          (super.noSuchMethod(
+            Invocation.method(
+              #loadReadingBookmarks,
+              [],
+              {
+                #limit: limit,
+                #page: page,
+              },
+            ),
+            returnValue: _i4.Future<
+                _i5.ResultDart<List<_i3.BookmarkDisplayModel>,
+                    Exception>>.value(_i6.dummyValue<
+                _i5.ResultDart<List<_i3.BookmarkDisplayModel>, Exception>>(
+              this,
+              Invocation.method(
+                #loadReadingBookmarks,
+                [],
+                {
+                  #limit: limit,
+                  #page: page,
+                },
+              ),
+            )),
+          ) as _i4.Future<
+              _i5.ResultDart<List<_i3.BookmarkDisplayModel>, Exception>>);
+
+  @override
+  _i4.Future<_i5.ResultDart<List<_i3.BookmarkDisplayModel>, Exception>>
       loadRandomUnarchivedBookmarks(int? randomCount) => (super.noSuchMethod(
             Invocation.method(
               #loadRandomUnarchivedBookmarks,

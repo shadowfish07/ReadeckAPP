@@ -22,6 +22,7 @@ import 'package:readeck_app/ui/settings/widgets/settings_screen.dart';
 import 'package:readeck_app/ui/settings/widgets/translation_settings_screen.dart';
 import 'package:readeck_app/ui/bookmarks/view_models/bookmarks_viewmodel.dart';
 import 'package:readeck_app/ui/bookmarks/widget/unarchived_screen.dart';
+import 'package:readeck_app/ui/bookmarks/widget/reading_screen.dart';
 import 'package:readeck_app/ui/bookmarks/widget/archived_screen.dart';
 import 'package:readeck_app/ui/bookmarks/widget/marked_screen.dart';
 import 'package:readeck_app/ui/bookmarks/view_models/bookmark_detail_viewmodel.dart';
@@ -39,6 +40,7 @@ final Map<String, String> _routeTitleMap = {
   Routes.translationSetting: '翻译设置',
   Routes.dailyRead: '每日阅读',
   Routes.unarchived: '未读',
+  Routes.reading: '阅读中',
   Routes.archived: '已归档',
   Routes.marked: '标记喜爱',
   Routes.bookmarkDetail: '书签详情',
@@ -109,6 +111,22 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
                       child: Consumer<UnarchivedViewmodel>(
                         builder: (context, viewModel, child) {
                           return UnarchivedScreen(viewModel: viewModel);
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ]),
+              StatefulShellBranch(routes: [
+                GoRoute(
+                  path: Routes.reading,
+                  builder: (context, state) {
+                    return ChangeNotifierProvider(
+                      create: (context) => ReadingViewmodel(
+                          context.read(), context.read(), context.read()),
+                      child: Consumer<ReadingViewmodel>(
+                        builder: (context, viewModel, child) {
+                          return ReadingScreen(viewModel: viewModel);
                         },
                       ),
                     );

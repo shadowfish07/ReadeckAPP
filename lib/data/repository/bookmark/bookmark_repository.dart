@@ -244,6 +244,33 @@ class BookmarkRepository {
     );
   }
 
+  AsyncResult<List<BookmarkDisplayModel>> loadReadingBookmarks({
+    int limit = 10,
+    int page = 1,
+  }) async {
+    appLogger.i('开始加载阅读中书签，页码: $page, 限制: $limit');
+    final result = await _readeckApiClient.getBookmarks(
+      readStatus: 'reading',
+      isArchived: false,
+      limit: limit,
+      offset: (page - 1) * limit,
+    );
+    return result.fold(
+      (bookmarks) async {
+        appLogger.i('成功加载阅读中书签 ${bookmarks.length} 个');
+        final modelsResult = await _wrapBookmarksWithStats(bookmarks);
+        if (modelsResult.isSuccess()) {
+          _insertOrUpdateCachedBookmarks(modelsResult.getOrThrow());
+        }
+        return modelsResult;
+      },
+      (error) {
+        appLogger.e('加载阅读中书签失败', error: error);
+        return Failure(error);
+      },
+    );
+  }
+
   AsyncResult<List<BookmarkDisplayModel>> loadRandomUnarchivedBookmarks(
       int randomCount) async {
     appLogger.i('开始加载随机未归档书签，请求数量: $randomCount');

@@ -36,6 +36,15 @@ class UnarchivedViewmodel extends BaseBookmarksViewmodel {
       get _loadBookmarks => _bookmarkRepository.loadUnarchivedBookmarks;
 }
 
+class ReadingViewmodel extends BaseBookmarksViewmodel {
+  ReadingViewmodel(super._bookmarkRepository, super._bookmarkOperationUseCases,
+      super._labelRepository);
+
+  @override
+  Future<Result<List<BookmarkDisplayModel>>> Function({int limit, int page})
+      get _loadBookmarks => _bookmarkRepository.loadReadingBookmarks;
+}
+
 abstract class BaseBookmarksViewmodel extends ChangeNotifier {
   BaseBookmarksViewmodel(this._bookmarkRepository,
       this._bookmarkOperationUseCases, this._labelRepository) {

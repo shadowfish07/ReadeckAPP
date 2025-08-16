@@ -51,6 +51,128 @@ void main() {
       );
     });
 
+    group('loadReadingBookmarks', () {
+      test('should call API with correct parameters for reading bookmarks',
+          () async {
+        // Arrange
+        final readingBookmarks = [
+          Bookmark(
+            id: '1',
+            url: 'https://example.com/1',
+            title: 'Reading Book 1',
+            isArchived: false,
+            isMarked: false,
+            labels: [],
+            created: DateTime.now(),
+            readProgress: 25,
+          ),
+          Bookmark(
+            id: '2',
+            url: 'https://example.com/2',
+            title: 'Reading Book 2',
+            isArchived: false,
+            isMarked: false,
+            labels: [],
+            created: DateTime.now(),
+            readProgress: 75,
+          ),
+        ];
+
+        when(mockApiClient.getBookmarks(
+          readStatus: 'reading',
+          isArchived: false,
+          limit: 15,
+          offset: 15,
+        )).thenAnswer((_) async => Success(readingBookmarks));
+
+        when(mockReadingStatsRepository.getReadingStats(any))
+            .thenAnswer((_) async => Failure(Exception('No stats')));
+
+        when(mockArticleRepository.getBookmarkArticle(any))
+            .thenAnswer((_) async => Failure(Exception('No article')));
+
+        // Act
+        final result = await repository.loadReadingBookmarks(
+          limit: 15,
+          page: 2,
+        );
+
+        // Assert
+        expect(result.isSuccess(), true);
+        expect(result.getOrNull()!.length, 2);
+        verify(mockApiClient.getBookmarks(
+          readStatus: 'reading',
+          isArchived: false,
+          limit: 15,
+          offset: 15, // (page - 1) * limit = (2 - 1) * 15
+        )).called(1);
+      });
+
+      test('should return empty list when API returns no reading bookmarks',
+          () async {
+        // Arrange
+        when(mockApiClient.getBookmarks(
+          readStatus: 'reading',
+          isArchived: false,
+          limit: 10,
+          offset: 0,
+        )).thenAnswer((_) async => const Success([]));
+
+        // Act
+        final result = await repository.loadReadingBookmarks();
+
+        // Assert
+        expect(result.isSuccess(), true);
+        expect(result.getOrNull()!.isEmpty, true);
+        verify(mockApiClient.getBookmarks(
+          readStatus: 'reading',
+          isArchived: false,
+          limit: 10,
+          offset: 0,
+        )).called(1);
+      });
+
+      test('should return failure when API call fails', () async {
+        // Arrange
+        final exception = Exception('Network error');
+        when(mockApiClient.getBookmarks(
+          readStatus: 'reading',
+          isArchived: false,
+          limit: 10,
+          offset: 0,
+        )).thenAnswer((_) async => Failure(exception));
+
+        // Act
+        final result = await repository.loadReadingBookmarks();
+
+        // Assert
+        expect(result.isError(), true);
+        expect(result.exceptionOrNull(), exception);
+      });
+
+      test('should use default pagination parameters when not specified',
+          () async {
+        // Arrange
+        when(mockApiClient.getBookmarks(
+          readStatus: 'reading',
+          isArchived: false,
+          limit: 10,
+          offset: 0,
+        )).thenAnswer((_) async => const Success([]));
+
+        // Act
+        await repository.loadReadingBookmarks();
+
+        // Assert
+        verify(mockApiClient.getBookmarks(
+          readStatus: 'reading',
+          isArchived: false,
+          limit: 10, // default limit
+          offset: 0, // default offset for page 1
+        )).called(1);
+      });
+    });
+
     group('_wrapBookmarksWithStats', () {
       late Bookmark testBookmark;
 
