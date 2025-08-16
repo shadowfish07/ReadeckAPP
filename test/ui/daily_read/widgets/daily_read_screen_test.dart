@@ -12,7 +12,7 @@ import 'package:readeck_app/ui/daily_read/widgets/daily_read_screen.dart';
 
 import 'daily_read_screen_test.mocks.dart';
 
-@GenerateMocks([DailyReadViewModel])
+@GenerateNiceMocks([MockSpec<DailyReadViewModel>()])
 void main() {
   late MockDailyReadViewModel mockDailyReadViewModel;
 
@@ -23,9 +23,9 @@ void main() {
     final mockOpenUrlCommand =
         Command.createAsyncNoResult<String>((_) async {});
     final mockToggleArchivedCommand =
-        Command.createAsyncNoResult<Bookmark>((_) async {});
+        Command.createAsyncNoResult<BookmarkDisplayModel>((_) async {});
     final mockToggleMarkedCommand =
-        Command.createAsyncNoResult<Bookmark>((_) async {});
+        Command.createAsyncNoResult<BookmarkDisplayModel>((_) async {});
     final mockLoadLabelsCommand = Command.createAsyncNoParam<List<String>>(
         () async => [],
         initialValue: []);
@@ -37,6 +37,8 @@ void main() {
         .thenReturn(mockToggleMarkedCommand);
     when(mockDailyReadViewModel.loadLabels).thenReturn(mockLoadLabelsCommand);
     when(mockDailyReadViewModel.setOnBookmarkArchivedCallback(any))
+        .thenReturn(null);
+    when(mockDailyReadViewModel.setNavigateToDetailCallback(any))
         .thenReturn(null);
   });
 
@@ -319,6 +321,7 @@ void main() {
       // Assert - verify ViewModel methods are properly set up
       verify(mockDailyReadViewModel.setOnBookmarkArchivedCallback(any))
           .called(1);
+      verify(mockDailyReadViewModel.setNavigateToDetailCallback(any)).called(1);
     });
   });
 }

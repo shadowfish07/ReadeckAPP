@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_command/flutter_command.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:logger/logger.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
+import 'package:readeck_app/domain/models/bookmark_display_model/bookmark_display_model.dart';
+import 'package:readeck_app/main.dart';
 import 'package:readeck_app/ui/core/ui/bookmark_card.dart';
 import 'package:readeck_app/ui/core/ui/label_edit_dialog.dart';
 
 void main() {
+  setUpAll(() {
+    // 初始化 logger
+    appLogger = Logger();
+  });
   late Command mockOpenUrlCommand;
-  late Bookmark testBookmark;
+  late BookmarkDisplayModel testBookmarkDisplayModel;
   late List<String> availableLabels;
   bool updateLabelsCalled = false;
 
@@ -16,28 +23,30 @@ void main() {
     mockOpenUrlCommand = Command.createAsyncNoResult<String>((_) async {});
     updateLabelsCalled = false;
 
-    testBookmark = Bookmark(
-      id: '1',
-      url: 'https://example.com',
-      title: 'Test Article',
-      isArchived: false,
-      isMarked: false,
-      labels: ['existing-label'],
-      created: DateTime.now(),
-      readProgress: 50,
+    testBookmarkDisplayModel = BookmarkDisplayModel(
+      bookmark: Bookmark(
+        id: '1',
+        url: 'https://example.com',
+        title: 'Test Article',
+        isArchived: false,
+        isMarked: false,
+        labels: ['existing-label'],
+        created: DateTime.now(),
+        readProgress: 50,
+      ),
     );
 
     availableLabels = ['label1', 'label2', 'existing-label'];
   });
 
   Widget createWidgetUnderTest({
-    Function(Bookmark, List<String>)? onUpdateLabels,
+    Function(BookmarkDisplayModel, List<String>)? onUpdateLabels,
     Future<List<String>> Function()? onLoadLabels,
   }) {
     return MaterialApp(
       home: Scaffold(
         body: BookmarkCard(
-          bookmark: testBookmark,
+          bookmarkDisplayModel: testBookmarkDisplayModel,
           onOpenUrl: mockOpenUrlCommand,
           onUpdateLabels: onUpdateLabels ??
               (bookmark, labels) {
@@ -103,7 +112,8 @@ void main() {
     testWidgets('should show error toast when label update fails',
         (WidgetTester tester) async {
       // Arrange - create a callback that throws an error
-      void failingOnUpdateLabels(Bookmark bookmark, List<String> labels) {
+      void failingOnUpdateLabels(
+          BookmarkDisplayModel bookmark, List<String> labels) {
         throw Exception('Network error');
       }
 
@@ -203,7 +213,7 @@ void main() {
       final widget = MaterialApp(
         home: Scaffold(
           body: BookmarkCard(
-            bookmark: testBookmark,
+            bookmarkDisplayModel: testBookmarkDisplayModel,
             onOpenUrl: mockOpenUrlCommand,
             onToggleArchive: (bookmark) {
               archiveCalled = true;
@@ -225,6 +235,58 @@ void main() {
       expect(archiveCalled, isTrue);
       expect(find.text('已标记归档'), findsOneWidget);
       expect(find.byType(SnackBar), findsOneWidget);
+    });
+  });
+
+  group('BookmarkCard Tap Tests', () {
+    testWidgets('should call onCardTap when card is tapped', (tester) async {
+      // Arrange
+      bool cardTapCalled = false;
+      Bookmark? cardTapBookmark;
+
+      // Act
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: BookmarkCard(
+              bookmarkDisplayModel: testBookmarkDisplayModel,
+              onOpenUrl: mockOpenUrlCommand,
+              onCardTap: (bookmark) {
+                cardTapCalled = true;
+                cardTapBookmark = bookmark.bookmark;
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.byType(BookmarkCard));
+      await tester.pumpAndSettle();
+
+      // Assert
+      expect(cardTapCalled, true);
+      expect(cardTapBookmark, testBookmarkDisplayModel.bookmark);
+    });
+
+    testWidgets('should handle null onCardTap gracefully', (tester) async {
+      // Act
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: BookmarkCard(
+              bookmarkDisplayModel: testBookmarkDisplayModel,
+              onOpenUrl: mockOpenUrlCommand,
+              // onCardTap is null
+            ),
+          ),
+        ),
+      );
+
+      // Should not throw when tapped
+      await tester.tap(find.byType(BookmarkCard));
+      await tester.pumpAndSettle();
+
+      // Test passes if no exception is thrown
     });
   });
 }

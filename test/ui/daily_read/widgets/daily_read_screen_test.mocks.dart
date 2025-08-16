@@ -4,16 +4,16 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i8;
-import 'dart:ui' as _i7;
+import 'dart:ui' as _i6;
 
 import 'package:flutter_command/flutter_command.dart' as _i2;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:readeck_app/domain/models/bookmark/bookmark.dart' as _i5;
+import 'package:readeck_app/domain/models/bookmark/bookmark.dart' as _i7;
 import 'package:readeck_app/domain/models/bookmark_display_model/bookmark_display_model.dart'
     as _i4;
 import 'package:readeck_app/ui/daily_read/view_models/daily_read_viewmodel.dart'
     as _i3;
-import 'package:readeck_app/utils/reading_stats_calculator.dart' as _i6;
+import 'package:readeck_app/utils/reading_stats_calculator.dart' as _i5;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -45,15 +45,16 @@ class _FakeCommand_0<TParam, TResult> extends _i1.SmartFake
 /// See the documentation for Mockito's code generation for more information.
 class MockDailyReadViewModel extends _i1.Mock
     implements _i3.DailyReadViewModel {
-  MockDailyReadViewModel() {
-    _i1.throwOnMissingStub(this);
-  }
-
   @override
   _i2.Command<bool, List<_i4.BookmarkDisplayModel>> get load =>
       (super.noSuchMethod(
         Invocation.getter(#load),
         returnValue: _FakeCommand_0<bool, List<_i4.BookmarkDisplayModel>>(
+          this,
+          Invocation.getter(#load),
+        ),
+        returnValueForMissingStub:
+            _FakeCommand_0<bool, List<_i4.BookmarkDisplayModel>>(
           this,
           Invocation.getter(#load),
         ),
@@ -66,32 +67,50 @@ class MockDailyReadViewModel extends _i1.Mock
           this,
           Invocation.getter(#openUrl),
         ),
+        returnValueForMissingStub: _FakeCommand_0<String, void>(
+          this,
+          Invocation.getter(#openUrl),
+        ),
       ) as _i2.Command<String, void>);
 
   @override
-  _i2.Command<_i5.Bookmark, void> get toggleBookmarkArchived =>
+  _i2.Command<_i4.BookmarkDisplayModel, void> get toggleBookmarkArchived =>
       (super.noSuchMethod(
         Invocation.getter(#toggleBookmarkArchived),
-        returnValue: _FakeCommand_0<_i5.Bookmark, void>(
+        returnValue: _FakeCommand_0<_i4.BookmarkDisplayModel, void>(
           this,
           Invocation.getter(#toggleBookmarkArchived),
         ),
-      ) as _i2.Command<_i5.Bookmark, void>);
+        returnValueForMissingStub:
+            _FakeCommand_0<_i4.BookmarkDisplayModel, void>(
+          this,
+          Invocation.getter(#toggleBookmarkArchived),
+        ),
+      ) as _i2.Command<_i4.BookmarkDisplayModel, void>);
 
   @override
-  _i2.Command<_i5.Bookmark, void> get toggleBookmarkMarked =>
+  _i2.Command<_i4.BookmarkDisplayModel, void> get toggleBookmarkMarked =>
       (super.noSuchMethod(
         Invocation.getter(#toggleBookmarkMarked),
-        returnValue: _FakeCommand_0<_i5.Bookmark, void>(
+        returnValue: _FakeCommand_0<_i4.BookmarkDisplayModel, void>(
           this,
           Invocation.getter(#toggleBookmarkMarked),
         ),
-      ) as _i2.Command<_i5.Bookmark, void>);
+        returnValueForMissingStub:
+            _FakeCommand_0<_i4.BookmarkDisplayModel, void>(
+          this,
+          Invocation.getter(#toggleBookmarkMarked),
+        ),
+      ) as _i2.Command<_i4.BookmarkDisplayModel, void>);
 
   @override
   _i2.Command<void, List<String>> get loadLabels => (super.noSuchMethod(
         Invocation.getter(#loadLabels),
         returnValue: _FakeCommand_0<void, List<String>>(
+          this,
+          Invocation.getter(#loadLabels),
+        ),
+        returnValueForMissingStub: _FakeCommand_0<void, List<String>>(
           this,
           Invocation.getter(#loadLabels),
         ),
@@ -101,24 +120,28 @@ class MockDailyReadViewModel extends _i1.Mock
   bool get isNoMore => (super.noSuchMethod(
         Invocation.getter(#isNoMore),
         returnValue: false,
+        returnValueForMissingStub: false,
       ) as bool);
 
   @override
   List<_i4.BookmarkDisplayModel> get bookmarks => (super.noSuchMethod(
         Invocation.getter(#bookmarks),
         returnValue: <_i4.BookmarkDisplayModel>[],
+        returnValueForMissingStub: <_i4.BookmarkDisplayModel>[],
       ) as List<_i4.BookmarkDisplayModel>);
 
   @override
   List<_i4.BookmarkDisplayModel> get unArchivedBookmarks => (super.noSuchMethod(
         Invocation.getter(#unArchivedBookmarks),
         returnValue: <_i4.BookmarkDisplayModel>[],
+        returnValueForMissingStub: <_i4.BookmarkDisplayModel>[],
       ) as List<_i4.BookmarkDisplayModel>);
 
   @override
   List<String> get availableLabels => (super.noSuchMethod(
         Invocation.getter(#availableLabels),
         returnValue: <String>[],
+        returnValueForMissingStub: <String>[],
       ) as List<String>);
 
   @override
@@ -142,7 +165,8 @@ class MockDailyReadViewModel extends _i1.Mock
 
   @override
   set toggleBookmarkArchived(
-          _i2.Command<_i5.Bookmark, void>? _toggleBookmarkArchived) =>
+          _i2.Command<_i4.BookmarkDisplayModel, void>?
+              _toggleBookmarkArchived) =>
       super.noSuchMethod(
         Invocation.setter(
           #toggleBookmarkArchived,
@@ -153,7 +177,7 @@ class MockDailyReadViewModel extends _i1.Mock
 
   @override
   set toggleBookmarkMarked(
-          _i2.Command<_i5.Bookmark, void>? _toggleBookmarkMarked) =>
+          _i2.Command<_i4.BookmarkDisplayModel, void>? _toggleBookmarkMarked) =>
       super.noSuchMethod(
         Invocation.setter(
           #toggleBookmarkMarked,
@@ -176,17 +200,21 @@ class MockDailyReadViewModel extends _i1.Mock
   bool get hasListeners => (super.noSuchMethod(
         Invocation.getter(#hasListeners),
         returnValue: false,
+        returnValueForMissingStub: false,
       ) as bool);
 
   @override
-  _i6.ReadingStatsForView? getReadingStats(String? bookmarkId) =>
-      (super.noSuchMethod(Invocation.method(
-        #getReadingStats,
-        [bookmarkId],
-      )) as _i6.ReadingStatsForView?);
+  _i5.ReadingStatsForView? getReadingStats(String? bookmarkId) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getReadingStats,
+          [bookmarkId],
+        ),
+        returnValueForMissingStub: null,
+      ) as _i5.ReadingStatsForView?);
 
   @override
-  void setOnBookmarkArchivedCallback(_i7.VoidCallback? callback) =>
+  void setOnBookmarkArchivedCallback(_i6.VoidCallback? callback) =>
       super.noSuchMethod(
         Invocation.method(
           #setOnBookmarkArchivedCallback,
@@ -196,8 +224,28 @@ class MockDailyReadViewModel extends _i1.Mock
       );
 
   @override
+  void setNavigateToDetailCallback(void Function(_i7.Bookmark)? callback) =>
+      super.noSuchMethod(
+        Invocation.method(
+          #setNavigateToDetailCallback,
+          [callback],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void handleBookmarkTap(_i4.BookmarkDisplayModel? bookmark) =>
+      super.noSuchMethod(
+        Invocation.method(
+          #handleBookmarkTap,
+          [bookmark],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
   _i8.Future<void> updateBookmarkLabels(
-    _i5.Bookmark? bookmark,
+    _i4.BookmarkDisplayModel? bookmark,
     List<String>? labels,
   ) =>
       (super.noSuchMethod(
@@ -222,7 +270,7 @@ class MockDailyReadViewModel extends _i1.Mock
       );
 
   @override
-  void addListener(_i7.VoidCallback? listener) => super.noSuchMethod(
+  void addListener(_i6.VoidCallback? listener) => super.noSuchMethod(
         Invocation.method(
           #addListener,
           [listener],
@@ -231,7 +279,7 @@ class MockDailyReadViewModel extends _i1.Mock
       );
 
   @override
-  void removeListener(_i7.VoidCallback? listener) => super.noSuchMethod(
+  void removeListener(_i6.VoidCallback? listener) => super.noSuchMethod(
         Invocation.method(
           #removeListener,
           [listener],

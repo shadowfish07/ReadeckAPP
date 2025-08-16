@@ -81,35 +81,19 @@ class SnackBarHelper {
   }) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.0),
+        ),
+        margin: const EdgeInsets.all(16.0),
         content: Text(
           message,
           style: TextStyle(color: textColor),
         ),
         backgroundColor: backgroundColor,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(16.0),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12.0),
-        ),
         duration: duration,
-        action: action?.copyWith(
-          textColor: textColor,
-        ),
+        action: action,
       ),
-    );
-  }
-}
-
-/// SnackBarAction 扩展，用于复制样式
-extension SnackBarActionCopyWith on SnackBarAction {
-  SnackBarAction copyWith({
-    Color? textColor,
-  }) {
-    return SnackBarAction(
-      label: label,
-      onPressed: onPressed,
-      textColor: textColor ?? this.textColor,
-      disabledTextColor: disabledTextColor,
     );
   }
 }

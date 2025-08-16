@@ -62,6 +62,18 @@ class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
     super.initState();
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
+
+    // 设置详情页导航回调
+    widget.viewModel.setNavigateToDetailCallback((bookmark) {
+      if (mounted) {
+        context.push(
+          Routes.bookmarkDetailWithId(bookmark.id),
+          extra: {
+            'bookmark': bookmark,
+          },
+        );
+      }
+    });
   }
 
   @override
@@ -217,13 +229,14 @@ class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
 
           final bookmarkModel = bookmarks[index];
           return BookmarkCard(
-            bookmark: bookmarkModel.bookmark,
+            bookmarkDisplayModel: bookmarkModel,
             onOpenUrl: widget.viewModel.openUrl,
+            onCardTap: widget.viewModel.handleBookmarkTap,
             onToggleMark: (bookmark) =>
-                widget.viewModel.toggleBookmarkMarked(bookmark),
+                widget.viewModel.toggleBookmarkMarked(bookmarkModel),
             onUpdateLabels: (bookmark, labels) {
               widget.viewModel
-                  .updateBookmarkLabels(bookmark, labels)
+                  .updateBookmarkLabels(bookmarkModel, labels)
                   .catchError((error) {
                 if (context.mounted) {
                   SnackBarHelper.showError(
@@ -234,19 +247,10 @@ class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
                 }
               });
             },
-            readingStats: bookmarkModel.stats,
-            onCardTap: (bookmark) {
-              context.push(
-                Routes.bookmarkDetailWithId(bookmark.id),
-                extra: {
-                  'bookmark': bookmark,
-                },
-              );
-            },
             availableLabels: widget.viewModel.availableLabels,
             onLoadLabels: () => widget.viewModel.loadLabels.executeWithFuture(),
             onToggleArchive: (bookmark) {
-              widget.viewModel.toggleBookmarkArchived(bookmark);
+              widget.viewModel.toggleBookmarkArchived(bookmarkModel);
             },
           );
         },
