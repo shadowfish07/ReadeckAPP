@@ -81,6 +81,11 @@ class SnackBarHelper {
   }) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.0),
+        ),
+        margin: const EdgeInsets.all(16.0),
         content: Text(
           message,
           style: TextStyle(color: textColor),

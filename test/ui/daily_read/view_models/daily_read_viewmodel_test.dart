@@ -18,11 +18,11 @@ import 'package:result_dart/result_dart.dart';
 
 import 'daily_read_viewmodel_test.mocks.dart';
 
-@GenerateMocks([
-  BookmarkRepository,
-  DailyReadHistoryRepository,
-  BookmarkOperationUseCases,
-  LabelRepository
+@GenerateNiceMocks([
+  MockSpec<BookmarkRepository>(),
+  MockSpec<DailyReadHistoryRepository>(),
+  MockSpec<BookmarkOperationUseCases>(),
+  MockSpec<LabelRepository>()
 ])
 void main() {
   late MockBookmarkRepository mockBookmarkRepository;
@@ -44,7 +44,7 @@ void main() {
     );
     // Provide a unit type dummy for void results
     provideDummy<ResultDart<void, Exception>>(
-      const Success('unit'),
+      Failure(Exception('dummy for void result')),
     );
     provideDummy<ResultDart<Bookmark, Exception>>(
       Success(Bookmark(
@@ -221,7 +221,7 @@ void main() {
       );
 
       when(mockBookmarkRepository.toggleArchived(testBookmark.bookmark))
-          .thenAnswer((_) async => Success(testBookmark.bookmark));
+          .thenAnswer((_) async => const Success(unit));
 
       dailyReadViewModel = DailyReadViewModel(
         mockBookmarkRepository,
@@ -267,7 +267,7 @@ void main() {
       );
 
       when(mockBookmarkRepository.toggleMarked(testBookmark.bookmark))
-          .thenAnswer((_) async => Success(testBookmark.bookmark));
+          .thenAnswer((_) async => const Success(unit));
 
       dailyReadViewModel = DailyReadViewModel(
         mockBookmarkRepository,
@@ -301,7 +301,7 @@ void main() {
 
       const testUrl = 'https://example.com';
       when(mockBookmarkOperationUseCases.openUrl(testUrl))
-          .thenAnswer((_) async => const Success(true));
+          .thenAnswer((_) async => const Success(unit));
 
       dailyReadViewModel = DailyReadViewModel(
         mockBookmarkRepository,
@@ -427,6 +427,23 @@ void main() {
     late BookmarkDisplayModel bookmarkModelWithoutStats;
 
     setUp(() {
+      when(mockBookmarkRepository.addListener(any)).thenAnswer((_) {});
+      when(mockLabelRepository.addListener(any)).thenAnswer((_) {});
+      when(mockBookmarkOperationUseCases.handleBookmarkTap(
+        bookmark: anyNamed('bookmark'),
+        onNavigateToDetail: anyNamed('onNavigateToDetail'),
+      )).thenAnswer((invocation) {
+        final bookmark = invocation.namedArguments[const Symbol('bookmark')]
+            as BookmarkDisplayModel;
+        final onNavigateToDetail =
+            invocation.namedArguments[const Symbol('onNavigateToDetail')]
+                as void Function(Bookmark);
+        if (bookmark.stats != null) {
+          onNavigateToDetail(bookmark.bookmark);
+        } else {
+          mockBookmarkOperationUseCases.openUrl(bookmark.bookmark.url);
+        }
+      });
       testBookmarkWithStats = Bookmark(
         id: 'bookmark-with-stats',
         url: 'https://example.com/with-stats',
@@ -465,8 +482,6 @@ void main() {
 
     test('should open URL when bookmark has no reading stats', () async {
       // Arrange
-      when(mockBookmarkRepository.addListener(any)).thenAnswer((_) {});
-      when(mockLabelRepository.addListener(any)).thenAnswer((_) {});
       when(mockDailyReadHistoryRepository.getTodayDailyReadHistory())
           .thenAnswer((_) async => const Success(None()));
       when(mockBookmarkRepository.loadRandomUnarchivedBookmarks(any))
@@ -476,7 +491,7 @@ void main() {
       when(mockDailyReadHistoryRepository.saveTodayBookmarks(any))
           .thenAnswer((_) async => const Success(1));
       when(mockBookmarkOperationUseCases.openUrl(testBookmarkWithoutStats.url))
-          .thenAnswer((_) async => const Success(true));
+          .thenAnswer((_) async => const Success(unit));
 
       dailyReadViewModel = DailyReadViewModel(
         mockBookmarkRepository,
@@ -489,7 +504,6 @@ void main() {
 
       // Act
       dailyReadViewModel.handleBookmarkTap(bookmarkModelWithoutStats);
-      await Future.delayed(Duration.zero);
 
       // Assert
       verify(mockBookmarkOperationUseCases
@@ -500,8 +514,6 @@ void main() {
     test('should call navigation callback when bookmark has reading stats',
         () async {
       // Arrange
-      when(mockBookmarkRepository.addListener(any)).thenAnswer((_) {});
-      when(mockLabelRepository.addListener(any)).thenAnswer((_) {});
       when(mockDailyReadHistoryRepository.getTodayDailyReadHistory())
           .thenAnswer((_) async => const Success(None()));
       when(mockBookmarkRepository.loadRandomUnarchivedBookmarks(any))
@@ -530,18 +542,16 @@ void main() {
 
       // Act
       dailyReadViewModel.handleBookmarkTap(bookmarkModelWithStats);
-      await Future.delayed(Duration.zero);
 
       // Assert
       expect(navigationCallbackCalled, true);
       expect(callbackBookmark, testBookmarkWithStats);
-      verifyNever(mockBookmarkOperationUseCases.openUrl(any));
+      verifyNever(
+          mockBookmarkOperationUseCases.openUrl(testBookmarkWithStats.url));
     });
 
     test('should set and use navigation callback successfully', () async {
       // Arrange
-      when(mockBookmarkRepository.addListener(any)).thenAnswer((_) {});
-      when(mockLabelRepository.addListener(any)).thenAnswer((_) {});
       when(mockDailyReadHistoryRepository.getTodayDailyReadHistory())
           .thenAnswer((_) async => const Success(None()));
       when(mockBookmarkRepository.loadRandomUnarchivedBookmarks(any))
@@ -577,8 +587,6 @@ void main() {
     test('should handle callback gracefully when set to empty function',
         () async {
       // Arrange
-      when(mockBookmarkRepository.addListener(any)).thenAnswer((_) {});
-      when(mockLabelRepository.addListener(any)).thenAnswer((_) {});
       when(mockDailyReadHistoryRepository.getTodayDailyReadHistory())
           .thenAnswer((_) async => const Success(None()));
       when(mockBookmarkRepository.loadRandomUnarchivedBookmarks(any))

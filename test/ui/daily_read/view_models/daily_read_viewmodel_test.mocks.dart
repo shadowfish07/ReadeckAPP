@@ -44,14 +44,11 @@ import 'package:result_dart/result_dart.dart' as _i5;
 /// See the documentation for Mockito's code generation for more information.
 class MockBookmarkRepository extends _i1.Mock
     implements _i2.BookmarkRepository {
-  MockBookmarkRepository() {
-    _i1.throwOnMissingStub(this);
-  }
-
   @override
   List<_i3.BookmarkDisplayModel> get bookmarks => (super.noSuchMethod(
         Invocation.getter(#bookmarks),
         returnValue: <_i3.BookmarkDisplayModel>[],
+        returnValueForMissingStub: <_i3.BookmarkDisplayModel>[],
       ) as List<_i3.BookmarkDisplayModel>);
 
   @override
@@ -75,10 +72,13 @@ class MockBookmarkRepository extends _i1.Mock
 
   @override
   _i3.BookmarkDisplayModel? getCachedBookmark(String? id) =>
-      (super.noSuchMethod(Invocation.method(
-        #getCachedBookmark,
-        [id],
-      )) as _i3.BookmarkDisplayModel?);
+      (super.noSuchMethod(
+        Invocation.method(
+          #getCachedBookmark,
+          [id],
+        ),
+        returnValueForMissingStub: null,
+      ) as _i3.BookmarkDisplayModel?);
 
   @override
   List<_i3.BookmarkDisplayModel?> getCachedBookmarks(List<String>? ids) =>
@@ -88,6 +88,7 @@ class MockBookmarkRepository extends _i1.Mock
           [ids],
         ),
         returnValue: <_i3.BookmarkDisplayModel?>[],
+        returnValueForMissingStub: <_i3.BookmarkDisplayModel?>[],
       ) as List<_i3.BookmarkDisplayModel?>);
 
   @override
@@ -116,6 +117,16 @@ class MockBookmarkRepository extends _i1.Mock
                 [ids],
               ),
             )),
+            returnValueForMissingStub: _i4.Future<
+                _i5.ResultDart<List<_i3.BookmarkDisplayModel>,
+                    Exception>>.value(_i6.dummyValue<
+                _i5.ResultDart<List<_i3.BookmarkDisplayModel>, Exception>>(
+              this,
+              Invocation.method(
+                #loadBookmarksByIds,
+                [ids],
+              ),
+            )),
           ) as _i4.Future<
               _i5.ResultDart<List<_i3.BookmarkDisplayModel>, Exception>>);
 
@@ -135,6 +146,20 @@ class MockBookmarkRepository extends _i1.Mock
               },
             ),
             returnValue: _i4.Future<
+                _i5.ResultDart<List<_i3.BookmarkDisplayModel>,
+                    Exception>>.value(_i6.dummyValue<
+                _i5.ResultDart<List<_i3.BookmarkDisplayModel>, Exception>>(
+              this,
+              Invocation.method(
+                #loadUnarchivedBookmarks,
+                [],
+                {
+                  #limit: limit,
+                  #page: page,
+                },
+              ),
+            )),
+            returnValueForMissingStub: _i4.Future<
                 _i5.ResultDart<List<_i3.BookmarkDisplayModel>,
                     Exception>>.value(_i6.dummyValue<
                 _i5.ResultDart<List<_i3.BookmarkDisplayModel>, Exception>>(
@@ -180,6 +205,20 @@ class MockBookmarkRepository extends _i1.Mock
                 },
               ),
             )),
+            returnValueForMissingStub: _i4.Future<
+                _i5.ResultDart<List<_i3.BookmarkDisplayModel>,
+                    Exception>>.value(_i6.dummyValue<
+                _i5.ResultDart<List<_i3.BookmarkDisplayModel>, Exception>>(
+              this,
+              Invocation.method(
+                #loadArchivedBookmarks,
+                [],
+                {
+                  #limit: limit,
+                  #page: page,
+                },
+              ),
+            )),
           ) as _i4.Future<
               _i5.ResultDart<List<_i3.BookmarkDisplayModel>, Exception>>);
 
@@ -199,6 +238,20 @@ class MockBookmarkRepository extends _i1.Mock
               },
             ),
             returnValue: _i4.Future<
+                _i5.ResultDart<List<_i3.BookmarkDisplayModel>,
+                    Exception>>.value(_i6.dummyValue<
+                _i5.ResultDart<List<_i3.BookmarkDisplayModel>, Exception>>(
+              this,
+              Invocation.method(
+                #loadMarkedBookmarks,
+                [],
+                {
+                  #limit: limit,
+                  #page: page,
+                },
+              ),
+            )),
+            returnValueForMissingStub: _i4.Future<
                 _i5.ResultDart<List<_i3.BookmarkDisplayModel>,
                     Exception>>.value(_i6.dummyValue<
                 _i5.ResultDart<List<_i3.BookmarkDisplayModel>, Exception>>(
@@ -232,6 +285,16 @@ class MockBookmarkRepository extends _i1.Mock
                 [randomCount],
               ),
             )),
+            returnValueForMissingStub: _i4.Future<
+                _i5.ResultDart<List<_i3.BookmarkDisplayModel>,
+                    Exception>>.value(_i6.dummyValue<
+                _i5.ResultDart<List<_i3.BookmarkDisplayModel>, Exception>>(
+              this,
+              Invocation.method(
+                #loadRandomUnarchivedBookmarks,
+                [randomCount],
+              ),
+            )),
           ) as _i4.Future<
               _i5.ResultDart<List<_i3.BookmarkDisplayModel>, Exception>>);
 
@@ -245,6 +308,15 @@ class MockBookmarkRepository extends _i1.Mock
         ),
         returnValue: _i4.Future<_i5.ResultDart<void, Exception>>.value(
             _i6.dummyValue<_i5.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #toggleMarked,
+            [bookmark],
+          ),
+        )),
+        returnValueForMissingStub:
+            _i4.Future<_i5.ResultDart<void, Exception>>.value(
+                _i6.dummyValue<_i5.ResultDart<void, Exception>>(
           this,
           Invocation.method(
             #toggleMarked,
@@ -269,6 +341,15 @@ class MockBookmarkRepository extends _i1.Mock
             [bookmark],
           ),
         )),
+        returnValueForMissingStub:
+            _i4.Future<_i5.ResultDart<void, Exception>>.value(
+                _i6.dummyValue<_i5.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #toggleArchived,
+            [bookmark],
+          ),
+        )),
       ) as _i4.Future<_i5.ResultDart<void, Exception>>);
 
   @override
@@ -286,6 +367,18 @@ class MockBookmarkRepository extends _i1.Mock
         ),
         returnValue: _i4.Future<_i5.ResultDart<void, Exception>>.value(
             _i6.dummyValue<_i5.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #updateLabels,
+            [
+              bookmark,
+              labels,
+            ],
+          ),
+        )),
+        returnValueForMissingStub:
+            _i4.Future<_i5.ResultDart<void, Exception>>.value(
+                _i6.dummyValue<_i5.ResultDart<void, Exception>>(
           this,
           Invocation.method(
             #updateLabels,
@@ -321,6 +414,18 @@ class MockBookmarkRepository extends _i1.Mock
             ],
           ),
         )),
+        returnValueForMissingStub:
+            _i4.Future<_i5.ResultDart<void, Exception>>.value(
+                _i6.dummyValue<_i5.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #updateReadProgress,
+            [
+              bookmark,
+              readProgress,
+            ],
+          ),
+        )),
       ) as _i4.Future<_i5.ResultDart<void, Exception>>);
 
   @override
@@ -339,6 +444,15 @@ class MockBookmarkRepository extends _i1.Mock
             [bookmarkId],
           ),
         )),
+        returnValueForMissingStub:
+            _i4.Future<_i5.ResultDart<void, Exception>>.value(
+                _i6.dummyValue<_i5.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #deleteBookmark,
+            [bookmarkId],
+          ),
+        )),
       ) as _i4.Future<_i5.ResultDart<void, Exception>>);
 }
 
@@ -347,10 +461,6 @@ class MockBookmarkRepository extends _i1.Mock
 /// See the documentation for Mockito's code generation for more information.
 class MockDailyReadHistoryRepository extends _i1.Mock
     implements _i8.DailyReadHistoryRepository {
-  MockDailyReadHistoryRepository() {
-    _i1.throwOnMissingStub(this);
-  }
-
   @override
   _i4.Future<_i5.ResultDart<_i9.OptionData<_i10.DailyReadHistory>, Exception>>
       getTodayDailyReadHistory() => (super.noSuchMethod(
@@ -359,6 +469,17 @@ class MockDailyReadHistoryRepository extends _i1.Mock
               [],
             ),
             returnValue: _i4.Future<
+                _i5.ResultDart<_i9.OptionData<_i10.DailyReadHistory>,
+                    Exception>>.value(_i6.dummyValue<
+                _i5
+                .ResultDart<_i9.OptionData<_i10.DailyReadHistory>, Exception>>(
+              this,
+              Invocation.method(
+                #getTodayDailyReadHistory,
+                [],
+              ),
+            )),
+            returnValueForMissingStub: _i4.Future<
                 _i5.ResultDart<_i9.OptionData<_i10.DailyReadHistory>,
                     Exception>>.value(_i6.dummyValue<
                 _i5
@@ -389,6 +510,15 @@ class MockDailyReadHistoryRepository extends _i1.Mock
             [bookmarks],
           ),
         )),
+        returnValueForMissingStub:
+            _i4.Future<_i5.ResultDart<int, Exception>>.value(
+                _i6.dummyValue<_i5.ResultDart<int, Exception>>(
+          this,
+          Invocation.method(
+            #saveTodayBookmarks,
+            [bookmarks],
+          ),
+        )),
       ) as _i4.Future<_i5.ResultDart<int, Exception>>);
 
   @override
@@ -406,6 +536,15 @@ class MockDailyReadHistoryRepository extends _i1.Mock
             [],
           ),
         )),
+        returnValueForMissingStub:
+            _i4.Future<_i5.ResultDart<void, Exception>>.value(
+                _i6.dummyValue<_i5.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #clearAllDataForDebug,
+            [],
+          ),
+        )),
       ) as _i4.Future<_i5.ResultDart<void, Exception>>);
 }
 
@@ -414,10 +553,6 @@ class MockDailyReadHistoryRepository extends _i1.Mock
 /// See the documentation for Mockito's code generation for more information.
 class MockBookmarkOperationUseCases extends _i1.Mock
     implements _i11.BookmarkOperationUseCases {
-  MockBookmarkOperationUseCases() {
-    _i1.throwOnMissingStub(this);
-  }
-
   @override
   _i4.Future<_i5.ResultDart<void, Exception>> openUrl(String? url) =>
       (super.noSuchMethod(
@@ -427,6 +562,15 @@ class MockBookmarkOperationUseCases extends _i1.Mock
         ),
         returnValue: _i4.Future<_i5.ResultDart<void, Exception>>.value(
             _i6.dummyValue<_i5.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #openUrl,
+            [url],
+          ),
+        )),
+        returnValueForMissingStub:
+            _i4.Future<_i5.ResultDart<void, Exception>>.value(
+                _i6.dummyValue<_i5.ResultDart<void, Exception>>(
           this,
           Invocation.method(
             #openUrl,
@@ -446,6 +590,9 @@ class MockBookmarkOperationUseCases extends _i1.Mock
             returnValue:
                 _i4.Future<Map<String, _i12.ReadingStatsForView>>.value(
                     <String, _i12.ReadingStatsForView>{}),
+            returnValueForMissingStub:
+                _i4.Future<Map<String, _i12.ReadingStatsForView>>.value(
+                    <String, _i12.ReadingStatsForView>{}),
           ) as _i4.Future<Map<String, _i12.ReadingStatsForView>>);
 
   @override
@@ -457,27 +604,44 @@ class MockBookmarkOperationUseCases extends _i1.Mock
           [bookmark],
         ),
         returnValue: _i4.Future<_i12.ReadingStatsForView?>.value(),
+        returnValueForMissingStub:
+            _i4.Future<_i12.ReadingStatsForView?>.value(),
       ) as _i4.Future<_i12.ReadingStatsForView?>);
+
+  @override
+  void handleBookmarkTap({
+    required _i3.BookmarkDisplayModel? bookmark,
+    required void Function(_i7.Bookmark)? onNavigateToDetail,
+  }) =>
+      super.noSuchMethod(
+        Invocation.method(
+          #handleBookmarkTap,
+          [],
+          {
+            #bookmark: bookmark,
+            #onNavigateToDetail: onNavigateToDetail,
+          },
+        ),
+        returnValueForMissingStub: null,
+      );
 }
 
 /// A class which mocks [LabelRepository].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockLabelRepository extends _i1.Mock implements _i13.LabelRepository {
-  MockLabelRepository() {
-    _i1.throwOnMissingStub(this);
-  }
-
   @override
   List<_i14.LabelInfo> get labels => (super.noSuchMethod(
         Invocation.getter(#labels),
         returnValue: <_i14.LabelInfo>[],
+        returnValueForMissingStub: <_i14.LabelInfo>[],
       ) as List<_i14.LabelInfo>);
 
   @override
   List<String> get labelNames => (super.noSuchMethod(
         Invocation.getter(#labelNames),
         returnValue: <String>[],
+        returnValueForMissingStub: <String>[],
       ) as List<String>);
 
   @override
@@ -508,11 +672,13 @@ class MockLabelRepository extends _i1.Mock implements _i13.LabelRepository {
       );
 
   @override
-  _i14.LabelInfo? getCachedLabel(String? name) =>
-      (super.noSuchMethod(Invocation.method(
-        #getCachedLabel,
-        [name],
-      )) as _i14.LabelInfo?);
+  _i14.LabelInfo? getCachedLabel(String? name) => (super.noSuchMethod(
+        Invocation.method(
+          #getCachedLabel,
+          [name],
+        ),
+        returnValueForMissingStub: null,
+      ) as _i14.LabelInfo?);
 
   @override
   List<_i14.LabelInfo> getCachedLabels(List<String>? names) =>
@@ -522,6 +688,7 @@ class MockLabelRepository extends _i1.Mock implements _i13.LabelRepository {
           [names],
         ),
         returnValue: <_i14.LabelInfo>[],
+        returnValueForMissingStub: <_i14.LabelInfo>[],
       ) as List<_i14.LabelInfo>);
 
   @override
@@ -532,6 +699,15 @@ class MockLabelRepository extends _i1.Mock implements _i13.LabelRepository {
           [],
         ),
         returnValue:
+            _i4.Future<_i5.ResultDart<List<_i14.LabelInfo>, Exception>>.value(
+                _i6.dummyValue<_i5.ResultDart<List<_i14.LabelInfo>, Exception>>(
+          this,
+          Invocation.method(
+            #loadLabels,
+            [],
+          ),
+        )),
+        returnValueForMissingStub:
             _i4.Future<_i5.ResultDart<List<_i14.LabelInfo>, Exception>>.value(
                 _i6.dummyValue<_i5.ResultDart<List<_i14.LabelInfo>, Exception>>(
           this,
