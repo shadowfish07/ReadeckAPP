@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_command/flutter_command.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
+import 'package:readeck_app/main.dart';
 import 'package:readeck_app/ui/core/ui/bookmark_labels_widget.dart';
 import 'package:readeck_app/ui/core/ui/label_edit_dialog.dart';
 import 'package:readeck_app/ui/core/ui/snack_bar_helper.dart';
@@ -67,9 +68,7 @@ class _BookmarkCardState extends State<BookmarkCard> {
           ? Theme.of(rootContext).colorScheme.surfaceContainerLow
           : null,
       child: InkWell(
-        onTap: () {
-          widget.onCardTap?.call(widget.bookmark);
-        },
+        onTap: _handleCardTap,
         borderRadius: BorderRadius.circular(12),
         child: Opacity(
           opacity: isArchived ? 0.7 : 1.0,
@@ -313,6 +312,12 @@ class _BookmarkCardState extends State<BookmarkCard> {
         ),
       ),
     );
+  }
+
+  /// 处理卡片点击事件
+  void _handleCardTap() {
+    appLogger.i('处理书签卡片点击: ${widget.bookmark.title}');
+    widget.onCardTap?.call(widget.bookmark);
   }
 
   String _formatDate(DateTime date) {

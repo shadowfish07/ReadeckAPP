@@ -196,6 +196,25 @@ class MockDailyReadViewModel extends _i1.Mock
       );
 
   @override
+  void setNavigateToDetailCallback(void Function(_i5.Bookmark)? callback) =>
+      super.noSuchMethod(
+        Invocation.method(
+          #setNavigateToDetailCallback,
+          [callback],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void handleBookmarkTap(_i5.Bookmark? bookmark) => super.noSuchMethod(
+        Invocation.method(
+          #handleBookmarkTap,
+          [bookmark],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
   _i8.Future<void> updateBookmarkLabels(
     _i5.Bookmark? bookmark,
     List<String>? labels,

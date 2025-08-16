@@ -35,6 +35,7 @@ class DailyReadViewModel extends ChangeNotifier {
   }
 
   VoidCallback? _onBookmarkArchivedCallback;
+  void Function(Bookmark)? _onNavigateToDetail;
 
   final BookmarkRepository _bookmarkRepository;
   final DailyReadHistoryRepository _dailyReadHistoryRepository;
@@ -145,6 +146,31 @@ class DailyReadViewModel extends ChangeNotifier {
 
   void setOnBookmarkArchivedCallback(VoidCallback? callback) {
     _onBookmarkArchivedCallback = callback;
+  }
+
+  void setNavigateToDetailCallback(void Function(Bookmark) callback) {
+    _onNavigateToDetail = callback;
+  }
+
+  void _navigateToDetail(Bookmark bookmark) {
+    _onNavigateToDetail?.call(bookmark);
+  }
+
+  void handleBookmarkTap(Bookmark bookmark) {
+    appLogger.i('处理书签点击: ${bookmark.title}');
+
+    final bookmarkModel = bookmarks.firstWhere(
+      (model) => model.bookmark.id == bookmark.id,
+      orElse: () => BookmarkDisplayModel(bookmark: bookmark, stats: null),
+    );
+
+    if (bookmarkModel.stats == null) {
+      appLogger.i('书签没有阅读统计数据，可能文章内容为空，使用浏览器打开: ${bookmark.url}');
+      openUrl.execute(bookmark.url);
+    } else {
+      appLogger.i('书签有阅读统计数据，触发详情页导航');
+      _navigateToDetail(bookmark);
+    }
   }
 
   Future<void> _toggleBookmarkArchived(Bookmark bookmark) async {

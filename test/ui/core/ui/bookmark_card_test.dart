@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_command/flutter_command.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:logger/logger.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
+import 'package:readeck_app/main.dart';
 import 'package:readeck_app/ui/core/ui/bookmark_card.dart';
 import 'package:readeck_app/ui/core/ui/label_edit_dialog.dart';
 
 void main() {
+  setUpAll(() {
+    // 初始化 logger
+    appLogger = Logger();
+  });
   late Command mockOpenUrlCommand;
   late Bookmark testBookmark;
   late List<String> availableLabels;
@@ -225,6 +231,58 @@ void main() {
       expect(archiveCalled, isTrue);
       expect(find.text('已标记归档'), findsOneWidget);
       expect(find.byType(SnackBar), findsOneWidget);
+    });
+  });
+
+  group('BookmarkCard Tap Tests', () {
+    testWidgets('should call onCardTap when card is tapped', (tester) async {
+      // Arrange
+      bool cardTapCalled = false;
+      Bookmark? cardTapBookmark;
+
+      // Act
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: BookmarkCard(
+              bookmark: testBookmark,
+              onOpenUrl: mockOpenUrlCommand,
+              onCardTap: (bookmark) {
+                cardTapCalled = true;
+                cardTapBookmark = bookmark;
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.byType(BookmarkCard));
+      await tester.pumpAndSettle();
+
+      // Assert
+      expect(cardTapCalled, true);
+      expect(cardTapBookmark, testBookmark);
+    });
+
+    testWidgets('should handle null onCardTap gracefully', (tester) async {
+      // Act
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: BookmarkCard(
+              bookmark: testBookmark,
+              onOpenUrl: mockOpenUrlCommand,
+              // onCardTap is null
+            ),
+          ),
+        ),
+      );
+
+      // Should not throw when tapped
+      await tester.tap(find.byType(BookmarkCard));
+      await tester.pumpAndSettle();
+
+      // Test passes if no exception is thrown
     });
   });
 }

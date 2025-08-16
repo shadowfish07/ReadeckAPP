@@ -132,6 +132,41 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
     }
   }
 
+  /// 处理书签点击，根据文章内容状态决定打开方式
+  void handleBookmarkTap(Bookmark bookmark) {
+    appLogger.i('处理书签点击: ${bookmark.title}');
+
+    // 检查是否已经有缓存的文章数据
+    // 我们可以通过检查书签的阅读统计数据来推断文章内容状态
+    final bookmarkModel = _bookmarks.firstWhere(
+      (model) => model.bookmark.id == bookmark.id,
+      orElse: () => BookmarkDisplayModel(bookmark: bookmark, stats: null),
+    );
+
+    // 如果没有阅读统计数据，说明可能文章内容为空，使用浏览器打开
+    if (bookmarkModel.stats == null) {
+      appLogger.i('书签没有阅读统计数据，可能文章内容为空，使用浏览器打开: ${bookmark.url}');
+      openUrl.execute(bookmark.url);
+    } else {
+      // 有阅读统计数据，说明文章有内容，触发详情页导航
+      appLogger.i('书签有阅读统计数据，触发详情页导航');
+      _navigateToDetail(bookmark);
+    }
+  }
+
+  /// 触发详情页导航的回调
+  void Function(Bookmark)? _onNavigateToDetail;
+
+  /// 设置详情页导航回调
+  void setNavigateToDetailCallback(void Function(Bookmark) callback) {
+    _onNavigateToDetail = callback;
+  }
+
+  /// 导航到详情页
+  void _navigateToDetail(Bookmark bookmark) {
+    _onNavigateToDetail?.call(bookmark);
+  }
+
   Future<void> _toggleBookmarkMarked(Bookmark bookmark) async {
     final result = await _bookmarkRepository.toggleMarked(bookmark);
 

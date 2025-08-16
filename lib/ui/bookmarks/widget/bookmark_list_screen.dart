@@ -62,6 +62,18 @@ class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
     super.initState();
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
+
+    // 设置详情页导航回调
+    widget.viewModel.setNavigateToDetailCallback((bookmark) {
+      if (mounted) {
+        context.push(
+          Routes.bookmarkDetailWithId(bookmark.id),
+          extra: {
+            'bookmark': bookmark,
+          },
+        );
+      }
+    });
   }
 
   @override
@@ -219,6 +231,7 @@ class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
           return BookmarkCard(
             bookmark: bookmarkModel.bookmark,
             onOpenUrl: widget.viewModel.openUrl,
+            onCardTap: widget.viewModel.handleBookmarkTap,
             onToggleMark: (bookmark) =>
                 widget.viewModel.toggleBookmarkMarked(bookmark),
             onUpdateLabels: (bookmark, labels) {
@@ -235,14 +248,6 @@ class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
               });
             },
             readingStats: bookmarkModel.stats,
-            onCardTap: (bookmark) {
-              context.push(
-                Routes.bookmarkDetailWithId(bookmark.id),
-                extra: {
-                  'bookmark': bookmark,
-                },
-              );
-            },
             availableLabels: widget.viewModel.availableLabels,
             onLoadLabels: () => widget.viewModel.loadLabels.executeWithFuture(),
             onToggleArchive: (bookmark) {
