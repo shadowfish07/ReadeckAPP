@@ -10,6 +10,7 @@ import 'package:readeck_app/ui/core/ui/loading.dart';
 import 'package:readeck_app/ui/bookmarks/view_models/bookmarks_viewmodel.dart';
 import 'package:readeck_app/utils/network_error_exception.dart';
 import 'package:readeck_app/ui/core/ui/snack_bar_helper.dart';
+import 'package:readeck_app/ui/core/ui/scroll_controller_provider.dart';
 
 /// 书签列表页面的文案配置
 class BookmarkListTexts {
@@ -56,6 +57,8 @@ class BookmarkListScreen<T extends BaseBookmarksViewmodel>
 class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
     extends State<BookmarkListScreen<T>> {
   late ScrollController _scrollController;
+  FabScrollCallback? _fabScrollCallback;
+  double _lastScrollPosition = 0;
 
   /// 获取滚动控制器，用于FAB动画
   ScrollController get scrollController => _scrollController;
@@ -80,6 +83,14 @@ class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // 获取 FAB 滚动回调
+    _fabScrollCallback = ScrollControllerProvider.of(context);
+  }
+
+  @override
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
@@ -87,10 +98,19 @@ class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >=
+    final currentScrollPosition = _scrollController.position.pixels;
+    final scrollDelta = currentScrollPosition - _lastScrollPosition;
+
+    // 通知 FAB 滚动状态
+    _fabScrollCallback?.call(currentScrollPosition, scrollDelta);
+
+    // 处理分页加载
+    if (currentScrollPosition >=
         _scrollController.position.maxScrollExtent - 200) {
       widget.viewModel.loadNextPage();
     }
+
+    _lastScrollPosition = currentScrollPosition;
   }
 
   @override

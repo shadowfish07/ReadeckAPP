@@ -14,6 +14,7 @@ import 'package:readeck_app/ui/core/ui/loading.dart';
 import 'package:readeck_app/ui/daily_read/view_models/daily_read_viewmodel.dart';
 import 'package:readeck_app/utils/network_error_exception.dart';
 import 'package:readeck_app/ui/core/ui/snack_bar_helper.dart';
+import 'package:readeck_app/ui/core/ui/scroll_controller_provider.dart';
 
 class DailyReadScreen extends StatefulWidget {
   const DailyReadScreen({super.key, required this.viewModel});
@@ -27,6 +28,8 @@ class DailyReadScreen extends StatefulWidget {
 class _DailyReadScreenState extends State<DailyReadScreen> {
   late ConfettiController _confettiController;
   late ScrollController _scrollController;
+  FabScrollCallback? _fabScrollCallback;
+  double _lastScrollPosition = 0;
 
   @override
   void initState() {
@@ -37,6 +40,7 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
     );
     // 初始化滚动控制器
     _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
     // 设置书签归档回调
     widget.viewModel.setOnBookmarkArchivedCallback(_onBookmarkArchived);
     // 设置导航回调
@@ -51,20 +55,11 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
   }
 
   @override
-  void dispose() {
-    // 释放动画控制器
-    _confettiController.dispose();
-    // 释放滚动控制器
-    _scrollController.dispose();
-    // 清除回调
-    widget.viewModel.setOnBookmarkArchivedCallback(null);
-    widget.viewModel.setNavigateToDetailCallback((_) {});
-    super.dispose();
-  }
-
-  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+
+    // 获取 FAB 滚动回调
+    _fabScrollCallback = ScrollControllerProvider.of(context);
     widget.viewModel.load.errors.where((x) => x != null).listen((error, _) {
       appLogger.e(
         '加载书签失败',
@@ -114,6 +109,29 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
     if (widget.viewModel.unArchivedBookmarks.isEmpty) {
       _playConfetti();
     }
+  }
+
+  void _onScroll() {
+    final currentScrollPosition = _scrollController.position.pixels;
+    final scrollDelta = currentScrollPosition - _lastScrollPosition;
+
+    // 通知 FAB 滚动状态
+    _fabScrollCallback?.call(currentScrollPosition, scrollDelta);
+
+    _lastScrollPosition = currentScrollPosition;
+  }
+
+  @override
+  void dispose() {
+    // 释放动画控制器
+    _confettiController.dispose();
+    // 释放滚动控制器
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    // 清除回调
+    widget.viewModel.setOnBookmarkArchivedCallback(null);
+    widget.viewModel.setNavigateToDetailCallback((_) {});
+    super.dispose();
   }
 
   Widget render() {

@@ -56,27 +56,44 @@ class _BookmarkListFabState extends State<BookmarkListFab>
   }
 
   void _onScroll() {
+    if (!widget.scrollController.hasClients) return;
+
     final currentScrollPosition = widget.scrollController.position.pixels;
     final scrollDelta = currentScrollPosition - _lastScrollPosition;
 
     // 滚动阈值，避免微小滚动导致频繁切换
-    const scrollThreshold = 5.0;
+    const scrollThreshold = 3.0;
 
-    if (scrollDelta > scrollThreshold) {
-      // 向下滚动，隐藏FAB
-      if (_isVisible) {
-        setState(() {
-          _isVisible = false;
-        });
-        _animationController.reverse();
-      }
-    } else if (scrollDelta < -scrollThreshold) {
-      // 向上滚动，显示FAB
+    // 如果滚动距离太小，忽略
+    if (scrollDelta.abs() < scrollThreshold) {
+      return;
+    }
+
+    // 在顶部附近时总是显示FAB
+    if (currentScrollPosition <= 50) {
       if (!_isVisible) {
         setState(() {
           _isVisible = true;
         });
         _animationController.forward();
+      }
+    } else {
+      if (scrollDelta > 0) {
+        // 向下滚动，隐藏FAB
+        if (_isVisible) {
+          setState(() {
+            _isVisible = false;
+          });
+          _animationController.reverse();
+        }
+      } else if (scrollDelta < 0) {
+        // 向上滚动，显示FAB
+        if (!_isVisible) {
+          setState(() {
+            _isVisible = true;
+          });
+          _animationController.forward();
+        }
       }
     }
 

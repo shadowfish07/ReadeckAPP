@@ -235,7 +235,7 @@ class MockReadeckApiClient extends _i1.Mock implements _i2.ReadeckApiClient {
       ) as _i3.Future<_i4.ResultDart<String, Exception>>);
 
   @override
-  _i3.Future<_i4.ResultDart<_i5.Bookmark, Exception>> createBookmark({
+  _i3.Future<_i4.ResultDart<void, Exception>> createBookmark({
     required String? url,
     String? title,
     List<String>? labels,
@@ -250,8 +250,8 @@ class MockReadeckApiClient extends _i1.Mock implements _i2.ReadeckApiClient {
             #labels: labels,
           },
         ),
-        returnValue: _i3.Future<_i4.ResultDart<_i5.Bookmark, Exception>>.value(
-            _i6.dummyValue<_i4.ResultDart<_i5.Bookmark, Exception>>(
+        returnValue: _i3.Future<_i4.ResultDart<void, Exception>>.value(
+            _i6.dummyValue<_i4.ResultDart<void, Exception>>(
           this,
           Invocation.method(
             #createBookmark,
@@ -263,7 +263,7 @@ class MockReadeckApiClient extends _i1.Mock implements _i2.ReadeckApiClient {
             },
           ),
         )),
-      ) as _i3.Future<_i4.ResultDart<_i5.Bookmark, Exception>>);
+      ) as _i3.Future<_i4.ResultDart<void, Exception>>);
 
   @override
   _i3.Future<_i4.ResultDart<void, Exception>> deleteBookmark(

@@ -381,7 +381,7 @@ class ReadeckApiClient {
   /// [title]: 书签标题（可选）
   /// [labels]: 书签标签列表（可选）
   /// 返回创建的书签对象
-  AsyncResult<Bookmark> createBookmark({
+  AsyncResult<void> createBookmark({
     required String url,
     String? title,
     List<String>? labels,
@@ -411,7 +411,7 @@ class ReadeckApiClient {
         body: json.encode(requestBody),
       );
 
-      if (response.statusCode == 201 || response.statusCode == 200 || response.statusCode == 202) {
+      if (response.statusCode == 202) {
         // 检查响应体是否为空或无效
         if (response.body.isEmpty) {
           appLogger.w("服务器返回空响应。uri: $uri");
@@ -427,11 +427,23 @@ class ReadeckApiClient {
               NetworkErrorException("JSON解析失败：$formatException", uri));
         }
 
-        // 解析创建的书签对象
+        // 检查创建响应格式
         if (data is Map<String, dynamic>) {
-          final bookmark = Bookmark.fromJson(data);
-          appLogger.i('createBookmark success for url: $url');
-          return Success(bookmark);
+          // 检查是否是创建成功的响应格式 {"message": "string", "status": 0}
+          if (data.containsKey('message') && data.containsKey('status')) {
+            final status = data['status'];
+            if (status == 202) {
+              // 创建成功，异步处理中
+              appLogger.i('书签创建请求已提交，正在异步处理: $url');
+              return const Success(());
+            } else {
+              appLogger.w("创建书签失败，状态码: $status");
+              return Failure(NetworkErrorException("创建书签失败", uri));
+            }
+          } else {
+            appLogger.w("无效的响应格式。uri: $uri, 响应体: ${response.body}");
+            return Failure(NetworkErrorException("无效的响应格式", uri));
+          }
         } else {
           appLogger.w("无效的响应格式。uri: $uri, 响应体: ${response.body}");
           return Failure(NetworkErrorException("无效的响应格式", uri));

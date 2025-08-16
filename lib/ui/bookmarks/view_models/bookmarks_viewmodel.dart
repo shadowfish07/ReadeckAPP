@@ -206,10 +206,6 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
 
   /// 书签数据变化回调
   void _onBookmarksChanged() {
-    // This is a bit tricky. A full reload might be too much.
-    // For now, just notify listeners, and the UI will rebuild.
-    // A more sophisticated approach might be needed if performance is an issue.
-    load.execute(1); // Reload the list
     notifyListeners();
   }
 
