@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:readeck_app/routing/routes.dart';
 import 'package:readeck_app/ui/api_config/view_models/api_config_viewmodel.dart';
+import 'package:readeck_app/ui/core/ui/snack_bar_helper.dart';
 
 class ApiConfigPage extends StatefulWidget {
   const ApiConfigPage({super.key, required this.viewModel});
@@ -93,10 +94,9 @@ class _ApiConfigPageState extends State<ApiConfigPage> {
                   } catch (e) {
                     // 弹出错误提示
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text("保存配置失败：$e"),
-                        ),
+                      SnackBarHelper.showError(
+                        context,
+                        "保存配置失败：$e",
                       );
                     }
                   }

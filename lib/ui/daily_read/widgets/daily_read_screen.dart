@@ -13,6 +13,7 @@ import 'package:readeck_app/ui/core/ui/error_page.dart';
 import 'package:readeck_app/ui/core/ui/loading.dart';
 import 'package:readeck_app/ui/daily_read/view_models/daily_read_viewmodel.dart';
 import 'package:readeck_app/utils/network_error_exception.dart';
+import 'package:readeck_app/ui/core/ui/snack_bar_helper.dart';
 
 class DailyReadScreen extends StatefulWidget {
   const DailyReadScreen({super.key, required this.viewModel});
@@ -54,10 +55,9 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
         '加载书签失败',
         error: error,
       );
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('加载书签失败'),
-        ),
+      SnackBarHelper.showError(
+        context,
+        '加载书签失败',
       );
     });
     widget.viewModel.toggleBookmarkArchived.errors
@@ -67,10 +67,9 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
         '切换书签归档状态失败',
         error: error,
       );
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('切换书签归档状态失败'),
-        ),
+      SnackBarHelper.showError(
+        context,
+        '切换书签归档状态失败',
       );
     });
     widget.viewModel.toggleBookmarkMarked.errors
@@ -80,10 +79,9 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
         '切换书签标记状态失败',
         error: error,
       );
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('切换书签标记状态失败'),
-        ),
+      SnackBarHelper.showError(
+        context,
+        '切换书签标记状态失败',
       );
     });
   }
@@ -197,11 +195,10 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
                 .updateBookmarkLabels(bookmark, labels)
                 .catchError((error) {
               if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('更新标签失败: $error'),
-                    duration: const Duration(seconds: 3),
-                  ),
+                SnackBarHelper.showError(
+                  context,
+                  '更新标签失败: $error',
+                  duration: const Duration(seconds: 3),
                 );
               }
             });

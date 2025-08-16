@@ -35,6 +35,15 @@ abstract final class AppTheme {
         borderRadius: BorderRadius.circular(12),
       ),
     ),
+    snackBarTheme: SnackBarThemeData(
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: _lightColorScheme.inverseSurface,
+      contentTextStyle: TextStyle(color: _lightColorScheme.onInverseSurface),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.0),
+      ),
+      insetPadding: const EdgeInsets.all(16.0),
+    ),
   );
 
   static ThemeData darkTheme = ThemeData(
@@ -55,6 +64,15 @@ abstract final class AppTheme {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
+    ),
+    snackBarTheme: SnackBarThemeData(
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: _darkColorScheme.inverseSurface,
+      contentTextStyle: TextStyle(color: _darkColorScheme.onInverseSurface),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.0),
+      ),
+      insetPadding: const EdgeInsets.all(16.0),
     ),
   );
 }
