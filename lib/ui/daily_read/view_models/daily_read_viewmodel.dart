@@ -22,10 +22,10 @@ class DailyReadViewModel extends ChangeNotifier {
         includeLastResultInCommandResults: true, initialValue: [])
       ..execute(false);
     openUrl = Command.createAsyncNoResult<String>(_openUrl);
-    toggleBookmarkArchived =
-        Command.createAsyncNoResult<Bookmark>(_toggleBookmarkArchived);
-    toggleBookmarkMarked =
-        Command.createAsyncNoResult<Bookmark>(_toggleBookmarkMarked);
+    toggleBookmarkArchived = Command.createAsyncNoResult<BookmarkDisplayModel>(
+        _toggleBookmarkArchived);
+    toggleBookmarkMarked = Command.createAsyncNoResult<BookmarkDisplayModel>(
+        _toggleBookmarkMarked);
     loadLabels = Command.createAsyncNoParam(_loadLabels, initialValue: []);
 
     // 注册书签数据变化监听器
@@ -44,8 +44,8 @@ class DailyReadViewModel extends ChangeNotifier {
 
   late Command<bool, List<BookmarkDisplayModel>> load;
   late Command<String, void> openUrl;
-  late Command<Bookmark, void> toggleBookmarkArchived;
-  late Command<Bookmark, void> toggleBookmarkMarked;
+  late Command<BookmarkDisplayModel, void> toggleBookmarkArchived;
+  late Command<BookmarkDisplayModel, void> toggleBookmarkMarked;
   late Command<void, List<String>> loadLabels;
 
   final List<BookmarkDisplayModel> _todayBookmarks = [];
@@ -156,25 +156,26 @@ class DailyReadViewModel extends ChangeNotifier {
     _onNavigateToDetail?.call(bookmark);
   }
 
-  void handleBookmarkTap(Bookmark bookmark) {
-    appLogger.i('处理书签点击: ${bookmark.title}');
+  void handleBookmarkTap(BookmarkDisplayModel bookmark) {
+    appLogger.i('处理书签点击: ${bookmark.bookmark.title}');
 
     final bookmarkModel = bookmarks.firstWhere(
-      (model) => model.bookmark.id == bookmark.id,
-      orElse: () => BookmarkDisplayModel(bookmark: bookmark, stats: null),
+      (model) => model.bookmark.id == bookmark.bookmark.id,
+      orElse: () =>
+          BookmarkDisplayModel(bookmark: bookmark.bookmark, stats: null),
     );
 
     if (bookmarkModel.stats == null) {
-      appLogger.i('书签没有阅读统计数据，可能文章内容为空，使用浏览器打开: ${bookmark.url}');
-      openUrl.execute(bookmark.url);
+      appLogger.i('书签没有阅读统计数据，可能文章内容为空，使用浏览器打开: ${bookmark.bookmark.url}');
+      openUrl.execute(bookmark.bookmark.url);
     } else {
       appLogger.i('书签有阅读统计数据，触发详情页导航');
-      _navigateToDetail(bookmark);
+      _navigateToDetail(bookmark.bookmark);
     }
   }
 
-  Future<void> _toggleBookmarkArchived(Bookmark bookmark) async {
-    final result = await _bookmarkRepository.toggleArchived(bookmark);
+  Future<void> _toggleBookmarkArchived(BookmarkDisplayModel bookmark) async {
+    final result = await _bookmarkRepository.toggleArchived(bookmark.bookmark);
 
     if (result.isError()) {
       appLogger.e("Failed to toggle bookmark archived",
@@ -185,8 +186,8 @@ class DailyReadViewModel extends ChangeNotifier {
     _onBookmarkArchivedCallback?.call();
   }
 
-  Future<void> _toggleBookmarkMarked(Bookmark bookmark) async {
-    final result = await _bookmarkRepository.toggleMarked(bookmark);
+  Future<void> _toggleBookmarkMarked(BookmarkDisplayModel bookmark) async {
+    final result = await _bookmarkRepository.toggleMarked(bookmark.bookmark);
 
     if (result.isError()) {
       appLogger.e("Failed to toggle bookmark marked",
@@ -206,8 +207,9 @@ class DailyReadViewModel extends ChangeNotifier {
   }
 
   Future<void> updateBookmarkLabels(
-      Bookmark bookmark, List<String> labels) async {
-    final result = await _bookmarkRepository.updateLabels(bookmark, labels);
+      BookmarkDisplayModel bookmark, List<String> labels) async {
+    final result =
+        await _bookmarkRepository.updateLabels(bookmark.bookmark, labels);
 
     if (result.isError()) {
       appLogger.e("Failed to update bookmark labels",

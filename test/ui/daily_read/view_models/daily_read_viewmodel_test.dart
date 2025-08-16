@@ -207,19 +207,21 @@ void main() {
       when(mockDailyReadHistoryRepository.saveTodayBookmarks(any))
           .thenAnswer((_) async => const Success(1));
 
-      final testBookmark = Bookmark(
-        id: '1',
-        url: 'https://example.com',
-        title: 'Test',
-        isArchived: false,
-        isMarked: false,
-        labels: [],
-        created: DateTime.now(),
-        readProgress: 0,
+      final testBookmark = BookmarkDisplayModel(
+        bookmark: Bookmark(
+          id: '1',
+          url: 'https://example.com',
+          title: 'Test',
+          isArchived: false,
+          isMarked: false,
+          labels: [],
+          created: DateTime.now(),
+          readProgress: 0,
+        ),
       );
 
-      when(mockBookmarkRepository.toggleArchived(testBookmark))
-          .thenAnswer((_) async => Success(testBookmark));
+      when(mockBookmarkRepository.toggleArchived(testBookmark.bookmark))
+          .thenAnswer((_) async => Success(testBookmark.bookmark));
 
       dailyReadViewModel = DailyReadViewModel(
         mockBookmarkRepository,
@@ -235,7 +237,8 @@ void main() {
           .executeWithFuture(testBookmark);
 
       // Assert
-      verify(mockBookmarkRepository.toggleArchived(testBookmark)).called(1);
+      verify(mockBookmarkRepository.toggleArchived(testBookmark.bookmark))
+          .called(1);
     });
 
     test('should handle toggle bookmark marked operation', () async {
@@ -250,19 +253,21 @@ void main() {
       when(mockDailyReadHistoryRepository.saveTodayBookmarks(any))
           .thenAnswer((_) async => const Success(1));
 
-      final testBookmark = Bookmark(
-        id: '1',
-        url: 'https://example.com',
-        title: 'Test',
-        isArchived: false,
-        isMarked: false,
-        labels: [],
-        created: DateTime.now(),
-        readProgress: 0,
+      final testBookmark = BookmarkDisplayModel(
+        bookmark: Bookmark(
+          id: '1',
+          url: 'https://example.com',
+          title: 'Test',
+          isArchived: false,
+          isMarked: false,
+          labels: [],
+          created: DateTime.now(),
+          readProgress: 0,
+        ),
       );
 
-      when(mockBookmarkRepository.toggleMarked(testBookmark))
-          .thenAnswer((_) async => Success(testBookmark));
+      when(mockBookmarkRepository.toggleMarked(testBookmark.bookmark))
+          .thenAnswer((_) async => Success(testBookmark.bookmark));
 
       dailyReadViewModel = DailyReadViewModel(
         mockBookmarkRepository,
@@ -278,7 +283,8 @@ void main() {
           .executeWithFuture(testBookmark);
 
       // Assert
-      verify(mockBookmarkRepository.toggleMarked(testBookmark)).called(1);
+      verify(mockBookmarkRepository.toggleMarked(testBookmark.bookmark))
+          .called(1);
     });
 
     test('should handle open URL operation', () async {
@@ -482,7 +488,7 @@ void main() {
       await Future.delayed(Duration.zero);
 
       // Act
-      dailyReadViewModel.handleBookmarkTap(testBookmarkWithoutStats);
+      dailyReadViewModel.handleBookmarkTap(bookmarkModelWithoutStats);
       await Future.delayed(Duration.zero);
 
       // Assert
@@ -523,7 +529,7 @@ void main() {
       await Future.delayed(Duration.zero);
 
       // Act
-      dailyReadViewModel.handleBookmarkTap(testBookmarkWithStats);
+      dailyReadViewModel.handleBookmarkTap(bookmarkModelWithStats);
       await Future.delayed(Duration.zero);
 
       // Assert
@@ -560,7 +566,7 @@ void main() {
       await Future.delayed(Duration.zero);
 
       // Act
-      dailyReadViewModel.handleBookmarkTap(testBookmarkWithStats);
+      dailyReadViewModel.handleBookmarkTap(bookmarkModelWithStats);
 
       // Assert
       expect(receivedBookmark, testBookmarkWithStats);
@@ -595,7 +601,7 @@ void main() {
       await Future.delayed(Duration.zero);
 
       // Act - should not throw
-      expect(() => dailyReadViewModel.handleBookmarkTap(testBookmarkWithStats),
+      expect(() => dailyReadViewModel.handleBookmarkTap(bookmarkModelWithStats),
           returnsNormally);
 
       // Wait a bit more to ensure any async operations complete

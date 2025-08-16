@@ -40,7 +40,7 @@ void main() {
   });
 
   Widget createWidgetUnderTest({
-    Function(Bookmark, List<String>)? onUpdateLabels,
+    Function(BookmarkDisplayModel, List<String>)? onUpdateLabels,
     Future<List<String>> Function()? onLoadLabels,
   }) {
     return MaterialApp(
@@ -112,7 +112,8 @@ void main() {
     testWidgets('should show error toast when label update fails',
         (WidgetTester tester) async {
       // Arrange - create a callback that throws an error
-      void failingOnUpdateLabels(Bookmark bookmark, List<String> labels) {
+      void failingOnUpdateLabels(
+          BookmarkDisplayModel bookmark, List<String> labels) {
         throw Exception('Network error');
       }
 
@@ -252,7 +253,7 @@ void main() {
               onOpenUrl: mockOpenUrlCommand,
               onCardTap: (bookmark) {
                 cardTapCalled = true;
-                cardTapBookmark = bookmark;
+                cardTapBookmark = bookmark.bookmark;
               },
             ),
           ),

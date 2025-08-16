@@ -131,7 +131,7 @@ void main() {
           .thenAnswer((_) async => const Success(true));
 
       // Act
-      viewModel.handleBookmarkTap(testBookmarkWithoutStats);
+      viewModel.handleBookmarkTap(bookmarkModelWithoutStats);
 
       // Wait for command execution
       await Future.delayed(Duration.zero);
@@ -157,7 +157,7 @@ void main() {
       });
 
       // Act
-      viewModel.handleBookmarkTap(testBookmarkWithStats);
+      viewModel.handleBookmarkTap(bookmarkModelWithStats);
 
       // Wait for any async operations
       await Future.delayed(Duration.zero);
@@ -179,7 +179,7 @@ void main() {
           .thenAnswer((_) async => const Success(true));
 
       // Act
-      viewModel.handleBookmarkTap(testBookmarkWithoutStats);
+      viewModel.handleBookmarkTap(bookmarkModelWithoutStats);
 
       // Wait for command execution
       await Future.delayed(Duration.zero);
@@ -208,7 +208,7 @@ void main() {
           .thenAnswer((_) async => const Success(true));
 
       // Act - Test bookmark with stats
-      viewModel.handleBookmarkTap(testBookmarkWithStats);
+      viewModel.handleBookmarkTap(bookmarkModelWithStats);
       await Future.delayed(Duration.zero);
 
       // Assert navigation callback was called
@@ -220,7 +220,7 @@ void main() {
       callbackBookmark = null;
 
       // Act - Test bookmark without stats
-      viewModel.handleBookmarkTap(testBookmarkWithoutStats);
+      viewModel.handleBookmarkTap(bookmarkModelWithoutStats);
       await Future.delayed(Duration.zero);
 
       // Assert URL was opened
@@ -252,7 +252,7 @@ void main() {
       // Manually trigger the private method to test callback
       viewModel.bookmarks.clear();
       viewModel.bookmarks.add(bookmarkModelWithStats);
-      viewModel.handleBookmarkTap(testBookmarkWithStats);
+      viewModel.handleBookmarkTap(bookmarkModelWithStats);
 
       // Assert
       expect(callbackCalled, true);
@@ -268,7 +268,7 @@ void main() {
       viewModel.setNavigateToDetailCallback((_) {});
 
       // Act - should not throw when callback is null
-      expect(() => viewModel.handleBookmarkTap(testBookmarkWithStats),
+      expect(() => viewModel.handleBookmarkTap(bookmarkModelWithStats),
           returnsNormally);
     });
 
@@ -283,7 +283,7 @@ void main() {
       });
 
       // Act
-      viewModel.handleBookmarkTap(testBookmarkWithStats);
+      viewModel.handleBookmarkTap(bookmarkModelWithStats);
 
       // Assert
       expect(receivedBookmark, testBookmarkWithStats);
@@ -308,7 +308,7 @@ void main() {
 
       // Act
       await viewModel.toggleBookmarkMarked
-          .executeWithFuture(testBookmarkWithStats);
+          .executeWithFuture(bookmarkModelWithStats);
 
       // Assert
       verify(mockBookmarkRepository.toggleMarked(testBookmarkWithStats))
@@ -340,7 +340,7 @@ void main() {
           .thenAnswer((_) async => const Success(true));
 
       // Act
-      viewModel.handleBookmarkTap(testBookmarkWithoutStats);
+      viewModel.handleBookmarkTap(bookmarkModelWithoutStats);
 
       // Wait for command execution
       await Future.delayed(Duration.zero);

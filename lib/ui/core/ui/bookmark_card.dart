@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_command/flutter_command.dart';
-import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 import 'package:readeck_app/domain/models/bookmark_display_model/bookmark_display_model.dart';
 import 'package:readeck_app/main.dart';
 import 'package:readeck_app/ui/core/ui/bookmark_labels_widget.dart';
@@ -12,10 +11,11 @@ import 'package:readeck_app/utils/reading_stats_calculator.dart';
 class BookmarkCard extends StatefulWidget {
   final BookmarkDisplayModel bookmarkDisplayModel;
   final Command onOpenUrl;
-  final Function(Bookmark bookmark)? onCardTap;
-  final Function(Bookmark bookmark)? onToggleMark;
-  final Function(Bookmark bookmark)? onToggleArchive;
-  final Function(Bookmark bookmark, List<String> labels)? onUpdateLabels;
+  final Function(BookmarkDisplayModel bookmark)? onCardTap;
+  final Function(BookmarkDisplayModel bookmark)? onToggleMark;
+  final Function(BookmarkDisplayModel bookmark)? onToggleArchive;
+  final Function(BookmarkDisplayModel bookmark, List<String> labels)?
+      onUpdateLabels;
   final List<String>? availableLabels;
   final Future<List<String>> Function()? onLoadLabels;
 
@@ -221,8 +221,8 @@ class _BookmarkCardState extends State<BookmarkCard> {
                     // 标记喜爱按钮
                     IconButton(
                       onPressed: widget.onToggleMark != null
-                          ? () => widget.onToggleMark!(
-                              widget.bookmarkDisplayModel.bookmark)
+                          ? () =>
+                              widget.onToggleMark!(widget.bookmarkDisplayModel)
                           : null,
                       style: IconButton.styleFrom(
                         minimumSize: const Size(32, 32),
@@ -279,7 +279,7 @@ class _BookmarkCardState extends State<BookmarkCard> {
                       onPressed: widget.onToggleArchive != null
                           ? () {
                               widget.onToggleArchive!(
-                                  widget.bookmarkDisplayModel.bookmark);
+                                  widget.bookmarkDisplayModel);
                               SnackBarHelper.showSuccess(
                                 context,
                                 widget.bookmarkDisplayModel.bookmark.isArchived
@@ -331,7 +331,7 @@ class _BookmarkCardState extends State<BookmarkCard> {
   /// 处理卡片点击事件
   void _handleCardTap() {
     appLogger.i('处理书签卡片点击: ${widget.bookmarkDisplayModel.bookmark.title}');
-    widget.onCardTap?.call(widget.bookmarkDisplayModel.bookmark);
+    widget.onCardTap?.call(widget.bookmarkDisplayModel);
   }
 
   String _formatDate(DateTime date) {
@@ -362,7 +362,7 @@ class _BookmarkCardState extends State<BookmarkCard> {
           onUpdateLabels: (bookmark, labels) async {
             try {
               if (widget.onUpdateLabels != null) {
-                widget.onUpdateLabels!(bookmark, labels);
+                widget.onUpdateLabels!(widget.bookmarkDisplayModel, labels);
                 if (context.mounted) {
                   SnackBarHelper.showSuccess(context, '标签已更新');
                 }

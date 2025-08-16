@@ -23,9 +23,9 @@ void main() {
     final mockOpenUrlCommand =
         Command.createAsyncNoResult<String>((_) async {});
     final mockToggleArchivedCommand =
-        Command.createAsyncNoResult<Bookmark>((_) async {});
+        Command.createAsyncNoResult<BookmarkDisplayModel>((_) async {});
     final mockToggleMarkedCommand =
-        Command.createAsyncNoResult<Bookmark>((_) async {});
+        Command.createAsyncNoResult<BookmarkDisplayModel>((_) async {});
     final mockLoadLabelsCommand = Command.createAsyncNoParam<List<String>>(
         () async => [],
         initialValue: []);

@@ -199,10 +199,10 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
           bookmarkDisplayModel: bookmarkModel,
           onOpenUrl: widget.viewModel.openUrl,
           onToggleMark: (bookmark) =>
-              widget.viewModel.toggleBookmarkMarked(bookmark),
+              widget.viewModel.toggleBookmarkMarked(bookmarkModel),
           onUpdateLabels: (bookmark, labels) {
             widget.viewModel
-                .updateBookmarkLabels(bookmark, labels)
+                .updateBookmarkLabels(bookmarkModel, labels)
                 .catchError((error) {
               if (context.mounted) {
                 SnackBarHelper.showError(
@@ -217,7 +217,7 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
           availableLabels: widget.viewModel.availableLabels,
           onLoadLabels: () => widget.viewModel.loadLabels.executeWithFuture(),
           onToggleArchive: (bookmark) {
-            widget.viewModel.toggleBookmarkArchived(bookmark);
+            widget.viewModel.toggleBookmarkArchived(bookmarkModel);
           },
         );
       },

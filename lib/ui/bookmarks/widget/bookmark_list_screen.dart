@@ -233,10 +233,10 @@ class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
             onOpenUrl: widget.viewModel.openUrl,
             onCardTap: widget.viewModel.handleBookmarkTap,
             onToggleMark: (bookmark) =>
-                widget.viewModel.toggleBookmarkMarked(bookmark),
+                widget.viewModel.toggleBookmarkMarked(bookmarkModel),
             onUpdateLabels: (bookmark, labels) {
               widget.viewModel
-                  .updateBookmarkLabels(bookmark, labels)
+                  .updateBookmarkLabels(bookmarkModel, labels)
                   .catchError((error) {
                 if (context.mounted) {
                   SnackBarHelper.showError(
@@ -250,7 +250,7 @@ class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
             availableLabels: widget.viewModel.availableLabels,
             onLoadLabels: () => widget.viewModel.loadLabels.executeWithFuture(),
             onToggleArchive: (bookmark) {
-              widget.viewModel.toggleBookmarkArchived(bookmark);
+              widget.viewModel.toggleBookmarkArchived(bookmarkModel);
             },
           );
         },
