@@ -26,4 +26,6 @@ abstract final class Routes {
   static const bookmarkDetail = '/$bookmarkDetailRelative';
   static const bookmarkDetailRelative = 'bookmark-detail';
   static String bookmarkDetailWithId(String id) => '$bookmarkDetail/$id';
+  static const addBookmark = '/$addBookmarkRelative';
+  static const addBookmarkRelative = 'add-bookmark';
 }

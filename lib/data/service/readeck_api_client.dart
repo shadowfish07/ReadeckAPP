@@ -374,6 +374,79 @@ class ReadeckApiClient {
     }
   }
 
+  /// 创建书签
+  ///
+  /// 创建新的书签
+  /// [url]: 书签URL（必填）
+  /// [title]: 书签标题（可选）
+  /// [labels]: 书签标签列表（可选）
+  /// 返回创建的书签对象
+  AsyncResult<Bookmark> createBookmark({
+    required String url,
+    String? title,
+    List<String>? labels,
+  }) async {
+    if (!_isConfigured) {
+      return Failure(ApiNotConfiguredException());
+    }
+
+    // 构建请求体
+    final Map<String, dynamic> requestBody = {
+      'url': url,
+    };
+
+    if (title != null && title.isNotEmpty) {
+      requestBody['title'] = title;
+    }
+    if (labels != null && labels.isNotEmpty) {
+      requestBody['labels'] = labels;
+    }
+
+    final uri = Uri.parse('$_host/api/bookmarks');
+
+    try {
+      final response = await _httpClient.post(
+        uri,
+        headers: _headers,
+        body: json.encode(requestBody),
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200 || response.statusCode == 202) {
+        // 检查响应体是否为空或无效
+        if (response.body.isEmpty) {
+          appLogger.w("服务器返回空响应。uri: $uri");
+          return Failure(NetworkErrorException("服务器返回空响应", uri));
+        }
+
+        dynamic data;
+        try {
+          data = json.decode(response.body);
+        } catch (formatException) {
+          appLogger.w("JSON解析失败。uri: $uri, 响应体: ${response.body}");
+          return Failure(
+              NetworkErrorException("JSON解析失败：$formatException", uri));
+        }
+
+        // 解析创建的书签对象
+        if (data is Map<String, dynamic>) {
+          final bookmark = Bookmark.fromJson(data);
+          appLogger.i('createBookmark success for url: $url');
+          return Success(bookmark);
+        } else {
+          appLogger.w("无效的响应格式。uri: $uri, 响应体: ${response.body}");
+          return Failure(NetworkErrorException("无效的响应格式", uri));
+        }
+      } else {
+        appLogger.w("创建书签失败。uri: $uri, 状态码: ${response.statusCode}");
+        return Failure(
+            NetworkErrorException('创建书签失败', uri, response.statusCode));
+      }
+    } catch (e) {
+      appLogger.w("网络请求失败。uri: $uri, 错误: $e");
+      return Failure(NetworkErrorException('网络请求失败', uri));
+    }
+  }
+
   /// 删除书签
   ///
   /// 删除保存的书签

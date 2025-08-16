@@ -27,6 +27,8 @@ import 'package:readeck_app/ui/bookmarks/widget/archived_screen.dart';
 import 'package:readeck_app/ui/bookmarks/widget/marked_screen.dart';
 import 'package:readeck_app/ui/bookmarks/view_models/bookmark_detail_viewmodel.dart';
 import 'package:readeck_app/ui/bookmarks/widget/bookmark_detail_screen.dart';
+import 'package:readeck_app/ui/bookmarks/view_models/add_bookmark_viewmodel.dart';
+import 'package:readeck_app/ui/bookmarks/widget/add_bookmark_screen.dart';
 
 import 'routes.dart';
 
@@ -44,6 +46,7 @@ final Map<String, String> _routeTitleMap = {
   Routes.archived: '已归档',
   Routes.marked: '标记喜爱',
   Routes.bookmarkDetail: '书签详情',
+  Routes.addBookmark: '添加书签',
 };
 
 // 根据路由获取标题
@@ -62,6 +65,15 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
               // 根据当前路由确定页面标题
               final title = _getTitleForRoute(state.matchedLocation);
 
+              // 检查是否为书签列表页面，需要显示FAB
+              final isBookmarkListRoute = [
+                Routes.dailyRead,
+                Routes.unarchived,
+                Routes.reading,
+                Routes.archived,
+                Routes.marked,
+              ].contains(state.matchedLocation);
+
               // 从设置页返回，跳转首页
               if (state.matchedLocation == Routes.settings) {
                 return MainLayout(
@@ -79,6 +91,13 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
 
               return MainLayout(
                 title: title,
+                floatingActionButton: isBookmarkListRoute
+                    ? FloatingActionButton(
+                        onPressed: () => context.push(Routes.addBookmark),
+                        tooltip: '添加书签',
+                        child: const Icon(Icons.add),
+                      )
+                    : null,
                 child: child,
               );
             },
@@ -241,6 +260,22 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
                 child: Consumer<BookmarkDetailViewModel>(
                   builder: (context, viewModel, child) {
                     return BookmarkDetailScreen(viewModel: viewModel);
+                  },
+                ),
+              );
+            }),
+        GoRoute(
+            path: Routes.addBookmark,
+            builder: (context, state) {
+              final viewModel = AddBookmarkViewModel(
+                context.read(),
+                context.read(),
+              );
+              return ChangeNotifierProvider.value(
+                value: viewModel,
+                child: Consumer<AddBookmarkViewModel>(
+                  builder: (context, viewModel, child) {
+                    return AddBookmarkScreen(viewModel: viewModel);
                   },
                 ),
               );

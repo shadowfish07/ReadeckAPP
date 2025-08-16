@@ -57,6 +57,9 @@ class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
     extends State<BookmarkListScreen<T>> {
   late ScrollController _scrollController;
 
+  /// 获取滚动控制器，用于FAB动画
+  ScrollController get scrollController => _scrollController;
+
   @override
   void initState() {
     super.initState();

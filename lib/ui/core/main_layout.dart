@@ -9,6 +9,7 @@ class MainLayout extends StatelessWidget {
   final List<Widget>? actions;
   final Widget? leading;
   final bool automaticallyImplyLeading;
+  final Widget? floatingActionButton;
 
   const MainLayout({
     super.key,
@@ -18,6 +19,7 @@ class MainLayout extends StatelessWidget {
     this.actions,
     this.leading,
     this.automaticallyImplyLeading = true,
+    this.floatingActionButton,
   });
 
   @override
@@ -81,6 +83,7 @@ class MainLayout extends StatelessWidget {
         ],
       ),
       body: child, // 显示当前路由的页面
+      floatingActionButton: floatingActionButton,
     );
   }
 }

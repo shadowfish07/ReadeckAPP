@@ -26,6 +26,7 @@ class DailyReadScreen extends StatefulWidget {
 
 class _DailyReadScreenState extends State<DailyReadScreen> {
   late ConfettiController _confettiController;
+  late ScrollController _scrollController;
 
   @override
   void initState() {
@@ -34,6 +35,8 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
     _confettiController = ConfettiController(
       duration: const Duration(seconds: 3),
     );
+    // 初始化滚动控制器
+    _scrollController = ScrollController();
     // 设置书签归档回调
     widget.viewModel.setOnBookmarkArchivedCallback(_onBookmarkArchived);
     // 设置导航回调
@@ -51,6 +54,8 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
   void dispose() {
     // 释放动画控制器
     _confettiController.dispose();
+    // 释放滚动控制器
+    _scrollController.dispose();
     // 清除回调
     widget.viewModel.setOnBookmarkArchivedCallback(null);
     widget.viewModel.setNavigateToDetailCallback((_) {});
@@ -191,6 +196,7 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
     }
 
     return ListView.builder(
+      controller: _scrollController,
       padding: const EdgeInsets.all(16),
       itemCount: widget.viewModel.unArchivedBookmarks.length,
       itemBuilder: (context, index) {

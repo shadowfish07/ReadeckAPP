@@ -1,0 +1,276 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_command/flutter_command.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
+import 'package:readeck_app/ui/bookmarks/view_models/add_bookmark_viewmodel.dart';
+import 'package:readeck_app/ui/core/ui/label_edit_dialog.dart';
+import 'package:readeck_app/ui/core/ui/loading.dart';
+import 'package:readeck_app/ui/core/ui/snack_bar_helper.dart';
+
+class AddBookmarkScreen extends StatefulWidget {
+  const AddBookmarkScreen({super.key, required this.viewModel});
+
+  final AddBookmarkViewModel viewModel;
+
+  @override
+  State<AddBookmarkScreen> createState() => _AddBookmarkScreenState();
+}
+
+class _AddBookmarkScreenState extends State<AddBookmarkScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _urlController = TextEditingController();
+  final _titleController = TextEditingController();
+  late ListenableSubscription _successSubscription;
+  late ListenableSubscription _errorSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // 监听创建成功
+    _successSubscription = widget.viewModel.createBookmark.listen((result, _) {
+      if (mounted) {
+        SnackBarHelper.showSuccess(context, '书签创建请求已提交，正在后台处理中');
+        context.pop();
+      }
+    });
+
+    // 监听创建失败
+    _errorSubscription = widget.viewModel.createBookmark.errors
+        .where((x) => x != null)
+        .listen((error, _) {
+      if (mounted && error != null) {
+        SnackBarHelper.showError(
+          context,
+          '创建失败: ${error.error.toString()}',
+          duration: const Duration(seconds: 3),
+        );
+      }
+    });
+
+    // 监听表单字段变化
+    _urlController.addListener(() {
+      widget.viewModel.updateUrl(_urlController.text);
+    });
+    _titleController.addListener(() {
+      widget.viewModel.updateTitle(_titleController.text);
+    });
+  }
+
+  @override
+  void dispose() {
+    _successSubscription.cancel();
+    _errorSubscription.cancel();
+    _urlController.dispose();
+    _titleController.dispose();
+    super.dispose();
+  }
+
+  void _submitForm() {
+    if (_formKey.currentState?.validate() == true) {
+      final params = CreateBookmarkParams(
+        url: widget.viewModel.url,
+        title: widget.viewModel.title,
+        labels: widget.viewModel.selectedLabels,
+      );
+      widget.viewModel.createBookmark.execute(params);
+    }
+  }
+
+  void _showLabelSelector() async {
+    // 创建一个虚拟的 Bookmark 对象来配合 LabelEditDialog
+    final dummyBookmark = Bookmark(
+      id: '',
+      url: '',
+      title: '',
+      labels: widget.viewModel.selectedLabels,
+      isMarked: false,
+      isArchived: false,
+      readProgress: 0,
+      created: DateTime.now(),
+    );
+
+    await showDialog(
+      context: context,
+      builder: (context) => LabelEditDialog(
+        bookmark: dummyBookmark,
+        availableLabels: widget.viewModel.availableLabels,
+        onUpdateLabels: (bookmark, labels) {
+          widget.viewModel.updateSelectedLabels(labels);
+        },
+        onLoadLabels: () async {
+          // 触发加载标签并返回最新的标签列表
+          widget.viewModel.loadLabels.execute();
+          return widget.viewModel.availableLabels;
+        },
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('添加书签'),
+      ),
+      body: Consumer<AddBookmarkViewModel>(
+        builder: (context, viewModel, child) {
+          return CommandBuilder(
+            command: viewModel.loadLabels,
+            whileExecuting: (context, lastValue, param) {
+              if (lastValue == null || lastValue.isEmpty) {
+                return const Loading(text: '正在加载标签');
+              }
+              return _buildForm(viewModel);
+            },
+            onError: (context, error, lastValue, param) {
+              return _buildForm(viewModel);
+            },
+            onData: (context, data, param) {
+              return _buildForm(viewModel);
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildForm(AddBookmarkViewModel viewModel) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // URL输入字段
+            TextFormField(
+              controller: _urlController,
+              decoration: InputDecoration(
+                labelText: 'URL *',
+                hintText: '请输入网页链接',
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.link),
+                helperText: '必填项',
+                helperStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+              ),
+              keyboardType: TextInputType.url,
+              textInputAction: TextInputAction.next,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return '请输入URL';
+                }
+                if (!viewModel.isValidUrl) {
+                  return '请输入有效的URL（以http://或https://开头）';
+                }
+                return null;
+              },
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+            ),
+            const SizedBox(height: 16),
+
+            // 标题输入字段
+            TextFormField(
+              controller: _titleController,
+              decoration: const InputDecoration(
+                labelText: '标题',
+                hintText: '可选，留空将自动获取',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.title),
+              ),
+              textInputAction: TextInputAction.done,
+              onFieldSubmitted: (_) => _submitForm(),
+            ),
+            const SizedBox(height: 16),
+
+            // 标签选择区域
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '标签',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 8),
+                      if (viewModel.selectedLabels.isEmpty)
+                        Text(
+                          '未选择标签',
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
+                        )
+                      else
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
+                          children: viewModel.selectedLabels.map((label) {
+                            return Chip(
+                              label: Text(label),
+                              deleteIcon: const Icon(Icons.close, size: 18),
+                              onDeleted: () => viewModel.removeLabel(label),
+                              backgroundColor: Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainerHighest,
+                            );
+                          }).toList(),
+                        ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  onPressed: _showLabelSelector,
+                  icon: const Icon(Icons.edit),
+                  tooltip: '编辑标签',
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // 提交按钮
+            SizedBox(
+              width: double.infinity,
+              child: Consumer<AddBookmarkViewModel>(
+                builder: (context, viewModel, child) {
+                  return ValueListenableBuilder<bool>(
+                    valueListenable: viewModel.createBookmark.isExecuting,
+                    builder: (context, isExecuting, _) {
+                      if (isExecuting) {
+                        return FilledButton.icon(
+                          onPressed: null,
+                          icon: const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          ),
+                          label: const Text('创建中...'),
+                        );
+                      }
+
+                      return FilledButton.icon(
+                        onPressed: viewModel.canSubmit ? _submitForm : null,
+                        icon: const Icon(Icons.bookmark_add),
+                        label: const Text('创建书签'),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
