@@ -351,7 +351,24 @@ class _BookmarkCardState extends State<BookmarkCard> {
         builder: (dialogContext) => LabelEditDialog(
           bookmark: widget.bookmark,
           availableLabels: labels,
-          onUpdateLabels: widget.onUpdateLabels!,
+          onUpdateLabels: (bookmark, labels) async {
+            try {
+              if (widget.onUpdateLabels != null) {
+                widget.onUpdateLabels!(bookmark, labels);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('标签已更新')),
+                  );
+                }
+              }
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('更新标签失败: $e')),
+                );
+              }
+            }
+          },
           onLoadLabels: widget.onLoadLabels,
         ),
       );

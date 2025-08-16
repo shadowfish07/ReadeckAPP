@@ -1,0 +1,198 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_command/flutter_command.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
+import 'package:readeck_app/ui/core/ui/bookmark_card.dart';
+import 'package:readeck_app/ui/core/ui/label_edit_dialog.dart';
+
+void main() {
+  late Command mockOpenUrlCommand;
+  late Bookmark testBookmark;
+  late List<String> availableLabels;
+  bool updateLabelsCalled = false;
+
+  setUp(() {
+    // Create a real Command instead of a mock
+    mockOpenUrlCommand = Command.createAsyncNoResult<String>((_) async {});
+    updateLabelsCalled = false;
+
+    testBookmark = Bookmark(
+      id: '1',
+      url: 'https://example.com',
+      title: 'Test Article',
+      isArchived: false,
+      isMarked: false,
+      labels: ['existing-label'],
+      created: DateTime.now(),
+      readProgress: 50,
+    );
+
+    availableLabels = ['label1', 'label2', 'existing-label'];
+  });
+
+  Widget createWidgetUnderTest({
+    Function(Bookmark, List<String>)? onUpdateLabels,
+    Future<List<String>> Function()? onLoadLabels,
+  }) {
+    return MaterialApp(
+      home: Scaffold(
+        body: BookmarkCard(
+          bookmark: testBookmark,
+          onOpenUrl: mockOpenUrlCommand,
+          onUpdateLabels: onUpdateLabels ??
+              (bookmark, labels) {
+                updateLabelsCalled = true;
+              },
+          availableLabels: availableLabels,
+          onLoadLabels: onLoadLabels,
+        ),
+      ),
+    );
+  }
+
+  group('BookmarkCard Label Edit Tests', () {
+    testWidgets('should display label edit button',
+        (WidgetTester tester) async {
+      // Act
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      // Assert
+      expect(find.byIcon(Icons.local_offer_outlined), findsOneWidget);
+      expect(find.byTooltip('编辑标签'), findsOneWidget);
+    });
+
+    testWidgets('should open label edit dialog when label button is tapped',
+        (WidgetTester tester) async {
+      // Act
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      // Tap the label edit button
+      await tester.tap(find.byIcon(Icons.local_offer_outlined));
+      await tester.pumpAndSettle();
+
+      // Assert
+      expect(find.byType(LabelEditDialog), findsOneWidget);
+      expect(find.text('编辑标签'), findsOneWidget);
+    });
+
+    testWidgets(
+        'should show success toast when labels are updated successfully',
+        (WidgetTester tester) async {
+      // Act
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      // Open label edit dialog
+      await tester.tap(find.byIcon(Icons.local_offer_outlined));
+      await tester.pumpAndSettle();
+
+      // Simulate label update by tapping save button
+      await tester.tap(find.text('保存'));
+      await tester.pumpAndSettle();
+
+      // Assert - check that success toast is shown
+      expect(find.text('标签已更新'), findsOneWidget);
+      expect(find.byType(SnackBar), findsOneWidget);
+
+      // Verify the callback was called
+      expect(updateLabelsCalled, isTrue);
+    });
+
+    testWidgets('should show error toast when label update fails',
+        (WidgetTester tester) async {
+      // Arrange - create a callback that throws an error
+      void failingOnUpdateLabels(Bookmark bookmark, List<String> labels) {
+        throw Exception('Network error');
+      }
+
+      // Act
+      await tester.pumpWidget(createWidgetUnderTest(
+        onUpdateLabels: failingOnUpdateLabels,
+      ));
+      await tester.pumpAndSettle();
+
+      // Open label edit dialog
+      await tester.tap(find.byIcon(Icons.local_offer_outlined));
+      await tester.pumpAndSettle();
+
+      // Simulate label update by tapping save button
+      await tester.tap(find.text('保存'));
+      await tester.pumpAndSettle();
+
+      // Assert - check that error toast is shown
+      expect(find.textContaining('更新标签失败'), findsOneWidget);
+      expect(find.byType(SnackBar), findsOneWidget);
+    });
+
+    testWidgets('should display existing labels in the card',
+        (WidgetTester tester) async {
+      // Act
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      // Assert - check that existing labels are displayed
+      expect(find.text('existing-label'), findsOneWidget);
+    });
+
+    testWidgets('should work with provided onUpdateLabels callback',
+        (WidgetTester tester) async {
+      // Act
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      // Assert - button should exist and be enabled
+      expect(find.byIcon(Icons.local_offer_outlined), findsOneWidget);
+
+      // Find all IconButton widgets and check the label edit button specifically
+      final iconButtons =
+          tester.widgetList<IconButton>(find.byType(IconButton));
+      final labelButton = iconButtons.firstWhere(
+        (button) =>
+            button.icon is Icon &&
+            (button.icon as Icon).icon == Icons.local_offer_outlined,
+      );
+      expect(labelButton.onPressed, isNotNull);
+    });
+  });
+
+  group('BookmarkCard General Tests', () {
+    testWidgets('should display bookmark title', (WidgetTester tester) async {
+      // Act
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      // Assert
+      expect(find.text('Test Article'), findsOneWidget);
+    });
+
+    testWidgets('should display reading progress', (WidgetTester tester) async {
+      // Act
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      // Assert
+      expect(find.text('50%'), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    });
+
+    testWidgets('should display favorite button', (WidgetTester tester) async {
+      // Act
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      // Assert
+      expect(find.byIcon(Icons.favorite_border), findsOneWidget);
+    });
+
+    testWidgets('should display archive button', (WidgetTester tester) async {
+      // Act
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      // Assert
+      expect(find.byIcon(Icons.archive_outlined), findsOneWidget);
+    });
+  });
+}
