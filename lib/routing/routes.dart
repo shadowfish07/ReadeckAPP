@@ -17,6 +17,8 @@ abstract final class Routes {
   static const dailyReadRelative = 'daily-read';
   static const unarchived = '/$unarchivedRelative';
   static const unarchivedRelative = 'unarchived';
+  static const reading = '/$readingRelative';
+  static const readingRelative = 'reading';
   static const archived = '/$archivedRelative';
   static const archivedRelative = 'archived';
   static const marked = '/$markedRelative';

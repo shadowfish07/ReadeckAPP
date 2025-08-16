@@ -51,6 +51,13 @@ class MainLayout extends StatelessWidget {
             },
           ),
           ListTile(
+            title: const Text('阅读中'),
+            onTap: () {
+              context.pop();
+              context.go(Routes.reading);
+            },
+          ),
+          ListTile(
             title: const Text('已归档'),
             onTap: () {
               context.pop();
