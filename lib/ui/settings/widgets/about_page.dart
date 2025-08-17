@@ -1,3 +1,6 @@
+import 'package:provider/provider.dart';
+import 'package:readeck_app/main_viewmodel.dart';
+
 import 'package:flutter/material.dart';
 import 'package:readeck_app/ui/settings/view_models/about_viewmodel.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -78,7 +81,39 @@ class AboutPage extends StatelessWidget {
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                 ),
-                const SizedBox(height: 32),
+                Consumer<MainAppViewModel>(
+                  builder: (context, mainViewModel, child) {
+                    if (mainViewModel.updateInfo == null) {
+                      return const SizedBox.shrink();
+                    }
+                    return Column(
+                      children: [
+                        const SizedBox(height: 32),
+                        Card(
+                          child: ListTile(
+                            title: Row(
+                              children: [
+                                Text(
+                                  '新版本可用: ${mainViewModel.updateInfo!.version}',
+                                ),
+                                const SizedBox(width: 8),
+                                const Badge(),
+                              ],
+                            ),
+                            trailing: FilledButton.tonal(
+                              onPressed: () {
+                                _launchUrl(
+                                    mainViewModel.updateInfo!.downloadUrl);
+                              },
+                              child: const Text('立即更新'),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                    );
+                  },
+                ),
                 // 应用描述
                 Card(
                   child: Padding(
@@ -141,38 +176,6 @@ class AboutPage extends StatelessWidget {
                           Icons.palette,
                           'Material Design',
                           '遵循 Material Design 2 设计规范',
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                // 开发者信息
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '开发者信息',
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                        ),
-                        const SizedBox(height: 12),
-                        const ListTile(
-                          leading: Icon(Icons.code),
-                          title: Text('开发者'),
-                          subtitle: Text('ShadowFish'),
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                        const ListTile(
-                          leading: Icon(Icons.flutter_dash),
-                          title: Text('技术栈'),
-                          subtitle: Text('Flutter & Dart'),
-                          contentPadding: EdgeInsets.zero,
                         ),
                       ],
                     ),

@@ -24,7 +24,7 @@ void main() {
         methodCount: 0,
         dateTimeFormat: DateTimeFormat.none,
       ),
-      level: Level.warning, // Reduce log noise in tests
+      level: Level.off, // Reduce log noise in tests
     );
   });
 

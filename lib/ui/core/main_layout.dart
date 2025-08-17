@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:readeck_app/data/service/update_service.dart';
 import 'package:readeck_app/main_viewmodel.dart';
 import 'package:readeck_app/routing/routes.dart';
 import 'package:readeck_app/ui/core/ui/bookmark_list_fab.dart';
@@ -54,12 +55,15 @@ class MainLayout extends StatefulWidget {
 
 class _MainLayoutState extends State<MainLayout> {
   StreamSubscription<String>? _shareTextSubscription;
+  StreamSubscription<UpdateInfo>? _updateSubscription;
   bool _isProcessingShare = false;
+  bool _hasUpdate = false;
 
   @override
   void initState() {
     super.initState();
     _setupShareIntentListener();
+    _setupUpdateListener();
   }
 
   void _setupShareIntentListener() {
@@ -92,9 +96,32 @@ class _MainLayoutState extends State<MainLayout> {
     });
   }
 
+  void _setupUpdateListener() {
+    final mainViewModel = context.read<MainAppViewModel>();
+    _updateSubscription = mainViewModel.onUpdateAvailable.listen((updateInfo) {
+      if (mounted) {
+        setState(() {
+          _hasUpdate = true;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('发现新版本: ${updateInfo.version}'),
+            action: SnackBarAction(
+              label: '前往更新',
+              onPressed: () {
+                context.go(Routes.about);
+              },
+            ),
+          ),
+        );
+      }
+    });
+  }
+
   @override
   void dispose() {
     _shareTextSubscription?.cancel();
+    _updateSubscription?.cancel();
     super.dispose();
   }
 
@@ -115,6 +142,16 @@ class _MainLayoutState extends State<MainLayout> {
                   )
                 : AppBar(
                     automaticallyImplyLeading: widget.automaticallyImplyLeading,
+                    leading: Builder(
+                      builder: (context) {
+                        return IconButton(
+                          icon: const Icon(Icons.menu),
+                          onPressed: () {
+                            Scaffold.of(context).openDrawer();
+                          },
+                        );
+                      },
+                    ),
                   )),
         drawer: NavigationDrawer(
           children: [
@@ -155,6 +192,7 @@ class _MainLayoutState extends State<MainLayout> {
             ),
             ListTile(
               title: const Text('设置'),
+              trailing: _hasUpdate ? const Badge() : null,
               onTap: () {
                 context.pop();
                 context.go(Routes.settings);

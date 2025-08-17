@@ -34,6 +34,8 @@ dependencies:
   share_plus: ^7.2.1
   receive_sharing_intent: ^1.8.0
   html: ^0.15.4
+  package_info_plus: ^8.0.0
+  version: ^3.0.2
 
 dev_dependencies:
   flutter_test:

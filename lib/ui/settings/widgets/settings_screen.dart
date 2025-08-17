@@ -1,3 +1,5 @@
+import 'package:provider/provider.dart';
+import 'package:readeck_app/main_viewmodel.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -99,8 +101,28 @@ class SettingsScreen extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.info),
             title: const Text('关于'),
-            subtitle: const Text('应用信息和版本'),
-            trailing: const Icon(Icons.chevron_right),
+            subtitle: Consumer<MainAppViewModel>(
+              builder: (context, mainViewModel, child) {
+                if (mainViewModel.updateInfo != null) {
+                  return Text('发现新版本 ${mainViewModel.updateInfo!.version}');
+                }
+                return const Text('应用信息和版本');
+              },
+            ),
+            trailing: Consumer<MainAppViewModel>(
+              builder: (context, mainViewModel, child) {
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    if (mainViewModel.updateInfo != null) ...[
+                      const Badge(),
+                      const SizedBox(width: 8),
+                    ],
+                    const Icon(Icons.chevron_right),
+                  ],
+                );
+              },
+            ),
             onTap: () {
               context.push(Routes.about);
             },
