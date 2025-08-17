@@ -28,6 +28,10 @@ class _AddBookmarkScreenState extends State<AddBookmarkScreen> {
   void initState() {
     super.initState();
 
+    // 初始化控制器的值
+    _urlController.text = widget.viewModel.url;
+    _titleController.text = widget.viewModel.title;
+
     // 监听创建成功
     _successSubscription = widget.viewModel.createBookmark.listen((result, _) {
       if (mounted) {
@@ -51,15 +55,33 @@ class _AddBookmarkScreenState extends State<AddBookmarkScreen> {
 
     // 监听表单字段变化
     _urlController.addListener(() {
-      widget.viewModel.updateUrl(_urlController.text);
+      if (widget.viewModel.url != _urlController.text) {
+        widget.viewModel.updateUrl(_urlController.text);
+      }
     });
     _titleController.addListener(() {
-      widget.viewModel.updateTitle(_titleController.text);
+      if (widget.viewModel.title != _titleController.text) {
+        widget.viewModel.updateTitle(_titleController.text);
+      }
     });
+
+    // 监听ViewModel的变化以更新控制器
+    widget.viewModel.addListener(_onViewModelChanged);
+  }
+
+  void _onViewModelChanged() {
+    // 同步ViewModel的值到控制器
+    if (_urlController.text != widget.viewModel.url) {
+      _urlController.text = widget.viewModel.url;
+    }
+    if (_titleController.text != widget.viewModel.title) {
+      _titleController.text = widget.viewModel.title;
+    }
   }
 
   @override
   void dispose() {
+    widget.viewModel.removeListener(_onViewModelChanged);
     _successSubscription.cancel();
     _errorSubscription.cancel();
     _urlController.dispose();

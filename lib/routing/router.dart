@@ -268,10 +268,21 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
         GoRoute(
             path: Routes.addBookmark,
             builder: (context, state) {
+              // 获取分享的文本参数
+              final sharedText = state.uri.queryParameters['shared_text'];
+
               final viewModel = AddBookmarkViewModel(
                 context.read(),
                 context.read(),
               );
+
+              // 如果有分享的文本，进行预处理
+              if (sharedText != null && sharedText.isNotEmpty) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  viewModel.processSharedText(sharedText);
+                });
+              }
+
               return ChangeNotifierProvider.value(
                 value: viewModel,
                 child: Consumer<AddBookmarkViewModel>(

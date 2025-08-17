@@ -254,6 +254,86 @@ void main() {
       });
     });
 
+    group('分享文本处理', () {
+      test('should extract URL from shared text with URL', () {
+        const sharedText =
+            'Check out this article https://example.com/article Amazing content';
+
+        viewModel.processSharedText(sharedText);
+
+        expect(viewModel.url, equals('https://example.com/article'));
+        expect(viewModel.title, isEmpty); // 标题应该保持为空
+      });
+
+      test('should extract multiple URLs and use the first one', () {
+        const sharedText =
+            'Two links: https://first.com and https://second.com';
+
+        viewModel.processSharedText(sharedText);
+
+        expect(viewModel.url, equals('https://first.com'));
+        expect(viewModel.title, isEmpty);
+      });
+
+      test('should handle HTTP URLs', () {
+        const sharedText = 'Old site http://example.com still works';
+
+        viewModel.processSharedText(sharedText);
+
+        expect(viewModel.url, equals('http://example.com'));
+        expect(viewModel.title, isEmpty);
+      });
+
+      test('should keep URL empty when no URL found', () {
+        const sharedText = 'Just some text without any links';
+
+        viewModel.processSharedText(sharedText);
+
+        expect(viewModel.url, isEmpty);
+        expect(viewModel.title, isEmpty);
+      });
+
+      test('should handle URL-only text', () {
+        const sharedText = 'https://example.com/path';
+
+        viewModel.processSharedText(sharedText);
+
+        expect(viewModel.url, equals('https://example.com/path'));
+        expect(viewModel.title, isEmpty);
+      });
+
+      test('should handle empty shared text', () {
+        const sharedText = '';
+
+        viewModel.processSharedText(sharedText);
+
+        expect(viewModel.url, isEmpty);
+        expect(viewModel.title, isEmpty);
+      });
+
+      test('should notify listeners when processing shared text with URL', () {
+        const sharedText = 'Check out https://example.com great site';
+        var listenerCallCount = 0;
+        viewModel.addListener(() => listenerCallCount++);
+
+        viewModel.processSharedText(sharedText);
+
+        // Should be called once: only for URL update
+        expect(listenerCallCount, equals(1));
+      });
+
+      test('should not notify listeners when no URL found', () {
+        const sharedText = 'Just some text without links';
+        var listenerCallCount = 0;
+        viewModel.addListener(() => listenerCallCount++);
+
+        viewModel.processSharedText(sharedText);
+
+        // Should not be called since no URL was found
+        expect(listenerCallCount, equals(0));
+      });
+    });
+
     group('资源释放', () {
       test('should remove label repository listener on dispose', () {
         viewModel.dispose();

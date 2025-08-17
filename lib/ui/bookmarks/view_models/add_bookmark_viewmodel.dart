@@ -87,6 +87,25 @@ class AddBookmarkViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 处理分享的文本，仅提取URL
+  void processSharedText(String sharedText) {
+    appLogger.i('处理分享的文本: $sharedText');
+
+    // 简单的URL检测和提取
+    final urlRegex = RegExp(r'https?://[^\s]+');
+    final match = urlRegex.firstMatch(sharedText);
+
+    if (match != null) {
+      final extractedUrl = match.group(0)!;
+      updateUrl(extractedUrl);
+      appLogger.i('解析分享内容 - URL: $extractedUrl');
+    } else {
+      appLogger.i('未找到URL，保持URL字段为空');
+    }
+
+    // 标题字段保持为空，让服务器自动获取
+  }
+
   Future<void> _createBookmark(CreateBookmarkParams params) async {
     appLogger.i('开始创建书签: ${params.url}');
 

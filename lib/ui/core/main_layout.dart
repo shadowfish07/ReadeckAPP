@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:readeck_app/main_viewmodel.dart';
 import 'package:readeck_app/routing/routes.dart';
-import 'package:readeck_app/ui/core/ui/share_overlay.dart';
 
 class MainLayout extends StatefulWidget {
   final Widget child;
@@ -32,7 +31,7 @@ class MainLayout extends StatefulWidget {
 
 class _MainLayoutState extends State<MainLayout> {
   StreamSubscription<String>? _shareTextSubscription;
-  bool _isShowingOverlay = false;
+  bool _isProcessingShare = false;
 
   @override
   void initState() {
@@ -43,30 +42,31 @@ class _MainLayoutState extends State<MainLayout> {
   void _setupShareIntentListener() {
     final mainViewModel = context.read<MainAppViewModel>();
     _shareTextSubscription = mainViewModel.shareTextStream.listen((sharedText) {
-      if (mounted && !_isShowingOverlay) {
-        _showShareOverlay(sharedText);
+      if (mounted && !_isProcessingShare) {
+        _navigateToAddBookmark(sharedText);
       }
     });
   }
 
-  void _showShareOverlay(String sharedText) {
+  void _navigateToAddBookmark(String sharedText) {
     setState(() {
-      _isShowingOverlay = true;
+      _isProcessingShare = true;
     });
 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => ShareOverlay(
-        sharedText: sharedText,
-        onClose: () {
-          Navigator.of(context).pop();
-          setState(() {
-            _isShowingOverlay = false;
-          });
-        },
-      ),
-    );
+    // 使用 query parameter 传递分享的文本
+    final uri = Uri.parse(Routes.addBookmark);
+    final newUri = uri.replace(queryParameters: {
+      'shared_text': sharedText,
+    });
+
+    context.push(newUri.toString()).then((_) {
+      // 导航完成后重置状态
+      if (mounted) {
+        setState(() {
+          _isProcessingShare = false;
+        });
+      }
+    });
   }
 
   @override
