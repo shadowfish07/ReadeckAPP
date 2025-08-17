@@ -411,7 +411,7 @@ class ReadeckApiClient {
         body: json.encode(requestBody),
       );
 
-      if (response.statusCode == 202) {
+      if (response.statusCode == 202 || response.statusCode == 201) {
         // 检查响应体是否为空或无效
         if (response.body.isEmpty) {
           appLogger.w("服务器返回空响应。uri: $uri");

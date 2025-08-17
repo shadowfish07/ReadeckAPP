@@ -142,7 +142,7 @@ class _AddBookmarkScreenState extends State<AddBookmarkScreen> {
         },
         onLoadLabels: () async {
           // 触发加载标签并返回最新的标签列表
-          widget.viewModel.loadLabels.execute();
+          await widget.viewModel.loadLabels.executeWithFuture();
           return widget.viewModel.availableLabels;
         },
       ),

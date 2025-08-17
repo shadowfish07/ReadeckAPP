@@ -42,7 +42,7 @@ void main() {
 
   // Provide dummy values for Result types that Mockito can't generate
   provideDummy<Result<List<LabelInfo>>>(const Success(<LabelInfo>[]));
-  provideDummy<Result<void>>(const Success(()));
+  provideDummy<Result<void>>(const Success(unit));
   provideDummy<Result<WebContent>>(
       const Success(WebContent(url: '', title: '', content: '')));
   provideDummy<Result<List<String>>>(const Success(<String>[]));
