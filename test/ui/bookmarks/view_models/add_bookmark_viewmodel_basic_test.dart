@@ -7,6 +7,7 @@ import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
 import 'package:readeck_app/data/repository/label/label_repository.dart';
 import 'package:readeck_app/data/repository/settings/settings_repository.dart';
 import 'package:readeck_app/data/service/web_content_service.dart';
+import 'package:readeck_app/data/repository/web_content/web_content_repository.dart';
 import 'package:readeck_app/data/repository/ai_tag_recommendation/ai_tag_recommendation_repository.dart';
 import 'package:readeck_app/domain/models/bookmark/label_info.dart';
 import 'package:readeck_app/main.dart';
@@ -19,7 +20,7 @@ import 'add_bookmark_viewmodel_basic_test.mocks.dart';
   BookmarkRepository,
   LabelRepository,
   SettingsRepository,
-  WebContentService,
+  WebContentRepository,
   AiTagRecommendationRepository,
 ])
 void main() {
@@ -50,7 +51,7 @@ void main() {
     late MockBookmarkRepository mockBookmarkRepository;
     late MockLabelRepository mockLabelRepository;
     late MockSettingsRepository mockSettingsRepository;
-    late MockWebContentService mockWebContentService;
+    late MockWebContentRepository mockWebContentRepository;
     late MockAiTagRecommendationRepository mockAiTagRecommendationRepository;
     late AddBookmarkViewModel viewModel;
 
@@ -58,7 +59,7 @@ void main() {
       mockBookmarkRepository = MockBookmarkRepository();
       mockLabelRepository = MockLabelRepository();
       mockSettingsRepository = MockSettingsRepository();
-      mockWebContentService = MockWebContentService();
+      mockWebContentRepository = MockWebContentRepository();
       mockAiTagRecommendationRepository = MockAiTagRecommendationRepository();
 
       // 模拟初始状态
@@ -68,7 +69,7 @@ void main() {
       when(mockAiTagRecommendationRepository.isAvailable).thenReturn(false);
 
       // 模拟网页内容获取服务
-      when(mockWebContentService.fetchWebContent(any,
+      when(mockWebContentRepository.fetchWebContent(any,
               timeout: anyNamed('timeout')))
           .thenAnswer((_) async => const Success(WebContent(
                 url: 'https://example.com',
@@ -85,7 +86,7 @@ void main() {
         mockBookmarkRepository,
         mockLabelRepository,
         mockSettingsRepository,
-        mockWebContentService,
+        mockWebContentRepository,
         mockAiTagRecommendationRepository,
       );
     });
@@ -125,7 +126,7 @@ void main() {
             .thenAnswer((_) async => const Success(<LabelInfo>[]));
 
         // 为新的web content service设置必要的mock
-        final mockWebService = MockWebContentService();
+        final mockWebService = MockWebContentRepository();
         when(mockWebService.fetchWebContent(any, timeout: anyNamed('timeout')))
             .thenAnswer((_) async => const Success(WebContent(
                   url: 'https://example.com',

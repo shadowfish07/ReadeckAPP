@@ -3,6 +3,7 @@ import 'package:flutter_command/flutter_command.dart';
 import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
 import 'package:readeck_app/data/repository/label/label_repository.dart';
 import 'package:readeck_app/data/repository/settings/settings_repository.dart';
+import 'package:readeck_app/data/repository/web_content/web_content_repository.dart';
 import 'package:readeck_app/data/service/web_content_service.dart';
 import 'package:readeck_app/data/repository/ai_tag_recommendation/ai_tag_recommendation_repository.dart';
 import 'package:readeck_app/main.dart';
@@ -13,7 +14,7 @@ class AddBookmarkViewModel extends ChangeNotifier {
     this._labelRepository,
     SettingsRepository
         settingsRepository, // Not stored as field, only used for DI
-    this._webContentService,
+    this._webContentRepository,
     this._aiTagRecommendationRepository,
   ) {
     createBookmark = Command.createAsync<CreateBookmarkParams, void>(
@@ -44,7 +45,7 @@ class AddBookmarkViewModel extends ChangeNotifier {
   final BookmarkRepository _bookmarkRepository;
   final LabelRepository _labelRepository;
   // SettingsRepository is accessed via _aiTagRecommendationRepository
-  final WebContentService _webContentService;
+  final WebContentRepository _webContentRepository;
   final AiTagRecommendationRepository _aiTagRecommendationRepository;
 
   late Command<CreateBookmarkParams, void> createBookmark;
@@ -249,7 +250,7 @@ class AddBookmarkViewModel extends ChangeNotifier {
     appLogger.i('自动获取网页内容: $url');
 
     try {
-      final result = await _webContentService.fetchWebContent(url);
+      final result = await _webContentRepository.fetchWebContent(url);
 
       if (result.isSuccess()) {
         final webContent = result.getOrThrow();

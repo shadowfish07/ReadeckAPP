@@ -8,13 +8,15 @@ import 'dart:async' as _i4;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i6;
 import 'package:readeck_app/data/repository/ai_tag_recommendation/ai_tag_recommendation_repository.dart'
-    as _i12;
+    as _i13;
 import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart'
     as _i2;
 import 'package:readeck_app/data/repository/label/label_repository.dart' as _i8;
 import 'package:readeck_app/data/repository/settings/settings_repository.dart'
     as _i10;
-import 'package:readeck_app/data/service/web_content_service.dart' as _i11;
+import 'package:readeck_app/data/repository/web_content/web_content_repository.dart'
+    as _i11;
+import 'package:readeck_app/data/service/web_content_service.dart' as _i12;
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart' as _i7;
 import 'package:readeck_app/domain/models/bookmark/label_info.dart' as _i9;
 import 'package:readeck_app/domain/models/bookmark_display_model/bookmark_display_model.dart'
@@ -812,25 +814,17 @@ class MockSettingsRepository extends _i1.Mock
       );
 }
 
-/// A class which mocks [WebContentService].
+/// A class which mocks [WebContentRepository].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockWebContentService extends _i1.Mock implements _i11.WebContentService {
-  MockWebContentService() {
+class MockWebContentRepository extends _i1.Mock
+    implements _i11.WebContentRepository {
+  MockWebContentRepository() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  void dispose() => super.noSuchMethod(
-        Invocation.method(
-          #dispose,
-          [],
-        ),
-        returnValueForMissingStub: null,
-      );
-
-  @override
-  _i4.Future<_i5.ResultDart<_i11.WebContent, Exception>> fetchWebContent(
+  _i4.Future<_i5.ResultDart<_i12.WebContent, Exception>> fetchWebContent(
     String? url, {
     Duration? timeout = const Duration(seconds: 10),
   }) =>
@@ -841,8 +835,8 @@ class MockWebContentService extends _i1.Mock implements _i11.WebContentService {
           {#timeout: timeout},
         ),
         returnValue:
-            _i4.Future<_i5.ResultDart<_i11.WebContent, Exception>>.value(
-                _i6.dummyValue<_i5.ResultDart<_i11.WebContent, Exception>>(
+            _i4.Future<_i5.ResultDart<_i12.WebContent, Exception>>.value(
+                _i6.dummyValue<_i5.ResultDart<_i12.WebContent, Exception>>(
           this,
           Invocation.method(
             #fetchWebContent,
@@ -850,14 +844,23 @@ class MockWebContentService extends _i1.Mock implements _i11.WebContentService {
             {#timeout: timeout},
           ),
         )),
-      ) as _i4.Future<_i5.ResultDart<_i11.WebContent, Exception>>);
+      ) as _i4.Future<_i5.ResultDart<_i12.WebContent, Exception>>);
+
+  @override
+  void dispose() => super.noSuchMethod(
+        Invocation.method(
+          #dispose,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
 }
 
 /// A class which mocks [AiTagRecommendationRepository].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockAiTagRecommendationRepository extends _i1.Mock
-    implements _i12.AiTagRecommendationRepository {
+    implements _i13.AiTagRecommendationRepository {
   MockAiTagRecommendationRepository() {
     _i1.throwOnMissingStub(this);
   }
@@ -871,7 +874,7 @@ class MockAiTagRecommendationRepository extends _i1.Mock
   @override
   _i4.Future<_i5.ResultDart<List<String>, Exception>>
       generateTagRecommendations(
-    _i11.WebContent? webContent,
+    _i12.WebContent? webContent,
     List<String>? existingTags, {
     int? maxTags = 5,
   }) =>

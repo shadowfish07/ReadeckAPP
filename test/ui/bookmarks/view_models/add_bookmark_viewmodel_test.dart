@@ -7,6 +7,7 @@ import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
 import 'package:readeck_app/data/repository/label/label_repository.dart';
 import 'package:readeck_app/data/repository/settings/settings_repository.dart';
 import 'package:readeck_app/data/service/web_content_service.dart';
+import 'package:readeck_app/data/repository/web_content/web_content_repository.dart';
 import 'package:readeck_app/data/repository/ai_tag_recommendation/ai_tag_recommendation_repository.dart';
 import 'package:readeck_app/domain/models/bookmark/label_info.dart';
 import 'package:readeck_app/main.dart';
@@ -19,7 +20,7 @@ import 'add_bookmark_viewmodel_test.mocks.dart';
   MockSpec<BookmarkRepository>(),
   MockSpec<LabelRepository>(),
   MockSpec<SettingsRepository>(),
-  MockSpec<WebContentService>(),
+  MockSpec<WebContentRepository>(),
   MockSpec<AiTagRecommendationRepository>(),
 ])
 void main() {
@@ -52,7 +53,7 @@ void main() {
     late MockBookmarkRepository mockBookmarkRepository;
     late MockLabelRepository mockLabelRepository;
     late MockSettingsRepository mockSettingsRepository;
-    late MockWebContentService mockWebContentService;
+    late MockWebContentRepository mockWebContentRepository;
     late MockAiTagRecommendationRepository mockAiTagRecommendationRepository;
     late AddBookmarkViewModel viewModel;
 
@@ -60,7 +61,7 @@ void main() {
       mockBookmarkRepository = MockBookmarkRepository();
       mockLabelRepository = MockLabelRepository();
       mockSettingsRepository = MockSettingsRepository();
-      mockWebContentService = MockWebContentService();
+      mockWebContentRepository = MockWebContentRepository();
       mockAiTagRecommendationRepository = MockAiTagRecommendationRepository();
 
       // 模拟初始状态
@@ -72,7 +73,7 @@ void main() {
         mockBookmarkRepository,
         mockLabelRepository,
         mockSettingsRepository,
-        mockWebContentService,
+        mockWebContentRepository,
         mockAiTagRecommendationRepository,
       );
     });
