@@ -8,7 +8,6 @@ import 'package:readeck_app/ui/api_config/view_models/api_config_viewmodel.dart'
 import 'package:readeck_app/ui/api_config/widgets/api_config_page.dart';
 import 'package:readeck_app/ui/core/main_layout.dart';
 import 'package:readeck_app/ui/core/ui/error_page.dart';
-import 'package:readeck_app/ui/core/ui/scroll_controller_provider.dart';
 import 'package:readeck_app/ui/daily_read/view_models/daily_read_viewmodel.dart';
 import 'package:readeck_app/ui/daily_read/widgets/daily_read_screen.dart';
 import 'package:readeck_app/ui/settings/view_models/about_viewmodel.dart';
@@ -93,17 +92,11 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
                 );
               }
 
-              if (isBookmarkListRoute) {
-                return MainLayout(
-                  title: title,
-                  child: _BookmarkListFabProvider(child: child),
-                );
-              } else {
-                return MainLayout(
-                  title: title,
-                  child: child,
-                );
-              }
+              return MainLayout(
+                title: title,
+                showFab: isBookmarkListRoute,
+                child: child,
+              );
             },
             branches: [
               StatefulShellBranch(routes: [
@@ -316,110 +309,4 @@ Future<String?> _redirect(BuildContext context, GoRouterState state) async {
 
   // no need to redirect at all
   return null;
-}
-
-/// 为书签列表页面提供带滚动动效的FAB
-class _BookmarkListFabProvider extends StatefulWidget {
-  const _BookmarkListFabProvider({required this.child});
-
-  final Widget child;
-
-  @override
-  State<_BookmarkListFabProvider> createState() =>
-      _BookmarkListFabProviderState();
-}
-
-class _BookmarkListFabProviderState extends State<_BookmarkListFabProvider>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _animation;
-  bool _isVisible = true;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 200),
-      vsync: this,
-    );
-
-    _animation = CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    );
-
-    // 初始状态显示FAB
-    _animationController.forward();
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  void _onScroll(double scrollPosition, double scrollDelta) {
-    // 滚动阈值，避免微小滚动导致频繁切换
-    const scrollThreshold = 3.0;
-
-    // 如果滚动距离太小，忽略
-    if (scrollDelta.abs() < scrollThreshold) {
-      return;
-    }
-
-    // 在顶部附近时总是显示FAB
-    if (scrollPosition <= 50) {
-      if (!_isVisible) {
-        setState(() {
-          _isVisible = true;
-        });
-        _animationController.forward();
-      }
-    } else {
-      if (scrollDelta > 0) {
-        // 向下滚动，隐藏FAB
-        if (_isVisible) {
-          setState(() {
-            _isVisible = false;
-          });
-          _animationController.reverse();
-        }
-      } else if (scrollDelta < 0) {
-        // 向上滚动，显示FAB
-        if (!_isVisible) {
-          setState(() {
-            _isVisible = true;
-          });
-          _animationController.forward();
-        }
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        // 为子页面提供滚动回调
-        ScrollControllerProvider(
-          fabScrollCallback: _onScroll,
-          child: widget.child,
-        ),
-        // 带滚动动效的FAB
-        Positioned(
-          bottom: 16,
-          right: 16,
-          child: ScaleTransition(
-            scale: _animation,
-            child: FloatingActionButton(
-              onPressed: () => context.push(Routes.addBookmark),
-              tooltip: '添加书签',
-              child: const Icon(Icons.add),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 }

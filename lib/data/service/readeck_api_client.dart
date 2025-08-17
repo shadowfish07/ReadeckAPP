@@ -418,36 +418,8 @@ class ReadeckApiClient {
           return Failure(NetworkErrorException("服务器返回空响应", uri));
         }
 
-        dynamic data;
-        try {
-          data = json.decode(response.body);
-        } catch (formatException) {
-          appLogger.w("JSON解析失败。uri: $uri, 响应体: ${response.body}");
-          return Failure(
-              NetworkErrorException("JSON解析失败：$formatException", uri));
-        }
-
-        // 检查创建响应格式
-        if (data is Map<String, dynamic>) {
-          // 检查是否是创建成功的响应格式 {"message": "string", "status": 0}
-          if (data.containsKey('message') && data.containsKey('status')) {
-            final status = data['status'];
-            if (status == 202) {
-              // 创建成功，异步处理中
-              appLogger.i('书签创建请求已提交，正在异步处理: $url');
-              return const Success(unit);
-            } else {
-              appLogger.w("创建书签失败，状态码: $status");
-              return Failure(NetworkErrorException("创建书签失败", uri));
-            }
-          } else {
-            appLogger.w("无效的响应格式。uri: $uri, 响应体: ${response.body}");
-            return Failure(NetworkErrorException("无效的响应格式", uri));
-          }
-        } else {
-          appLogger.w("无效的响应格式。uri: $uri, 响应体: ${response.body}");
-          return Failure(NetworkErrorException("无效的响应格式", uri));
-        }
+        appLogger.i('书签创建请求已提交，正在异步处理: $url');
+        return const Success(unit);
       } else {
         appLogger.w("创建书签失败。uri: $uri, 状态码: ${response.statusCode}");
         return Failure(

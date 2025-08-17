@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_command/flutter_command.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 import 'package:readeck_app/ui/bookmarks/view_models/add_bookmark_viewmodel.dart';
 import 'package:readeck_app/ui/core/ui/label_edit_dialog.dart';
 import 'package:readeck_app/ui/core/ui/loading.dart';
@@ -133,22 +132,10 @@ class _AddBookmarkScreenState extends State<AddBookmarkScreen> {
   }
 
   void _showLabelSelector() async {
-    // 创建一个虚拟的 Bookmark 对象来配合 LabelEditDialog
-    final dummyBookmark = Bookmark(
-      id: '',
-      url: '',
-      title: '',
-      labels: widget.viewModel.selectedLabels,
-      isMarked: false,
-      isArchived: false,
-      readProgress: 0,
-      created: DateTime.now(),
-    );
-
     await showDialog(
       context: context,
       builder: (context) => LabelEditDialog(
-        bookmark: dummyBookmark,
+        selectedLabels: widget.viewModel.selectedLabels,
         availableLabels: widget.viewModel.availableLabels,
         onUpdateLabels: (bookmark, labels) {
           widget.viewModel.updateSelectedLabels(labels);

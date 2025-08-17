@@ -719,7 +719,7 @@ class _BookmarkDetailScreenState extends State<BookmarkDetailScreen> {
     showDialog<void>(
       context: context,
       builder: (BuildContext context) {
-        return LabelEditDialog(
+        return LabelEditDialog.fromBookmark(
           bookmark: widget.viewModel.bookmark,
           availableLabels: widget.viewModel.availableLabels,
           onUpdateLabels: (bookmark, labels) async {

@@ -8,13 +8,14 @@ import 'package:readeck_app/routing/routes.dart';
 /// - Material Design 3 规范的FAB
 /// - 支持滚动时自动隐藏/显示动画
 /// - 点击跳转到添加书签页面
+/// - 通过Provider获取ScrollController
 class BookmarkListFab extends StatefulWidget {
   const BookmarkListFab({
     super.key,
-    required this.scrollController,
+    this.scrollController,
   });
 
-  final ScrollController scrollController;
+  final ScrollController? scrollController;
 
   @override
   State<BookmarkListFab> createState() => _BookmarkListFabState();
@@ -45,20 +46,38 @@ class _BookmarkListFabState extends State<BookmarkListFab>
     _animationController.forward();
 
     // 监听滚动事件
-    widget.scrollController.addListener(_onScroll);
+    _attachScrollListener();
+  }
+
+  @override
+  void didUpdateWidget(BookmarkListFab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.scrollController != widget.scrollController) {
+      _detachScrollListener(oldWidget.scrollController);
+      _attachScrollListener();
+    }
   }
 
   @override
   void dispose() {
-    widget.scrollController.removeListener(_onScroll);
+    _detachScrollListener(widget.scrollController);
     _animationController.dispose();
     super.dispose();
   }
 
-  void _onScroll() {
-    if (!widget.scrollController.hasClients) return;
+  void _attachScrollListener() {
+    widget.scrollController?.addListener(_onScroll);
+  }
 
-    final currentScrollPosition = widget.scrollController.position.pixels;
+  void _detachScrollListener(ScrollController? controller) {
+    controller?.removeListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (widget.scrollController == null || !widget.scrollController!.hasClients)
+      return;
+
+    final currentScrollPosition = widget.scrollController!.position.pixels;
     final scrollDelta = currentScrollPosition - _lastScrollPosition;
 
     // 滚动阈值，避免微小滚动导致频繁切换

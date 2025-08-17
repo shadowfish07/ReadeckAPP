@@ -356,7 +356,7 @@ class _BookmarkCardState extends State<BookmarkCard> {
     if (mounted) {
       showDialog<void>(
         context: context,
-        builder: (dialogContext) => LabelEditDialog(
+        builder: (dialogContext) => LabelEditDialog.fromBookmark(
           bookmark: widget.bookmarkDisplayModel.bookmark,
           availableLabels: labels,
           onUpdateLabels: (bookmark, labels) async {

@@ -9,15 +9,18 @@ import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 import 'package:readeck_app/domain/models/bookmark_display_model/bookmark_display_model.dart';
 import 'package:readeck_app/ui/daily_read/view_models/daily_read_viewmodel.dart';
 import 'package:readeck_app/ui/daily_read/widgets/daily_read_screen.dart';
+import 'package:readeck_app/ui/core/main_layout.dart';
 
 import 'daily_read_screen_test.mocks.dart';
 
 @GenerateNiceMocks([MockSpec<DailyReadViewModel>()])
 void main() {
   late MockDailyReadViewModel mockDailyReadViewModel;
+  late ScrollControllerProvider scrollControllerProvider;
 
   setUp(() {
     mockDailyReadViewModel = MockDailyReadViewModel();
+    scrollControllerProvider = ScrollControllerProvider();
 
     // Stub all other commands that might be accessed during build
     final mockOpenUrlCommand =
@@ -42,16 +45,48 @@ void main() {
         .thenReturn(null);
   });
 
+  tearDown(() {
+    scrollControllerProvider.dispose();
+  });
+
   Widget createWidgetUnderTest() {
     return MaterialApp(
-      home: ChangeNotifierProvider<DailyReadViewModel>.value(
-        value: mockDailyReadViewModel,
+      home: MultiProvider(
+        providers: [
+          ChangeNotifierProvider<DailyReadViewModel>.value(
+            value: mockDailyReadViewModel,
+          ),
+          ChangeNotifierProvider<ScrollControllerProvider>.value(
+            value: scrollControllerProvider,
+          ),
+        ],
         child: DailyReadScreen(viewModel: mockDailyReadViewModel),
       ),
     );
   }
 
   group('DailyReadScreen', () {
+    testWidgets('should build without error with empty data',
+        (WidgetTester tester) async {
+      // Arrange
+      final loadCommand = Command.createAsync<bool, List<BookmarkDisplayModel>>(
+          (_) async => <BookmarkDisplayModel>[],
+          initialValue: []);
+
+      when(mockDailyReadViewModel.unArchivedBookmarks).thenReturn([]);
+      when(mockDailyReadViewModel.load).thenReturn(loadCommand);
+      when(mockDailyReadViewModel.isNoMore).thenReturn(false);
+      when(mockDailyReadViewModel.availableLabels).thenReturn([]);
+      when(mockDailyReadViewModel.getReadingStats(any)).thenReturn(null);
+
+      // Act
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pump(); // Don't use pumpAndSettle initially
+
+      // Assert
+      expect(find.byType(DailyReadScreen), findsOneWidget);
+    });
+
     testWidgets('should display bookmarks when viewmodel has data',
         (WidgetTester tester) async {
       // Arrange

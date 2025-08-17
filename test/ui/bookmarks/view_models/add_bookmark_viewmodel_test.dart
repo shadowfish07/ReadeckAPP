@@ -42,6 +42,11 @@ void main() {
   // Provide dummy values for Result types that Mockito can't generate
   provideDummy<Result<List<LabelInfo>>>(const Success(<LabelInfo>[]));
   provideDummy<Result<void>>(const Success(()));
+  provideDummy<Result<WebContent>>(const Success(WebContent(
+    url: 'https://example.com',
+    title: 'Test Title',
+    content: 'Test Content',
+  )));
 
   group('AddBookmarkViewModel', () {
     late MockBookmarkRepository mockBookmarkRepository;
