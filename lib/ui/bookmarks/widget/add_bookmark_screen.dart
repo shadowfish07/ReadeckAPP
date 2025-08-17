@@ -23,6 +23,8 @@ class _AddBookmarkScreenState extends State<AddBookmarkScreen> {
   final _titleController = TextEditingController();
   late ListenableSubscription _successSubscription;
   late ListenableSubscription _errorSubscription;
+  late ListenableSubscription _contentFetchErrorSubscription;
+  late ListenableSubscription _tagGenerationErrorSubscription;
 
   @override
   void initState() {
@@ -48,6 +50,34 @@ class _AddBookmarkScreenState extends State<AddBookmarkScreen> {
         SnackBarHelper.showError(
           context,
           '创建失败: ${error.error.toString()}',
+          duration: const Duration(seconds: 3),
+        );
+      }
+    });
+
+    // 监听网页内容获取失败
+    _contentFetchErrorSubscription = widget
+        .viewModel.autoFetchContentCommand.errors
+        .where((x) => x != null)
+        .listen((error, _) {
+      if (mounted && error != null) {
+        SnackBarHelper.showError(
+          context,
+          '获取网页内容失败: ${error.error.toString()}',
+          duration: const Duration(seconds: 3),
+        );
+      }
+    });
+
+    // 监听AI标签推荐失败
+    _tagGenerationErrorSubscription = widget
+        .viewModel.autoGenerateTagsCommand.errors
+        .where((x) => x != null)
+        .listen((error, _) {
+      if (mounted && error != null) {
+        SnackBarHelper.showError(
+          context,
+          'AI标签推荐失败: ${error.error.toString()}',
           duration: const Duration(seconds: 3),
         );
       }
@@ -84,6 +114,8 @@ class _AddBookmarkScreenState extends State<AddBookmarkScreen> {
     widget.viewModel.removeListener(_onViewModelChanged);
     _successSubscription.cancel();
     _errorSubscription.cancel();
+    _contentFetchErrorSubscription.cancel();
+    _tagGenerationErrorSubscription.cancel();
     _urlController.dispose();
     _titleController.dispose();
     super.dispose();
@@ -170,58 +202,59 @@ class _AddBookmarkScreenState extends State<AddBookmarkScreen> {
             ValueListenableBuilder<bool>(
               valueListenable: viewModel.autoFetchContentCommand.isExecuting,
               builder: (context, isFetching, _) {
-                return TextFormField(
-                  controller: _urlController,
-                  decoration: InputDecoration(
-                    labelText: 'URL *',
-                    hintText: '请输入网页链接',
-                    border: const OutlineInputBorder(),
-                    prefixIcon: isFetching
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: Padding(
-                              padding: EdgeInsets.all(12.0),
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                              ),
-                            ),
-                          )
-                        : Icon(
-                            viewModel.isContentFetched
-                                ? Icons.check_circle
-                                : Icons.link,
-                            color: viewModel.isContentFetched
-                                ? Theme.of(context).colorScheme.primary
-                                : null,
-                          ),
-                    suffixIcon:
-                        viewModel.autoFetchContentCommand.errors.value != null
+                return ValueListenableBuilder(
+                  valueListenable: viewModel.autoFetchContentCommand.errors,
+                  builder: (context, error, _) {
+                    // 如果正在执行，错误状态应该被重置
+                    final hasError = error != null && !isFetching;
+
+                    return TextFormField(
+                      controller: _urlController,
+                      decoration: InputDecoration(
+                        labelText: 'URL *',
+                        hintText: '请输入网页链接',
+                        border: const OutlineInputBorder(),
+                        prefixIcon: isFetching
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: Padding(
+                                  padding: EdgeInsets.all(12.0),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              )
+                            : const Icon(Icons.link),
+                        suffixIcon: hasError
                             ? IconButton(
                                 icon: const Icon(Icons.refresh),
                                 onPressed: viewModel.retryContentFetch,
                                 tooltip: '重新获取',
                               )
                             : null,
-                    helperText: _getUrlHelperText(viewModel, isFetching),
-                    helperStyle:
-                        Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: _getUrlHelperColor(
-                                  context, viewModel, isFetching),
-                            ),
-                  ),
-                  keyboardType: TextInputType.url,
-                  textInputAction: TextInputAction.next,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return '请输入URL';
-                    }
-                    if (!viewModel.isValidUrl) {
-                      return '请输入有效的URL（以http://或https://开头）';
-                    }
-                    return null;
+                        helperText: _getUrlHelperText(
+                            viewModel, isFetching, hasError ? error : null),
+                        helperStyle:
+                            Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: _getUrlHelperColor(context, viewModel,
+                                      isFetching, hasError ? error : null),
+                                ),
+                      ),
+                      keyboardType: TextInputType.url,
+                      textInputAction: TextInputAction.next,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return '请输入URL';
+                        }
+                        if (!viewModel.isValidUrl) {
+                          return '请输入有效的URL（以http://或https://开头）';
+                        }
+                        return null;
+                      },
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                    );
                   },
-                  autovalidateMode: AutovalidateMode.onUserInteraction,
                 );
               },
             ),
@@ -339,11 +372,12 @@ class _AddBookmarkScreenState extends State<AddBookmarkScreen> {
   }
 
   /// 获取URL输入框的帮助文本
-  String _getUrlHelperText(AddBookmarkViewModel viewModel, bool isFetching) {
+  String _getUrlHelperText(
+      AddBookmarkViewModel viewModel, bool isFetching, dynamic error) {
     if (isFetching) {
       return '正在获取网页内容...';
     }
-    if (viewModel.autoFetchContentCommand.errors.value != null) {
+    if (error != null) {
       return '获取失败，请检查网址或重试';
     }
     if (viewModel.isContentFetched) {
@@ -353,12 +387,12 @@ class _AddBookmarkScreenState extends State<AddBookmarkScreen> {
   }
 
   /// 获取URL输入框帮助文本的颜色
-  Color? _getUrlHelperColor(
-      BuildContext context, AddBookmarkViewModel viewModel, bool isFetching) {
+  Color? _getUrlHelperColor(BuildContext context,
+      AddBookmarkViewModel viewModel, bool isFetching, dynamic error) {
     if (isFetching) {
       return Theme.of(context).colorScheme.primary;
     }
-    if (viewModel.autoFetchContentCommand.errors.value != null) {
+    if (error != null) {
       return Theme.of(context).colorScheme.error;
     }
     if (viewModel.isContentFetched) {
@@ -401,8 +435,8 @@ class _AddBookmarkScreenState extends State<AddBookmarkScreen> {
         },
       ),
 
-      // AI推荐标签显示
-      if (viewModel.recommendedTags.isNotEmpty) ...[
+      // AI推荐标签显示 - 使用shouldShowRecommendations来控制显示
+      if (viewModel.shouldShowRecommendations) ...[
         const SizedBox(height: 12),
         Container(
           padding: const EdgeInsets.all(12),
@@ -434,7 +468,14 @@ class _AddBookmarkScreenState extends State<AddBookmarkScreen> {
                   ),
                   const Spacer(),
                   TextButton(
-                    onPressed: viewModel.addAllRecommendedTags,
+                    onPressed: () {
+                      // 只添加未选择的推荐标签
+                      for (final tag in viewModel.recommendedTags) {
+                        if (!viewModel.selectedLabels.contains(tag)) {
+                          viewModel.addRecommendedTag(tag);
+                        }
+                      }
+                    },
                     child: const Text('全部添加'),
                   ),
                 ],
@@ -443,28 +484,14 @@ class _AddBookmarkScreenState extends State<AddBookmarkScreen> {
               Wrap(
                 spacing: 8,
                 runSpacing: 4,
-                children: viewModel.recommendedTags.map((tag) {
-                  final isSelected = viewModel.selectedLabels.contains(tag);
+                children: viewModel.recommendedTags
+                    .where((tag) => !viewModel.selectedLabels.contains(tag))
+                    .map((tag) {
                   return ActionChip(
                     label: Text(tag),
-                    onPressed: isSelected
-                        ? null
-                        : () => viewModel.addRecommendedTag(tag),
-                    backgroundColor: isSelected
-                        ? Theme.of(context).colorScheme.primaryContainer
-                        : Theme.of(context).colorScheme.surfaceContainerHigh,
-                    side: isSelected
-                        ? BorderSide(
-                            color: Theme.of(context).colorScheme.primary,
-                          )
-                        : null,
-                    avatar: isSelected
-                        ? Icon(
-                            Icons.check,
-                            size: 16,
-                            color: Theme.of(context).colorScheme.primary,
-                          )
-                        : null,
+                    onPressed: () => viewModel.addRecommendedTag(tag),
+                    backgroundColor:
+                        Theme.of(context).colorScheme.surfaceContainerHigh,
                   );
                 }).toList(),
               ),
@@ -472,7 +499,7 @@ class _AddBookmarkScreenState extends State<AddBookmarkScreen> {
           ),
         ),
       ],
-      const SizedBox(height: 16),
+      const SizedBox(height: 8),
     ];
   }
 }
