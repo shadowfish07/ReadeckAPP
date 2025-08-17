@@ -80,10 +80,10 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
   late Command<BookmarkDisplayModel, void> toggleBookmarkArchived;
   late Command<void, List<String>> loadLabels;
 
-  List<BookmarkDisplayModel> get bookmarks => _bookmarkRepository.bookmarks
-      .where((x) => _bookmarkIds.contains(x.bookmark.id))
+  List<BookmarkDisplayModel> get bookmarks => _bookmarkIds
+      .map(_bookmarkRepository.getCachedBookmark)
+      .whereType<BookmarkDisplayModel>()
       .toList();
-
   bool get hasMoreData => _hasMoreData;
   bool get isLoadingMore => loadMore.isExecuting.value;
 

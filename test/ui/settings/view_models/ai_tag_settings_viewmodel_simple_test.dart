@@ -136,11 +136,18 @@ void main() {
         var listenerCallCount = 0;
         viewModel.addListener(() => listenerCallCount++);
 
-        await expectLater(
-          () =>
-              viewModel.saveAiTagTargetLanguage.executeWithFuture(newLanguage),
-          throwsA(equals(exception)),
-        );
+        // Execute command and wait for it to complete with error
+        viewModel.saveAiTagTargetLanguage.execute(newLanguage);
+
+        // Wait for the command to complete
+        while (viewModel.saveAiTagTargetLanguage.isExecuting.value) {
+          await Future.delayed(const Duration(milliseconds: 10));
+        }
+
+        // Check that command had an error
+        expect(viewModel.saveAiTagTargetLanguage.errors.value, isNotNull);
+        expect(viewModel.saveAiTagTargetLanguage.errors.value!.error,
+            equals(exception));
 
         // State should not change when save fails
         expect(viewModel.aiTagTargetLanguage,

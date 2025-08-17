@@ -302,6 +302,13 @@ void main() {
       when(mockBookmarkRepository.bookmarks)
           .thenReturn([bookmarkModelWithStats, bookmarkModelWithoutStats]);
 
+      // Mock getCachedBookmark for each bookmark ID
+      when(mockBookmarkRepository.getCachedBookmark(testBookmarkWithStats.id))
+          .thenReturn(bookmarkModelWithStats);
+      when(mockBookmarkRepository
+              .getCachedBookmark(testBookmarkWithoutStats.id))
+          .thenReturn(bookmarkModelWithoutStats);
+
       // Simulate loading that populates _bookmarkIds
       when(mockBookmarkRepository.loadUnarchivedBookmarks(
               limit: anyNamed('limit'), page: anyNamed('page')))

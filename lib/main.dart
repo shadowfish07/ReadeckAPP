@@ -33,6 +33,10 @@ void main() async {
 // 全局Logger实例
 late Logger appLogger;
 
+// 全局ScaffoldMessenger key，用于在页面导航后显示SnackBar
+final GlobalKey<ScaffoldMessengerState> globalScaffoldMessengerKey =
+    GlobalKey<ScaffoldMessengerState>();
+
 /// 配置Logger，在正式包中将INFO级别以上的日志输出到文件
 Future<void> _configureLogger() async {
   if (kDebugMode) {
@@ -170,6 +174,7 @@ class _MainAppState extends State<MainApp> {
           darkTheme: AppTheme.darkTheme,
           themeMode: viewModel.themeMode,
           routerConfig: routerStore,
+          scaffoldMessengerKey: globalScaffoldMessengerKey,
         );
       },
     );

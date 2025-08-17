@@ -36,8 +36,8 @@ class _AddBookmarkScreenState extends State<AddBookmarkScreen> {
     // 监听创建成功
     _successSubscription = widget.viewModel.createBookmark.listen((result, _) {
       if (mounted) {
-        SnackBarHelper.showSuccess(context, '书签创建请求已提交，正在后台处理中');
         context.pop();
+        SnackBarHelper.showSuccessGlobal('书签创建请求已提交，正在后台处理中');
       }
     });
 
