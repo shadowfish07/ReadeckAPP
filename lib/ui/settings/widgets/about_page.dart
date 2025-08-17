@@ -12,256 +12,248 @@ class AboutPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('关于'),
-      ),
-      body: ListenableBuilder(
-        listenable: viewModel,
-        builder: (BuildContext context, _) {
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(height: 32),
-                // 应用图标
-                Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
+    return ListenableBuilder(
+      listenable: viewModel,
+      builder: (BuildContext context, _) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const SizedBox(height: 32),
+              // 应用图标
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    width: 120,
+                    height: 120,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary,
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: Icon(
+                          Icons.book,
+                          size: 60,
+                          color: Theme.of(context).colorScheme.onPrimary,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              // 应用名称
+              Text(
+                'Readeck APP',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              // 版本信息
+              Text(
+                '版本 ${viewModel.version}',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
+              Consumer<MainAppViewModel>(
+                builder: (context, mainViewModel, child) {
+                  if (mainViewModel.updateInfo == null) {
+                    return const SizedBox.shrink();
+                  }
+                  return Column(
+                    children: [
+                      const SizedBox(height: 32),
+                      Card(
+                        child: ListTile(
+                          title: Row(
+                            children: [
+                              Text(
+                                '新版本可用: ${mainViewModel.updateInfo!.version}',
+                              ),
+                              const SizedBox(width: 8),
+                              const Badge(),
+                            ],
+                          ),
+                          trailing: FilledButton.tonal(
+                            onPressed: () {
+                              _launchUrl(mainViewModel.updateInfo!.downloadUrl);
+                            },
+                            child: const Text('立即更新'),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  );
+                },
+              ),
+              // 应用描述
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '应用简介',
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Readeck APP 是一个基于 Material Design 2 设计的移动端应用，用于连接和管理 Readeck 书签服务。通过这个应用，您可以方便地浏览、管理和阅读您保存的书签内容。',
+                        style: Theme.of(context).textTheme.bodyMedium,
                       ),
                     ],
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(24),
-                    child: Image.asset(
-                      'assets/images/logo.png',
-                      width: 120,
-                      height: 120,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          width: 120,
-                          height: 120,
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primary,
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                          child: Icon(
-                            Icons.book,
-                            size: 60,
-                            color: Theme.of(context).colorScheme.onPrimary,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
                 ),
-                const SizedBox(height: 24),
-                // 应用名称
-                Text(
-                  'Readeck APP',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                ),
-                const SizedBox(height: 8),
-                // 版本信息
-                Text(
-                  '版本 ${viewModel.version}',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                ),
-                Consumer<MainAppViewModel>(
-                  builder: (context, mainViewModel, child) {
-                    if (mainViewModel.updateInfo == null) {
-                      return const SizedBox.shrink();
-                    }
-                    return Column(
-                      children: [
-                        const SizedBox(height: 32),
-                        Card(
-                          child: ListTile(
-                            title: Row(
-                              children: [
-                                Text(
-                                  '新版本可用: ${mainViewModel.updateInfo!.version}',
+              ),
+              const SizedBox(height: 16),
+              // 功能特性
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '主要功能',
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
                                 ),
-                                const SizedBox(width: 8),
-                                const Badge(),
-                              ],
+                      ),
+                      const SizedBox(height: 12),
+                      _buildFeatureItem(
+                        context,
+                        Icons.bookmark,
+                        '书签管理',
+                        '浏览和管理您的书签收藏',
+                      ),
+                      _buildFeatureItem(
+                        context,
+                        Icons.shuffle,
+                        '随机推荐',
+                        '发现您可能感兴趣的未读内容',
+                      ),
+                      _buildFeatureItem(
+                        context,
+                        Icons.settings,
+                        'API 配置',
+                        '灵活配置您的 Readeck 服务器连接',
+                      ),
+                      _buildFeatureItem(
+                        context,
+                        Icons.palette,
+                        'Material Design',
+                        '遵循 Material Design 2 设计规范',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              // 链接和联系方式
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '相关链接',
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                      ),
+                      const SizedBox(height: 12),
+                      ListTile(
+                        leading: const Icon(Icons.web),
+                        title: const Text('Readeck 官网'),
+                        subtitle: const Text('了解更多关于 Readeck'),
+                        trailing: const Icon(Icons.open_in_new),
+                        contentPadding: EdgeInsets.zero,
+                        onTap: () => _launchUrl('https://readeck.org'),
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.bug_report),
+                        title: const Text('反馈问题'),
+                        subtitle: const Text('报告 Bug 或提出建议'),
+                        trailing: const Icon(Icons.open_in_new),
+                        contentPadding: EdgeInsets.zero,
+                        onTap: () => _showFeedbackDialog(context),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              // 版权信息
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '版权信息',
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '© 2024 Readeck APP. All rights reserved.',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                             ),
-                            trailing: FilledButton.tonal(
-                              onPressed: () {
-                                _launchUrl(
-                                    mainViewModel.updateInfo!.downloadUrl);
-                              },
-                              child: const Text('立即更新'),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '本应用基于 MIT 许可证开源',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                             ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-                    );
-                  },
-                ),
-                // 应用描述
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '应用简介',
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Readeck APP 是一个基于 Material Design 2 设计的移动端应用，用于连接和管理 Readeck 书签服务。通过这个应用，您可以方便地浏览、管理和阅读您保存的书签内容。',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 16),
-                // 功能特性
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '主要功能',
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                        ),
-                        const SizedBox(height: 12),
-                        _buildFeatureItem(
-                          context,
-                          Icons.bookmark,
-                          '书签管理',
-                          '浏览和管理您的书签收藏',
-                        ),
-                        _buildFeatureItem(
-                          context,
-                          Icons.shuffle,
-                          '随机推荐',
-                          '发现您可能感兴趣的未读内容',
-                        ),
-                        _buildFeatureItem(
-                          context,
-                          Icons.settings,
-                          'API 配置',
-                          '灵活配置您的 Readeck 服务器连接',
-                        ),
-                        _buildFeatureItem(
-                          context,
-                          Icons.palette,
-                          'Material Design',
-                          '遵循 Material Design 2 设计规范',
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                // 链接和联系方式
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '相关链接',
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                        ),
-                        const SizedBox(height: 12),
-                        ListTile(
-                          leading: const Icon(Icons.web),
-                          title: const Text('Readeck 官网'),
-                          subtitle: const Text('了解更多关于 Readeck'),
-                          trailing: const Icon(Icons.open_in_new),
-                          contentPadding: EdgeInsets.zero,
-                          onTap: () => _launchUrl('https://readeck.org'),
-                        ),
-                        ListTile(
-                          leading: const Icon(Icons.bug_report),
-                          title: const Text('反馈问题'),
-                          subtitle: const Text('报告 Bug 或提出建议'),
-                          trailing: const Icon(Icons.open_in_new),
-                          contentPadding: EdgeInsets.zero,
-                          onTap: () => _showFeedbackDialog(context),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                // 版权信息
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '版权信息',
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '© 2024 Readeck APP. All rights reserved.',
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant,
-                                  ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '本应用基于 MIT 许可证开源',
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant,
-                                  ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 32),
-              ],
-            ),
-          );
-        },
-      ),
+              ),
+              const SizedBox(height: 32),
+            ],
+          ),
+        );
+      },
     );
   }
 

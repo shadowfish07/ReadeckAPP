@@ -118,6 +118,18 @@ class _MainLayoutState extends State<MainLayout> {
     });
   }
 
+  void _navigateToRoute(BuildContext context, String route) {
+    // 关闭抽屉
+    Navigator.of(context).pop();
+
+    // 延迟一帧执行导航，确保抽屉完全关闭
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.go(route);
+      }
+    });
+  }
+
   @override
   void dispose() {
     _shareTextSubscription?.cancel();
@@ -157,46 +169,28 @@ class _MainLayoutState extends State<MainLayout> {
           children: [
             ListTile(
               title: const Text('每日阅读'),
-              onTap: () {
-                context.pop();
-                context.go(Routes.dailyRead);
-              },
+              onTap: () => _navigateToRoute(context, Routes.dailyRead),
             ),
             ListTile(
               title: const Text('未读'),
-              onTap: () {
-                context.pop();
-                context.go(Routes.unarchived);
-              },
+              onTap: () => _navigateToRoute(context, Routes.unarchived),
             ),
             ListTile(
               title: const Text('阅读中'),
-              onTap: () {
-                context.pop();
-                context.go(Routes.reading);
-              },
+              onTap: () => _navigateToRoute(context, Routes.reading),
             ),
             ListTile(
               title: const Text('已归档'),
-              onTap: () {
-                context.pop();
-                context.go(Routes.archived);
-              },
+              onTap: () => _navigateToRoute(context, Routes.archived),
             ),
             ListTile(
               title: const Text('收藏'),
-              onTap: () {
-                context.pop();
-                context.go(Routes.marked);
-              },
+              onTap: () => _navigateToRoute(context, Routes.marked),
             ),
             ListTile(
               title: const Text('设置'),
               trailing: _hasUpdate ? const Badge() : null,
-              onTap: () {
-                context.pop();
-                context.go(Routes.settings);
-              },
+              onTap: () => _navigateToRoute(context, Routes.settings),
             ),
           ],
         ),

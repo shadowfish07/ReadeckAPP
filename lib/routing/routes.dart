@@ -14,7 +14,8 @@ abstract final class Routes {
   static const translationSettingRelative = 'translation-setting';
   static const aiTagSetting = '/$settingsRelative/$aiTagSettingRelative';
   static const aiTagSettingRelative = 'ai-tag-setting';
-  static const about = '/about';
+  static const about = '/$settingsRelative/$aboutRelative';
+  static const aboutRelative = 'about';
   static const dailyRead = '/$dailyReadRelative';
   static const dailyReadRelative = 'daily-read';
   static const unarchived = '/$unarchivedRelative';
