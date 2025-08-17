@@ -31,7 +31,10 @@ void main() {
       final responsePayload = {
         'tag_name': 'v0.5.0',
         'assets': [
-          {'browser_download_url': 'http://example.com/download'}
+          {
+            'name': 'app.apk',
+            'browser_download_url': 'http://example.com/download'
+          }
         ]
       };
       when(mockHttpClient.get(any)).thenAnswer(
@@ -56,7 +59,10 @@ void main() {
       final responsePayload = {
         'tag_name': 'v0.5.0',
         'assets': [
-          {'browser_download_url': 'http://example.com/download'}
+          {
+            'name': 'app.apk',
+            'browser_download_url': 'http://example.com/download'
+          }
         ]
       };
       when(mockHttpClient.get(any)).thenAnswer(

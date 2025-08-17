@@ -28,10 +28,13 @@ class UpdateService {
         String? apkDownloadUrl;
 
         for (final asset in assets) {
-          final name = asset['name'] as String;
-          if (name.toLowerCase().endsWith('.apk')) {
-            apkDownloadUrl = asset['browser_download_url'] as String;
-            break;
+          final name = asset['name'];
+          if (name is String && name.toLowerCase().endsWith('.apk')) {
+            final downloadUrl = asset['browser_download_url'];
+            if (downloadUrl is String) {
+              apkDownloadUrl = downloadUrl;
+              break;
+            }
           }
         }
 
