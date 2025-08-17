@@ -74,8 +74,10 @@ class _BookmarkListFabState extends State<BookmarkListFab>
   }
 
   void _onScroll() {
-    if (widget.scrollController == null || !widget.scrollController!.hasClients)
+    if (widget.scrollController == null ||
+        !widget.scrollController!.hasClients) {
       return;
+    }
 
     final currentScrollPosition = widget.scrollController!.position.pixels;
     final scrollDelta = currentScrollPosition - _lastScrollPosition;

@@ -34,7 +34,10 @@ class WebContentService {
 
       // 验证URL格式
       final uri = Uri.tryParse(url);
-      if (uri == null || !uri.hasScheme || (!uri.scheme.startsWith('http'))) {
+      if (uri == null ||
+          !uri.hasScheme ||
+          (uri.scheme != 'http' && uri.scheme != 'https') ||
+          uri.host.isEmpty) {
         appLogger.w('无效的URL格式: $url');
         return Failure(Exception('无效的URL格式'));
       }
