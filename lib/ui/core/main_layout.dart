@@ -1,8 +1,12 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:readeck_app/main_viewmodel.dart';
 import 'package:readeck_app/routing/routes.dart';
+import 'package:readeck_app/ui/core/ui/share_overlay.dart';
 
-class MainLayout extends StatelessWidget {
+class MainLayout extends StatefulWidget {
   final Widget child;
   final PreferredSizeWidget? appBar;
   final String? title;
@@ -23,18 +27,69 @@ class MainLayout extends StatelessWidget {
   });
 
   @override
+  State<MainLayout> createState() => _MainLayoutState();
+}
+
+class _MainLayoutState extends State<MainLayout> {
+  StreamSubscription<String>? _shareTextSubscription;
+  bool _isShowingOverlay = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _setupShareIntentListener();
+  }
+
+  void _setupShareIntentListener() {
+    final mainViewModel = context.read<MainAppViewModel>();
+    _shareTextSubscription = mainViewModel.shareTextStream.listen((sharedText) {
+      if (mounted && !_isShowingOverlay) {
+        _showShareOverlay(sharedText);
+      }
+    });
+  }
+
+  void _showShareOverlay(String sharedText) {
+    setState(() {
+      _isShowingOverlay = true;
+    });
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => ShareOverlay(
+        sharedText: sharedText,
+        onClose: () {
+          Navigator.of(context).pop();
+          setState(() {
+            _isShowingOverlay = false;
+          });
+        },
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _shareTextSubscription?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: appBar ??
-          (title != null || actions != null || leading != null
+      appBar: widget.appBar ??
+          (widget.title != null ||
+                  widget.actions != null ||
+                  widget.leading != null
               ? AppBar(
-                  title: title != null ? Text(title!) : null,
-                  actions: actions,
-                  leading: leading,
-                  automaticallyImplyLeading: automaticallyImplyLeading,
+                  title: widget.title != null ? Text(widget.title!) : null,
+                  actions: widget.actions,
+                  leading: widget.leading,
+                  automaticallyImplyLeading: widget.automaticallyImplyLeading,
                 )
               : AppBar(
-                  automaticallyImplyLeading: automaticallyImplyLeading,
+                  automaticallyImplyLeading: widget.automaticallyImplyLeading,
                 )),
       drawer: NavigationDrawer(
         children: [
@@ -82,8 +137,8 @@ class MainLayout extends StatelessWidget {
           ),
         ],
       ),
-      body: child, // 显示当前路由的页面
-      floatingActionButton: floatingActionButton,
+      body: widget.child, // 显示当前路由的页面
+      floatingActionButton: widget.floatingActionButton,
     );
   }
 }
