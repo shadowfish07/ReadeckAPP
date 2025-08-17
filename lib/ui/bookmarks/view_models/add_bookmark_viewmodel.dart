@@ -255,10 +255,11 @@ class AddBookmarkViewModel extends ChangeNotifier {
       if (result.isSuccess()) {
         final webContent = result.getOrThrow();
 
+        _isContentFetched = true;
+
         // 更新标题
         if (webContent.title.isNotEmpty) {
           _title = webContent.title;
-          _isContentFetched = true;
           appLogger.i('自动填充标题: $_title');
         }
 
