@@ -16,11 +16,13 @@ import 'package:readeck_app/ui/settings/view_models/ai_settings_viewmodel.dart';
 import 'package:readeck_app/ui/settings/view_models/model_selection_viewmodel.dart';
 import 'package:readeck_app/ui/settings/view_models/settings_viewmodel.dart';
 import 'package:readeck_app/ui/settings/view_models/translation_settings_viewmodel.dart';
+import 'package:readeck_app/ui/settings/view_models/ai_tag_settings_viewmodel.dart';
 import 'package:readeck_app/ui/settings/widgets/about_page.dart';
 import 'package:readeck_app/ui/settings/widgets/ai_settings_screen.dart';
 import 'package:readeck_app/ui/settings/widgets/model_selection_screen.dart';
 import 'package:readeck_app/ui/settings/widgets/settings_screen.dart';
 import 'package:readeck_app/ui/settings/widgets/translation_settings_screen.dart';
+import 'package:readeck_app/ui/settings/widgets/ai_tag_settings_screen.dart';
 import 'package:readeck_app/ui/bookmarks/view_models/bookmarks_viewmodel.dart';
 import 'package:readeck_app/ui/bookmarks/widget/unarchived_screen.dart';
 import 'package:readeck_app/ui/bookmarks/widget/reading_screen.dart';
@@ -41,6 +43,7 @@ final Map<String, String> _routeTitleMap = {
   Routes.aiSetting: 'AI 设置',
   Routes.modelSelection: '选择模型',
   Routes.translationSetting: '翻译设置',
+  Routes.aiTagSetting: 'AI 标签设置',
   Routes.dailyRead: '每日阅读',
   Routes.unarchived: '未读',
   Routes.reading: '阅读中',
@@ -237,6 +240,12 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
               final viewModel =
                   TranslationSettingsViewModel(context.read(), context.read());
               return TranslationSettingsScreen(viewModel: viewModel);
+            }),
+        GoRoute(
+            path: Routes.aiTagSetting,
+            builder: (context, state) {
+              final viewModel = AiTagSettingsViewModel(context.read());
+              return AiTagSettingsScreen(viewModel: viewModel);
             }),
         GoRoute(
             path: '${Routes.bookmarkDetail}/:id',

@@ -25,6 +25,7 @@ class SettingsRepository {
   String? _translationProvider;
   String? _translationTargetLanguage;
   bool? _translationCacheEnabled;
+  String? _aiTagTargetLanguage;
 
   bool _isLoaded = false;
 
@@ -115,6 +116,16 @@ class SettingsRepository {
             '加载翻译缓存启用状态失败: ${translationCacheResult.exceptionOrNull()}'));
       }
       _translationCacheEnabled = translationCacheResult.getOrThrow();
+
+      // 加载AI标签目标语言
+      final aiTagLanguageResult = await _prefsService.getAiTagTargetLanguage();
+      if (aiTagLanguageResult.isError()) {
+        appLogger.e('加载AI标签目标语言失败',
+            error: aiTagLanguageResult.exceptionOrNull());
+        return Failure(Exception(
+            '加载AI标签目标语言失败: ${aiTagLanguageResult.exceptionOrNull()}'));
+      }
+      _aiTagTargetLanguage = aiTagLanguageResult.getOrThrow();
 
       _isLoaded = true;
       appLogger.i('应用配置加载完成');
@@ -296,6 +307,27 @@ class SettingsRepository {
   String getSelectedOpenRouterModel() {
     _ensureLoaded();
     return _selectedOpenRouterModel!;
+  }
+
+  /// 保存AI标签目标语言
+  AsyncResult<void> saveAiTagTargetLanguage(String language) async {
+    _ensureLoaded();
+
+    final result = await _prefsService.setAiTagTargetLanguage(language);
+    if (result.isError()) {
+      appLogger.e("保存AI标签目标语言失败", error: result.exceptionOrNull());
+      return result;
+    }
+
+    // 更新缓存
+    _aiTagTargetLanguage = language;
+    return const Success(unit);
+  }
+
+  /// 同步获取AI标签目标语言
+  String getAiTagTargetLanguage() {
+    _ensureLoaded();
+    return _aiTagTargetLanguage!;
   }
 
   /// 释放资源
