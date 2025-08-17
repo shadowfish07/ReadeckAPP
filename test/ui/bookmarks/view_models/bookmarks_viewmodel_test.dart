@@ -74,6 +74,9 @@ void main() {
             limit: anyNamed('limit'), page: anyNamed('page')))
         .thenAnswer((_) async => const Success([]));
 
+    // 设置Repository的bookmarks getter
+    when(mockBookmarkRepository.bookmarks).thenReturn([]);
+
     // 创建测试数据
     testBookmarkWithStats = Bookmark(
       id: 'bookmark-with-stats',
@@ -124,9 +127,8 @@ void main() {
 
     test('should delegate tap handling to use case for bookmark without stats',
         () {
-      // Arrange
-      viewModel.bookmarks.clear();
-      viewModel.bookmarks.add(bookmarkModelWithoutStats);
+      // Arrange - Mock repository to return empty list
+      when(mockBookmarkRepository.bookmarks).thenReturn([]);
 
       // Act
       viewModel.handleBookmarkTap(bookmarkModelWithoutStats);
@@ -140,9 +142,9 @@ void main() {
 
     test('should delegate tap handling to use case for bookmark with stats',
         () {
-      // Arrange
-      viewModel.bookmarks.clear();
-      viewModel.bookmarks.add(bookmarkModelWithStats);
+      // Arrange - Mock repository to contain the bookmark
+      when(mockBookmarkRepository.bookmarks)
+          .thenReturn([bookmarkModelWithStats]);
 
       // Act
       viewModel.handleBookmarkTap(bookmarkModelWithStats);
@@ -155,8 +157,8 @@ void main() {
     });
 
     test('should delegate tap handling to use case for not-found bookmark', () {
-      // Arrange
-      viewModel.bookmarks.clear(); // Empty list
+      // Arrange - Mock repository to return empty list
+      when(mockBookmarkRepository.bookmarks).thenReturn([]);
 
       // Act
       viewModel.handleBookmarkTap(bookmarkModelWithoutStats);
@@ -169,9 +171,9 @@ void main() {
     });
 
     test('should delegate tap handling to use case in mixed scenarios', () {
-      // Arrange
-      viewModel.bookmarks
-          .addAll([bookmarkModelWithStats, bookmarkModelWithoutStats]);
+      // Arrange - Mock repository to contain both bookmarks
+      when(mockBookmarkRepository.bookmarks)
+          .thenReturn([bookmarkModelWithStats, bookmarkModelWithoutStats]);
 
       // Act - Test bookmark with stats
       viewModel.handleBookmarkTap(bookmarkModelWithStats);
@@ -295,11 +297,19 @@ void main() {
           .called(1);
     });
 
-    test('should maintain bookmark list state correctly', () {
-      // Arrange
-      viewModel.bookmarks.clear();
-      viewModel.bookmarks
-          .addAll([bookmarkModelWithStats, bookmarkModelWithoutStats]);
+    test('should maintain bookmark list state correctly', () async {
+      // Arrange - Mock repository to contain test bookmarks and setup bookmark IDs
+      when(mockBookmarkRepository.bookmarks)
+          .thenReturn([bookmarkModelWithStats, bookmarkModelWithoutStats]);
+
+      // Simulate loading that populates _bookmarkIds
+      when(mockBookmarkRepository.loadUnarchivedBookmarks(
+              limit: anyNamed('limit'), page: anyNamed('page')))
+          .thenAnswer((_) async =>
+              Success([bookmarkModelWithStats, bookmarkModelWithoutStats]));
+
+      // Trigger load to populate internal bookmark IDs
+      await viewModel.load.executeWithFuture(1);
 
       // Act
       final stats1 = viewModel.getReadingStats(testBookmarkWithStats.id);

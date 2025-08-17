@@ -435,7 +435,7 @@ class ReadeckApiClient {
             if (status == 202) {
               // 创建成功，异步处理中
               appLogger.i('书签创建请求已提交，正在异步处理: $url');
-              return const Success(());
+              return const Success(unit);
             } else {
               appLogger.w("创建书签失败，状态码: $status");
               return Failure(NetworkErrorException("创建书签失败", uri));

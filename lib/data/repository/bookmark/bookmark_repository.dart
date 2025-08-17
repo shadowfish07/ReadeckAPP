@@ -407,7 +407,7 @@ class BookmarkRepository {
     if (result.isSuccess()) {
       appLogger.i('书签创建请求已提交，正在异步处理: $url');
       // 不需要立即添加到缓存，因为书签还在异步处理中
-      return const Success(());
+      return const Success(unit);
     } else {
       appLogger.e('书签创建失败: $url', error: result.exceptionOrNull());
       return Failure(result.exceptionOrNull()!);
