@@ -4,6 +4,8 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Version](https://img.shields.io/github/v/release/shadowfish07/ReadeckApp)]()
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/shadowfish07/ReadeckAPP?utm_source=oss&utm_medium=github&utm_campaign=shadowfish07%2FReadeckAPP&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
+[![codecov](https://codecov.io/gh/shadowfish07/ReadeckAPP/branch/main/graph/badge.svg?token=nq9u4gyBBM)](https://codecov.io/gh/shadowfish07/ReadeckAPP)
 
 A read-later mobile application built as a companion app for [Readeck](https://readeck.org/en/).
 
