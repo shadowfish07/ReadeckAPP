@@ -615,3 +615,7 @@ This project uses [semantic-release](https://github.com/semantic-release/semanti
 ### Test-Driven Development (TDD)
 
 This project follows a Test-Driven Development (TDD) approach. All new features or bug fixes should start with writing a failing unit test that describes the desired functionality or reproduces the bug. Only after the test is written should the implementation code be written to make the test pass.
+
+### 注意事项
+
+- 遇到 Mockito null safety 错误时，首先运行 flutter pub run build_runner build

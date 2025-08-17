@@ -58,20 +58,10 @@ class SettingsScreen extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.smart_toy),
             title: const Text('AI 设置'),
-            subtitle: const Text('配置 OpenRouter API 密钥'),
+            subtitle: const Text('配置 AI 服务、翻译和标签功能'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               context.push(Routes.aiSetting);
-            },
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.translate),
-            title: const Text('翻译设置'),
-            subtitle: const Text('配置翻译服务和目标语言'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              context.push(Routes.translationSetting);
             },
           ),
           const Divider(),

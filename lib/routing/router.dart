@@ -15,11 +15,13 @@ import 'package:readeck_app/ui/settings/view_models/ai_settings_viewmodel.dart';
 import 'package:readeck_app/ui/settings/view_models/model_selection_viewmodel.dart';
 import 'package:readeck_app/ui/settings/view_models/settings_viewmodel.dart';
 import 'package:readeck_app/ui/settings/view_models/translation_settings_viewmodel.dart';
+import 'package:readeck_app/ui/settings/view_models/ai_tag_settings_viewmodel.dart';
 import 'package:readeck_app/ui/settings/widgets/about_page.dart';
 import 'package:readeck_app/ui/settings/widgets/ai_settings_screen.dart';
 import 'package:readeck_app/ui/settings/widgets/model_selection_screen.dart';
 import 'package:readeck_app/ui/settings/widgets/settings_screen.dart';
 import 'package:readeck_app/ui/settings/widgets/translation_settings_screen.dart';
+import 'package:readeck_app/ui/settings/widgets/ai_tag_settings_screen.dart';
 import 'package:readeck_app/ui/bookmarks/view_models/bookmarks_viewmodel.dart';
 import 'package:readeck_app/ui/bookmarks/widget/unarchived_screen.dart';
 import 'package:readeck_app/ui/bookmarks/widget/reading_screen.dart';
@@ -27,6 +29,8 @@ import 'package:readeck_app/ui/bookmarks/widget/archived_screen.dart';
 import 'package:readeck_app/ui/bookmarks/widget/marked_screen.dart';
 import 'package:readeck_app/ui/bookmarks/view_models/bookmark_detail_viewmodel.dart';
 import 'package:readeck_app/ui/bookmarks/widget/bookmark_detail_screen.dart';
+import 'package:readeck_app/ui/bookmarks/view_models/add_bookmark_viewmodel.dart';
+import 'package:readeck_app/ui/bookmarks/widget/add_bookmark_screen.dart';
 
 import 'routes.dart';
 
@@ -38,12 +42,14 @@ final Map<String, String> _routeTitleMap = {
   Routes.aiSetting: 'AI 设置',
   Routes.modelSelection: '选择模型',
   Routes.translationSetting: '翻译设置',
+  Routes.aiTagSetting: 'AI 标签设置',
   Routes.dailyRead: '每日阅读',
   Routes.unarchived: '未读',
   Routes.reading: '阅读中',
   Routes.archived: '已归档',
   Routes.marked: '标记喜爱',
   Routes.bookmarkDetail: '书签详情',
+  Routes.addBookmark: '添加书签',
 };
 
 // 根据路由获取标题
@@ -62,6 +68,15 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
               // 根据当前路由确定页面标题
               final title = _getTitleForRoute(state.matchedLocation);
 
+              // 检查是否为书签列表页面，需要显示FAB
+              final isBookmarkListRoute = [
+                Routes.dailyRead,
+                Routes.unarchived,
+                Routes.reading,
+                Routes.archived,
+                Routes.marked,
+              ].contains(state.matchedLocation);
+
               // 从设置页返回，跳转首页
               if (state.matchedLocation == Routes.settings) {
                 return MainLayout(
@@ -79,6 +94,7 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
 
               return MainLayout(
                 title: title,
+                showFab: isBookmarkListRoute,
                 child: child,
               );
             },
@@ -219,6 +235,12 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
               return TranslationSettingsScreen(viewModel: viewModel);
             }),
         GoRoute(
+            path: Routes.aiTagSetting,
+            builder: (context, state) {
+              final viewModel = AiTagSettingsViewModel(context.read());
+              return AiTagSettingsScreen(viewModel: viewModel);
+            }),
+        GoRoute(
             path: '${Routes.bookmarkDetail}/:id',
             builder: (context, state) {
               final bookmarkId = state.pathParameters['id']!;
@@ -241,6 +263,36 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
                 child: Consumer<BookmarkDetailViewModel>(
                   builder: (context, viewModel, child) {
                     return BookmarkDetailScreen(viewModel: viewModel);
+                  },
+                ),
+              );
+            }),
+        GoRoute(
+            path: Routes.addBookmark,
+            builder: (context, state) {
+              // 获取分享的文本参数
+              final sharedText = state.uri.queryParameters['shared_text'];
+
+              final viewModel = AddBookmarkViewModel(
+                context.read(),
+                context.read(),
+                context.read(),
+                context.read(),
+                context.read(),
+              );
+
+              // 如果有分享的文本，进行预处理
+              if (sharedText != null && sharedText.isNotEmpty) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  viewModel.processSharedText(sharedText);
+                });
+              }
+
+              return ChangeNotifierProvider.value(
+                value: viewModel,
+                child: Consumer<AddBookmarkViewModel>(
+                  builder: (context, viewModel, child) {
+                    return AddBookmarkScreen(viewModel: viewModel);
                   },
                 ),
               );

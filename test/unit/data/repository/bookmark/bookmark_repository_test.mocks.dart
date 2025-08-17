@@ -235,6 +235,37 @@ class MockReadeckApiClient extends _i1.Mock implements _i2.ReadeckApiClient {
       ) as _i3.Future<_i4.ResultDart<String, Exception>>);
 
   @override
+  _i3.Future<_i4.ResultDart<void, Exception>> createBookmark({
+    required String? url,
+    String? title,
+    List<String>? labels,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #createBookmark,
+          [],
+          {
+            #url: url,
+            #title: title,
+            #labels: labels,
+          },
+        ),
+        returnValue: _i3.Future<_i4.ResultDart<void, Exception>>.value(
+            _i6.dummyValue<_i4.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #createBookmark,
+            [],
+            {
+              #url: url,
+              #title: title,
+              #labels: labels,
+            },
+          ),
+        )),
+      ) as _i3.Future<_i4.ResultDart<void, Exception>>);
+
+  @override
   _i3.Future<_i4.ResultDart<void, Exception>> deleteBookmark(
           String? bookmarkId) =>
       (super.noSuchMethod(

@@ -9,6 +9,9 @@ import 'package:readeck_app/data/repository/settings/settings_repository.dart';
 import 'package:readeck_app/data/service/database_service.dart';
 import 'package:readeck_app/data/service/readeck_api_client.dart';
 import 'package:readeck_app/data/service/openrouter_api_client.dart';
+import 'package:readeck_app/data/service/web_content_service.dart';
+import 'package:readeck_app/data/repository/web_content/web_content_repository.dart';
+import 'package:readeck_app/data/repository/ai_tag_recommendation/ai_tag_recommendation_repository.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_operation_use_cases.dart';
 
 import 'package:readeck_app/data/repository/label/label_repository.dart';
@@ -22,6 +25,9 @@ List<SingleChildWidget> providers(String host, String token) {
     Provider(create: (context) => SharedPreferencesService()),
     Provider(create: (context) => ReadeckApiClient(host, token)),
     Provider(create: (context) => DatabaseService()),
+    Provider(create: (context) => WebContentService()),
+    Provider<WebContentRepository>(
+        create: (context) => WebContentRepositoryImpl(context.read())),
     Provider(create: (context) {
       final prefsService = context.read<SharedPreferencesService>();
       final apiClient = context.read<ReadeckApiClient>();
@@ -33,6 +39,12 @@ List<SingleChildWidget> providers(String host, String token) {
     Provider(create: (context) {
       final openRouterClient = context.read<OpenRouterApiClient>();
       return OpenRouterRepository(openRouterClient);
+    }),
+    Provider(create: (context) {
+      final openRouterClient = context.read<OpenRouterApiClient>();
+      final settingsRepository = context.read<SettingsRepository>();
+      return AiTagRecommendationRepository(
+          openRouterClient, settingsRepository);
     }),
     ChangeNotifierProvider(
       create: (context) => MainAppViewModel(

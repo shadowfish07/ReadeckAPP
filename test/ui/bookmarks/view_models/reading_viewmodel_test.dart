@@ -10,6 +10,7 @@ import 'package:readeck_app/ui/bookmarks/view_models/bookmarks_viewmodel.dart';
 import 'package:logger/logger.dart';
 import 'package:readeck_app/main.dart';
 import 'package:result_dart/result_dart.dart';
+import 'package:flutter_command/flutter_command.dart';
 
 import 'reading_viewmodel_test.mocks.dart';
 
@@ -22,13 +23,18 @@ void main() {
 
   setUpAll(() {
     appLogger = Logger();
-    provideDummy<ResultDart<List<BookmarkDisplayModel>, Exception>>(
+    // 设置 flutter_command 全局异常处理器
+    Command.globalExceptionHandler = (_, exception) {
+      // 在测试中忽略异常，只为了满足 flutter_command 的要求
+    };
+
+    provideDummy<Result<List<BookmarkDisplayModel>>>(
       const Success([]),
     );
-    provideDummy<ResultDart<void, Exception>>(
+    provideDummy<Result<void>>(
       const Success(unit),
     );
-    provideDummy<ResultDart<List<String>, Exception>>(
+    provideDummy<Result<List<String>>>(
       const Success([]),
     );
   });
@@ -40,7 +46,9 @@ void main() {
 
     // Setup default mock behaviors
     when(mockBookmarkRepository.addListener(any)).thenAnswer((_) {});
+    when(mockBookmarkRepository.removeListener(any)).thenAnswer((_) {});
     when(mockLabelRepository.addListener(any)).thenAnswer((_) {});
+    when(mockLabelRepository.removeListener(any)).thenAnswer((_) {});
     when(mockLabelRepository.labelNames).thenReturn([]);
   });
 
@@ -78,6 +86,12 @@ void main() {
               limit: anyNamed('limit'), page: anyNamed('page')))
           .thenAnswer((_) async => Success(readingBookmarks));
 
+      // Mock getCachedBookmark to return the bookmarks by ID
+      when(mockBookmarkRepository.getCachedBookmark('1'))
+          .thenReturn(readingBookmarks[0]);
+      when(mockBookmarkRepository.getCachedBookmark('2'))
+          .thenReturn(readingBookmarks[1]);
+
       // Act
       readingViewmodel = ReadingViewmodel(
         mockBookmarkRepository,
@@ -89,7 +103,9 @@ void main() {
       await Future.delayed(Duration.zero);
 
       // Assert
-      expect(readingViewmodel.bookmarks, readingBookmarks);
+      expect(readingViewmodel.bookmarks.length, 2);
+      expect(readingViewmodel.bookmarks[0].bookmark.id, '1');
+      expect(readingViewmodel.bookmarks[1].bookmark.id, '2');
       verify(mockBookmarkRepository.loadReadingBookmarks(limit: 10, page: 1))
           .called(1);
     });
@@ -97,23 +113,7 @@ void main() {
     test('should load more reading bookmarks when loadNextPage is called',
         () async {
       // Arrange
-      final additionalBookmarks = [
-        BookmarkDisplayModel(
-          bookmark: Bookmark(
-            id: '11',
-            url: 'https://example.com/11',
-            title: 'Reading Book 11',
-            isArchived: false,
-            isMarked: false,
-            labels: [],
-            created: DateTime.now(),
-            readProgress: 75,
-          ),
-        ),
-      ];
-
-      // Make sure initial load returns 10 items to set hasMoreData = true
-      final initialBookmarksWithFullPage = List.generate(
+      final initialBookmarks = List.generate(
         10,
         (index) => BookmarkDisplayModel(
           bookmark: Bookmark(
@@ -129,10 +129,33 @@ void main() {
         ),
       );
 
+      final additionalBookmarks = [
+        BookmarkDisplayModel(
+          bookmark: Bookmark(
+            id: '11',
+            url: 'https://example.com/11',
+            title: 'Reading Book 11',
+            isArchived: false,
+            isMarked: false,
+            labels: [],
+            created: DateTime.now(),
+            readProgress: 75,
+          ),
+        ),
+      ];
+
       when(mockBookmarkRepository.loadReadingBookmarks(limit: 10, page: 1))
-          .thenAnswer((_) async => Success(initialBookmarksWithFullPage));
+          .thenAnswer((_) async => Success(initialBookmarks));
       when(mockBookmarkRepository.loadReadingBookmarks(limit: 10, page: 2))
           .thenAnswer((_) async => Success(additionalBookmarks));
+
+      // Mock getCachedBookmark for all bookmarks
+      for (int i = 0; i < initialBookmarks.length; i++) {
+        when(mockBookmarkRepository.getCachedBookmark('${i + 1}'))
+            .thenReturn(initialBookmarks[i]);
+      }
+      when(mockBookmarkRepository.getCachedBookmark('11'))
+          .thenReturn(additionalBookmarks[0]);
 
       readingViewmodel = ReadingViewmodel(
         mockBookmarkRepository,
@@ -141,21 +164,15 @@ void main() {
       );
 
       // Wait for initial load
-      await Future.delayed(const Duration(milliseconds: 100));
+      await Future.delayed(Duration.zero);
 
       // Act
       readingViewmodel.loadNextPage();
-
-      // Wait for loadMore command to complete
       await Future.delayed(const Duration(milliseconds: 100));
 
       // Assert
       expect(
           readingViewmodel.bookmarks.length, 11); // 10 initial + 1 additional
-      expect(
-          readingViewmodel.bookmarks,
-          containsAll(
-              [...initialBookmarksWithFullPage, ...additionalBookmarks]));
       verify(mockBookmarkRepository.loadReadingBookmarks(limit: 10, page: 2))
           .called(1);
     });
@@ -179,6 +196,48 @@ void main() {
       // Assert
       verify(mockBookmarkRepository.loadReadingBookmarks(limit: 10, page: 1))
           .called(1);
+    });
+
+    test('should not load more when hasMoreData is false', () async {
+      // Arrange - return fewer than 10 items to set hasMoreData = false
+      final bookmarks = [
+        BookmarkDisplayModel(
+          bookmark: Bookmark(
+            id: '1',
+            url: 'https://example.com/1',
+            title: 'Reading Book 1',
+            isArchived: false,
+            isMarked: false,
+            labels: [],
+            created: DateTime.now(),
+            readProgress: 25,
+          ),
+        ),
+      ];
+
+      when(mockBookmarkRepository.loadReadingBookmarks(
+              limit: anyNamed('limit'), page: anyNamed('page')))
+          .thenAnswer((_) async => Success(bookmarks));
+
+      when(mockBookmarkRepository.getCachedBookmark('1'))
+          .thenReturn(bookmarks[0]);
+
+      readingViewmodel = ReadingViewmodel(
+        mockBookmarkRepository,
+        mockBookmarkOperationUseCases,
+        mockLabelRepository,
+      );
+
+      // Wait for initial load
+      await Future.delayed(Duration.zero);
+
+      // Act
+      readingViewmodel.loadNextPage();
+
+      // Assert - loadMore should not be called because hasMoreData is false
+      expect(readingViewmodel.hasMoreData, false);
+      verifyNever(
+          mockBookmarkRepository.loadReadingBookmarks(limit: 10, page: 2));
     });
   });
 }

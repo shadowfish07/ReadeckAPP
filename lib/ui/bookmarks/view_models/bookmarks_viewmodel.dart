@@ -70,7 +70,7 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
   final BookmarkOperationUseCases _bookmarkOperationUseCases;
   final LabelRepository _labelRepository;
 
-  final List<BookmarkDisplayModel> _bookmarks = [];
+  final List<String> _bookmarkIds = [];
   int _currentPage = 1;
   bool _hasMoreData = true;
   late Command<int, List<BookmarkDisplayModel>> load;
@@ -80,8 +80,10 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
   late Command<BookmarkDisplayModel, void> toggleBookmarkArchived;
   late Command<void, List<String>> loadLabels;
 
-  List<BookmarkDisplayModel> get bookmarks => _bookmarks;
-
+  List<BookmarkDisplayModel> get bookmarks => _bookmarkIds
+      .map(_bookmarkRepository.getCachedBookmark)
+      .whereType<BookmarkDisplayModel>()
+      .toList();
   bool get hasMoreData => _hasMoreData;
   bool get isLoadingMore => loadMore.isExecuting.value;
 
@@ -92,8 +94,8 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
 
   ReadingStatsForView? getReadingStats(String bookmarkId) {
     final idx =
-        _bookmarks.indexWhere((element) => element.bookmark.id == bookmarkId);
-    return idx == -1 ? null : _bookmarks[idx].stats;
+        bookmarks.indexWhere((element) => element.bookmark.id == bookmarkId);
+    return idx == -1 ? null : bookmarks[idx].stats;
   }
 
   Future<List<BookmarkDisplayModel>> _load(int page) async {
@@ -101,16 +103,16 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
     _currentPage = page;
     final result = await _loadBookmarks(limit: limit, page: page);
     final newBookmarks = result.getOrThrow();
-    _bookmarks.clear();
-    _bookmarks.addAll(newBookmarks);
+    _bookmarkIds.clear();
+    _bookmarkIds.addAll(newBookmarks.map((x) => x.bookmark.id));
     _hasMoreData = newBookmarks.length == limit;
 
     notifyListeners();
-    return _bookmarks;
+    return bookmarks;
   }
 
   Future<List<BookmarkDisplayModel>> _loadMore(int page) async {
-    if (!_hasMoreData) return _bookmarks;
+    if (!_hasMoreData) return bookmarks;
 
     var limit = 10;
     _currentPage = page;
@@ -118,14 +120,14 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
     final newBookmarks = result.getOrThrow();
 
     if (newBookmarks.isNotEmpty) {
-      _bookmarks.addAll(newBookmarks);
+      _bookmarkIds.addAll(newBookmarks.map((x) => x.bookmark.id));
       _hasMoreData = newBookmarks.length == limit;
     } else {
       _hasMoreData = false;
     }
 
     notifyListeners();
-    return _bookmarks;
+    return bookmarks;
   }
 
   void loadNextPage() {
@@ -206,10 +208,6 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
 
   /// 书签数据变化回调
   void _onBookmarksChanged() {
-    // This is a bit tricky. A full reload might be too much.
-    // For now, just notify listeners, and the UI will rebuild.
-    // A more sophisticated approach might be needed if performance is an issue.
-    load.execute(1); // Reload the list
     notifyListeners();
   }
 

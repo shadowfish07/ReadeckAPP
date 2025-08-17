@@ -391,6 +391,29 @@ class BookmarkRepository {
     return Failure(result.exceptionOrNull()!);
   }
 
+  /// 创建书签
+  AsyncResult<void> createBookmark({
+    required String url,
+    String? title,
+    List<String>? labels,
+  }) async {
+    appLogger.i('开始创建书签: $url');
+    final result = await _readeckApiClient.createBookmark(
+      url: url,
+      title: title,
+      labels: labels,
+    );
+
+    if (result.isSuccess()) {
+      appLogger.i('书签创建请求已提交，正在异步处理: $url');
+      // 不需要立即添加到缓存，因为书签还在异步处理中
+      return const Success(unit);
+    } else {
+      appLogger.e('书签创建失败: $url', error: result.exceptionOrNull());
+      return Failure(result.exceptionOrNull()!);
+    }
+  }
+
   /// 删除书签
   AsyncResult<void> deleteBookmark(String bookmarkId) async {
     appLogger.i('开始删除书签: $bookmarkId');

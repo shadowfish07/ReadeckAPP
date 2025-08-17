@@ -3,18 +3,38 @@ import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 import 'package:readeck_app/ui/core/ui/snack_bar_helper.dart';
 
 class LabelEditDialog extends StatefulWidget {
-  final Bookmark bookmark;
+  final Bookmark? bookmark;
+  final List<String> selectedLabels;
   final List<String> availableLabels;
-  final Function(Bookmark bookmark, List<String> labels) onUpdateLabels;
+  final Function(Bookmark? bookmark, List<String> labels) onUpdateLabels;
   final Future<List<String>> Function()? onLoadLabels;
 
   const LabelEditDialog({
     super.key,
-    required this.bookmark,
+    this.bookmark,
+    required this.selectedLabels,
     required this.availableLabels,
     required this.onUpdateLabels,
     this.onLoadLabels,
   });
+
+  // 为了向后兼容的工厂构造函数
+  factory LabelEditDialog.fromBookmark({
+    Key? key,
+    required Bookmark bookmark,
+    required List<String> availableLabels,
+    required Function(Bookmark bookmark, List<String> labels) onUpdateLabels,
+    Future<List<String>> Function()? onLoadLabels,
+  }) {
+    return LabelEditDialog(
+      key: key,
+      bookmark: bookmark,
+      selectedLabels: bookmark.labels,
+      availableLabels: availableLabels,
+      onUpdateLabels: (bm, labels) => onUpdateLabels(bookmark, labels),
+      onLoadLabels: onLoadLabels,
+    );
+  }
 
   @override
   State<LabelEditDialog> createState() => _LabelEditDialogState();
@@ -30,7 +50,7 @@ class _LabelEditDialogState extends State<LabelEditDialog> {
   @override
   void initState() {
     super.initState();
-    _selectedLabels = List.from(widget.bookmark.labels);
+    _selectedLabels = List.from(widget.selectedLabels);
     _allLabels = List.from(widget.availableLabels);
     _filteredLabels = List.from(widget.availableLabels);
     _searchController.addListener(_filterLabels);

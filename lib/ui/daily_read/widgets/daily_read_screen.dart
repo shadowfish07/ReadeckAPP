@@ -14,6 +14,7 @@ import 'package:readeck_app/ui/core/ui/loading.dart';
 import 'package:readeck_app/ui/daily_read/view_models/daily_read_viewmodel.dart';
 import 'package:readeck_app/utils/network_error_exception.dart';
 import 'package:readeck_app/ui/core/ui/snack_bar_helper.dart';
+import 'package:readeck_app/ui/core/main_layout.dart';
 
 class DailyReadScreen extends StatefulWidget {
   const DailyReadScreen({super.key, required this.viewModel});
@@ -26,6 +27,7 @@ class DailyReadScreen extends StatefulWidget {
 
 class _DailyReadScreenState extends State<DailyReadScreen> {
   late ConfettiController _confettiController;
+  ScrollController? _scrollController;
 
   @override
   void initState() {
@@ -48,18 +50,25 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
   }
 
   @override
-  void dispose() {
-    // 释放动画控制器
-    _confettiController.dispose();
-    // 清除回调
-    widget.viewModel.setOnBookmarkArchivedCallback(null);
-    widget.viewModel.setNavigateToDetailCallback((_) {});
-    super.dispose();
-  }
-
-  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+
+    // 只有在没有外部提供ScrollController时才创建自己的
+    if (_scrollController == null) {
+      _scrollController = ScrollController();
+
+      // 延迟到下一帧更新Provider，避免在build过程中触发rebuild
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          try {
+            final provider = context.read<ScrollControllerProvider?>();
+            provider?.setScrollController(_scrollController);
+          } catch (e) {
+            // 在测试环境中可能会失败，忽略
+          }
+        }
+      });
+    }
     widget.viewModel.load.errors.where((x) => x != null).listen((error, _) {
       appLogger.e(
         '加载书签失败',
@@ -109,6 +118,26 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
     if (widget.viewModel.unArchivedBookmarks.isEmpty) {
       _playConfetti();
     }
+  }
+
+  @override
+  void dispose() {
+    // 清除Provider中的ScrollController引用
+    try {
+      final provider = context.read<ScrollControllerProvider?>();
+      provider?.setScrollController(null);
+    } catch (e) {
+      // 在测试或context已失效时忽略错误
+    }
+
+    // 释放动画控制器
+    _confettiController.dispose();
+    // 释放滚动控制器
+    _scrollController?.dispose();
+    // 清除回调
+    widget.viewModel.setOnBookmarkArchivedCallback(null);
+    widget.viewModel.setNavigateToDetailCallback((_) {});
+    super.dispose();
   }
 
   Widget render() {
@@ -191,6 +220,7 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
     }
 
     return ListView.builder(
+      controller: _scrollController,
       padding: const EdgeInsets.all(16),
       itemCount: widget.viewModel.unArchivedBookmarks.length,
       itemBuilder: (context, index) {

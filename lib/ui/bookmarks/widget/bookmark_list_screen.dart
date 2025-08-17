@@ -10,6 +10,7 @@ import 'package:readeck_app/ui/core/ui/loading.dart';
 import 'package:readeck_app/ui/bookmarks/view_models/bookmarks_viewmodel.dart';
 import 'package:readeck_app/utils/network_error_exception.dart';
 import 'package:readeck_app/ui/core/ui/snack_bar_helper.dart';
+import 'package:readeck_app/ui/core/main_layout.dart';
 
 /// 书签列表页面的文案配置
 class BookmarkListTexts {
@@ -55,13 +56,11 @@ class BookmarkListScreen<T extends BaseBookmarksViewmodel>
 
 class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
     extends State<BookmarkListScreen<T>> {
-  late ScrollController _scrollController;
+  ScrollController? _scrollController;
 
   @override
   void initState() {
     super.initState();
-    _scrollController = ScrollController();
-    _scrollController.addListener(_onScroll);
 
     // 设置详情页导航回调
     widget.viewModel.setNavigateToDetailCallback((bookmark) {
@@ -77,15 +76,51 @@ class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // 只有在没有外部提供ScrollController时才创建自己的
+    if (_scrollController == null) {
+      _scrollController = ScrollController();
+      _scrollController?.addListener(_onScroll);
+
+      // 延迟到下一帧更新Provider，避免在build过程中触发rebuild
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          try {
+            final provider = context.read<ScrollControllerProvider?>();
+            provider?.setScrollController(_scrollController);
+          } catch (e) {
+            // 在测试环境中可能会失败，忽略
+          }
+        }
+      });
+    }
+  }
+
+  @override
   void dispose() {
-    _scrollController.removeListener(_onScroll);
-    _scrollController.dispose();
+    // 清除Provider中的ScrollController引用
+    try {
+      final provider = context.read<ScrollControllerProvider?>();
+      provider?.setScrollController(null);
+    } catch (e) {
+      // 在测试或context已失效时忽略错误
+    }
+
+    _scrollController?.removeListener(_onScroll);
+    _scrollController?.dispose();
     super.dispose();
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
+    if (_scrollController == null || !_scrollController!.hasClients) return;
+
+    final currentScrollPosition = _scrollController!.position.pixels;
+
+    // 处理分页加载
+    if (currentScrollPosition >=
+        _scrollController!.position.maxScrollExtent - 200) {
       widget.viewModel.loadNextPage();
     }
   }

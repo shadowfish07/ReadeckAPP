@@ -196,6 +196,91 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
                 },
               ),
             ),
+
+            const SizedBox(height: 16),
+
+            // 翻译设置配置卡片
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.translate,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '翻译设置',
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('翻译服务配置'),
+                      subtitle: const Text('配置翻译目标语言和缓存设置'),
+                      trailing: const Icon(Icons.arrow_forward_ios),
+                      onTap: () {
+                        context.push(Routes.translationSetting);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // AI标签设置配置卡片
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.label,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'AI 标签设置',
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('标签推荐配置'),
+                      subtitle: const Text('配置AI标签推荐的目标语言'),
+                      trailing: const Icon(Icons.arrow_forward_ios),
+                      onTap: () {
+                        context.push(Routes.aiTagSetting);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
             const SizedBox(height: 16),
             Card(
               child: Padding(

@@ -12,6 +12,7 @@ class SharedPreferencesService {
   static const String _kTranslationProvider = 'translationProvider';
   static const String _kTranslationTargetLanguage = 'translationTargetLanguage';
   static const String _kTranslationCacheEnabled = 'translationCacheEnabled';
+  static const String _kAiTagTargetLanguage = 'aiTagTargetLanguage';
 
   AsyncResult<void> setThemeMode(int value) async {
     final prefs = await SharedPreferences.getInstance();
@@ -174,6 +175,29 @@ class SharedPreferencesService {
     final prefs = await SharedPreferences.getInstance();
     try {
       final value = prefs.getBool(_kTranslationCacheEnabled) ?? true;
+      return Success(value);
+    } on Exception catch (e) {
+      return Failure(e);
+    }
+  }
+
+  /// 设置AI标签目标语言
+  AsyncResult<void> setAiTagTargetLanguage(String value) async {
+    final prefs = await SharedPreferences.getInstance();
+    try {
+      await prefs.setString(_kAiTagTargetLanguage, value);
+      return const Success(unit);
+    } on Exception catch (e) {
+      return Failure(e);
+    }
+  }
+
+  /// 获取AI标签目标语言
+  /// 默认值为 '中文'
+  AsyncResult<String> getAiTagTargetLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    try {
+      final value = prefs.getString(_kAiTagTargetLanguage) ?? '中文';
       return Success(value);
     } on Exception catch (e) {
       return Failure(e);

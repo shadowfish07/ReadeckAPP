@@ -475,6 +475,51 @@ class MockBookmarkRepository extends _i1.Mock
       ) as _i4.Future<_i5.ResultDart<void, Exception>>);
 
   @override
+  _i4.Future<_i5.ResultDart<void, Exception>> createBookmark({
+    required String? url,
+    String? title,
+    List<String>? labels,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #createBookmark,
+          [],
+          {
+            #url: url,
+            #title: title,
+            #labels: labels,
+          },
+        ),
+        returnValue: _i4.Future<_i5.ResultDart<void, Exception>>.value(
+            _i6.dummyValue<_i5.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #createBookmark,
+            [],
+            {
+              #url: url,
+              #title: title,
+              #labels: labels,
+            },
+          ),
+        )),
+        returnValueForMissingStub:
+            _i4.Future<_i5.ResultDart<void, Exception>>.value(
+                _i6.dummyValue<_i5.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #createBookmark,
+            [],
+            {
+              #url: url,
+              #title: title,
+              #labels: labels,
+            },
+          ),
+        )),
+      ) as _i4.Future<_i5.ResultDart<void, Exception>>);
+
+  @override
   _i4.Future<_i5.ResultDart<void, Exception>> deleteBookmark(
           String? bookmarkId) =>
       (super.noSuchMethod(
