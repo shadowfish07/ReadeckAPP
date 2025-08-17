@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:readeck_app/ui/settings/view_models/about_viewmodel.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -101,6 +102,96 @@ class AboutPage extends StatelessWidget {
                               ],
                             ),
                             const SizedBox(height: 16),
+                            // 显示更新日志
+                            if (viewModel.updateInfo!.releaseNotes.isNotEmpty)
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '更新内容：',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .surfaceContainerHighest,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: MarkdownBody(
+                                      data: viewModel.updateInfo!.releaseNotes,
+                                      styleSheet: MarkdownStyleSheet(
+                                        p: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                            ),
+                                        h1: Theme.of(context)
+                                            .textTheme
+                                            .titleLarge
+                                            ?.copyWith(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                            ),
+                                        h2: Theme.of(context)
+                                            .textTheme
+                                            .titleMedium
+                                            ?.copyWith(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                            ),
+                                        h3: Theme.of(context)
+                                            .textTheme
+                                            .titleSmall
+                                            ?.copyWith(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                            ),
+                                        listBullet: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                            ),
+                                        code: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                              fontFamily: 'monospace',
+                                              backgroundColor: Theme.of(context)
+                                                  .colorScheme
+                                                  .surfaceContainer,
+                                            ),
+                                      ),
+                                      onTapLink: (text, href, title) {
+                                        if (href != null) {
+                                          _launchUrl(href);
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                ],
+                              ),
                             // 下载进度条
                             if (viewModel.isDownloading)
                               Column(
@@ -148,12 +239,12 @@ class AboutPage extends StatelessWidget {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
-                                TextButton(
+                                TextButton.icon(
                                   onPressed: () {
-                                    _launchUrl(
-                                        viewModel.updateInfo!.downloadUrl);
+                                    _launchUrl(viewModel.updateInfo!.htmlUrl);
                                   },
-                                  child: const Text('手动下载'),
+                                  icon: const Icon(Icons.open_in_new, size: 16),
+                                  label: const Text('Github'),
                                 ),
                                 const SizedBox(width: 8),
                                 FilledButton.tonal(
@@ -161,7 +252,10 @@ class AboutPage extends StatelessWidget {
                                           viewModel.isInstalling)
                                       ? null
                                       : () {
-                                          _showUpdateDialog(context, viewModel);
+                                          // 直接执行下载并安装，无需弹窗确认
+                                          viewModel
+                                              .downloadAndInstallUpdateCommand
+                                              .execute(viewModel.updateInfo!);
                                         },
                                   child: const Text('立即更新'),
                                 ),
@@ -399,52 +493,6 @@ class AboutPage extends StatelessWidget {
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('知道了'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showUpdateDialog(BuildContext context, AboutViewModel aboutViewModel) {
-    if (aboutViewModel.updateInfo == null) return;
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('应用更新'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('发现新版本: ${aboutViewModel.updateInfo!.version}'),
-              const SizedBox(height: 16),
-              const Text('更新功能：'),
-              const SizedBox(height: 8),
-              const Text('• 自动下载更新文件'),
-              const Text('• 自动安装（需要授权）'),
-              const Text('• 实时显示下载进度'),
-              const SizedBox(height: 16),
-              const Text(
-                '注意：如果是首次自动安装，可能需要授权"安装未知应用"权限。',
-                style: TextStyle(fontSize: 12),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('取消'),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                // 执行下载并安装
-                aboutViewModel.downloadAndInstallUpdateCommand
-                    .execute(aboutViewModel.updateInfo!);
-              },
-              child: const Text('立即更新'),
             ),
           ],
         );

@@ -43,6 +43,8 @@ class UpdateService {
         return UpdateInfo(
           version: latestVersion.toString(),
           downloadUrl: apkDownloadUrl,
+          releaseNotes: json['body'] as String? ?? '',
+          htmlUrl: json['html_url'] as String? ?? '',
         );
       }
     }
@@ -53,6 +55,13 @@ class UpdateService {
 class UpdateInfo {
   final String version;
   final String downloadUrl;
+  final String releaseNotes;
+  final String htmlUrl;
 
-  UpdateInfo({required this.version, required this.downloadUrl});
+  UpdateInfo({
+    required this.version,
+    required this.downloadUrl,
+    required this.releaseNotes,
+    required this.htmlUrl,
+  });
 }

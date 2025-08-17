@@ -31,7 +31,12 @@ void main() {
   group('AboutViewModel', () {
     test('checks for update on initialization and updates updateInfo',
         () async {
-      final updateInfo = UpdateInfo(version: '1.0.0', downloadUrl: 'url');
+      final updateInfo = UpdateInfo(
+        version: '1.0.0',
+        downloadUrl: 'url',
+        releaseNotes: 'Test release notes',
+        htmlUrl: 'https://github.com/test/repo/releases/tag/v1.0.0',
+      );
       when(mockUpdateRepository.checkForUpdate())
           .thenAnswer((_) async => Success(updateInfo));
 

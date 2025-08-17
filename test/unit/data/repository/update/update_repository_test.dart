@@ -19,7 +19,12 @@ void main() {
 
   group('UpdateRepository', () {
     test('returns success when update service finds an update', () async {
-      final updateInfo = UpdateInfo(version: '1.0.0', downloadUrl: 'url');
+      final updateInfo = UpdateInfo(
+        version: '1.0.0',
+        downloadUrl: 'url',
+        releaseNotes: 'Test release notes',
+        htmlUrl: 'https://github.com/test/repo/releases/tag/v1.0.0',
+      );
       when(mockUpdateService.checkForUpdate())
           .thenAnswer((_) async => updateInfo);
 
