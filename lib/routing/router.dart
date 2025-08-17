@@ -274,6 +274,9 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
               final viewModel = AddBookmarkViewModel(
                 context.read(),
                 context.read(),
+                context.read(),
+                context.read(),
+                context.read(),
               );
 
               // 如果有分享的文本，进行预处理

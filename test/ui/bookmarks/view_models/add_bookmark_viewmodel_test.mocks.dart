@@ -7,9 +7,14 @@ import 'dart:async' as _i4;
 
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i6;
+import 'package:readeck_app/data/repository/ai_tag_recommendation/ai_tag_recommendation_repository.dart'
+    as _i12;
 import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart'
     as _i2;
 import 'package:readeck_app/data/repository/label/label_repository.dart' as _i8;
+import 'package:readeck_app/data/repository/settings/settings_repository.dart'
+    as _i10;
+import 'package:readeck_app/data/service/web_content_service.dart' as _i11;
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart' as _i7;
 import 'package:readeck_app/domain/models/bookmark/label_info.dart' as _i9;
 import 'package:readeck_app/domain/models/bookmark_display_model/bookmark_display_model.dart'
@@ -638,4 +643,513 @@ class MockLabelRepository extends _i1.Mock implements _i8.LabelRepository {
         ),
         returnValueForMissingStub: null,
       );
+}
+
+/// A class which mocks [SettingsRepository].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockSettingsRepository extends _i1.Mock
+    implements _i10.SettingsRepository {
+  @override
+  _i4.Stream<void> get settingsChanged => (super.noSuchMethod(
+        Invocation.getter(#settingsChanged),
+        returnValue: _i4.Stream<void>.empty(),
+        returnValueForMissingStub: _i4.Stream<void>.empty(),
+      ) as _i4.Stream<void>);
+
+  @override
+  _i4.Future<_i5.ResultDart<void, Exception>> loadSettings() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #loadSettings,
+          [],
+        ),
+        returnValue: _i4.Future<_i5.ResultDart<void, Exception>>.value(
+            _i6.dummyValue<_i5.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #loadSettings,
+            [],
+          ),
+        )),
+        returnValueForMissingStub:
+            _i4.Future<_i5.ResultDart<void, Exception>>.value(
+                _i6.dummyValue<_i5.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #loadSettings,
+            [],
+          ),
+        )),
+      ) as _i4.Future<_i5.ResultDart<void, Exception>>);
+
+  @override
+  bool isApiConfigured() => (super.noSuchMethod(
+        Invocation.method(
+          #isApiConfigured,
+          [],
+        ),
+        returnValue: false,
+        returnValueForMissingStub: false,
+      ) as bool);
+
+  @override
+  _i4.Future<_i5.ResultDart<void, Exception>> saveApiConfig(
+    String? host,
+    String? token,
+  ) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #saveApiConfig,
+          [
+            host,
+            token,
+          ],
+        ),
+        returnValue: _i4.Future<_i5.ResultDart<void, Exception>>.value(
+            _i6.dummyValue<_i5.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #saveApiConfig,
+            [
+              host,
+              token,
+            ],
+          ),
+        )),
+        returnValueForMissingStub:
+            _i4.Future<_i5.ResultDart<void, Exception>>.value(
+                _i6.dummyValue<_i5.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #saveApiConfig,
+            [
+              host,
+              token,
+            ],
+          ),
+        )),
+      ) as _i4.Future<_i5.ResultDart<void, Exception>>);
+
+  @override
+  (String, String) getApiConfig() => (super.noSuchMethod(
+        Invocation.method(
+          #getApiConfig,
+          [],
+        ),
+        returnValue: (
+          _i6.dummyValue<String>(
+            this,
+            Invocation.method(
+              #getApiConfig,
+              [],
+            ),
+          ),
+          _i6.dummyValue<String>(
+            this,
+            Invocation.method(
+              #getApiConfig,
+              [],
+            ),
+          )
+        ),
+        returnValueForMissingStub: (
+          _i6.dummyValue<String>(
+            this,
+            Invocation.method(
+              #getApiConfig,
+              [],
+            ),
+          ),
+          _i6.dummyValue<String>(
+            this,
+            Invocation.method(
+              #getApiConfig,
+              [],
+            ),
+          )
+        ),
+      ) as (String, String));
+
+  @override
+  int getThemeMode() => (super.noSuchMethod(
+        Invocation.method(
+          #getThemeMode,
+          [],
+        ),
+        returnValue: 0,
+        returnValueForMissingStub: 0,
+      ) as int);
+
+  @override
+  _i4.Future<_i5.ResultDart<void, Exception>> saveThemeMode(int? themeMode) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #saveThemeMode,
+          [themeMode],
+        ),
+        returnValue: _i4.Future<_i5.ResultDart<void, Exception>>.value(
+            _i6.dummyValue<_i5.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #saveThemeMode,
+            [themeMode],
+          ),
+        )),
+        returnValueForMissingStub:
+            _i4.Future<_i5.ResultDart<void, Exception>>.value(
+                _i6.dummyValue<_i5.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #saveThemeMode,
+            [themeMode],
+          ),
+        )),
+      ) as _i4.Future<_i5.ResultDart<void, Exception>>);
+
+  @override
+  _i4.Future<_i5.ResultDart<void, Exception>> saveOpenRouterApiKey(
+          String? apiKey) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #saveOpenRouterApiKey,
+          [apiKey],
+        ),
+        returnValue: _i4.Future<_i5.ResultDart<void, Exception>>.value(
+            _i6.dummyValue<_i5.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #saveOpenRouterApiKey,
+            [apiKey],
+          ),
+        )),
+        returnValueForMissingStub:
+            _i4.Future<_i5.ResultDart<void, Exception>>.value(
+                _i6.dummyValue<_i5.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #saveOpenRouterApiKey,
+            [apiKey],
+          ),
+        )),
+      ) as _i4.Future<_i5.ResultDart<void, Exception>>);
+
+  @override
+  String getOpenRouterApiKey() => (super.noSuchMethod(
+        Invocation.method(
+          #getOpenRouterApiKey,
+          [],
+        ),
+        returnValue: _i6.dummyValue<String>(
+          this,
+          Invocation.method(
+            #getOpenRouterApiKey,
+            [],
+          ),
+        ),
+        returnValueForMissingStub: _i6.dummyValue<String>(
+          this,
+          Invocation.method(
+            #getOpenRouterApiKey,
+            [],
+          ),
+        ),
+      ) as String);
+
+  @override
+  _i4.Future<_i5.ResultDart<void, Exception>> saveTranslationProvider(
+          String? provider) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #saveTranslationProvider,
+          [provider],
+        ),
+        returnValue: _i4.Future<_i5.ResultDart<void, Exception>>.value(
+            _i6.dummyValue<_i5.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #saveTranslationProvider,
+            [provider],
+          ),
+        )),
+        returnValueForMissingStub:
+            _i4.Future<_i5.ResultDart<void, Exception>>.value(
+                _i6.dummyValue<_i5.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #saveTranslationProvider,
+            [provider],
+          ),
+        )),
+      ) as _i4.Future<_i5.ResultDart<void, Exception>>);
+
+  @override
+  String getTranslationProvider() => (super.noSuchMethod(
+        Invocation.method(
+          #getTranslationProvider,
+          [],
+        ),
+        returnValue: _i6.dummyValue<String>(
+          this,
+          Invocation.method(
+            #getTranslationProvider,
+            [],
+          ),
+        ),
+        returnValueForMissingStub: _i6.dummyValue<String>(
+          this,
+          Invocation.method(
+            #getTranslationProvider,
+            [],
+          ),
+        ),
+      ) as String);
+
+  @override
+  _i4.Future<_i5.ResultDart<void, Exception>> saveTranslationTargetLanguage(
+          String? language) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #saveTranslationTargetLanguage,
+          [language],
+        ),
+        returnValue: _i4.Future<_i5.ResultDart<void, Exception>>.value(
+            _i6.dummyValue<_i5.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #saveTranslationTargetLanguage,
+            [language],
+          ),
+        )),
+        returnValueForMissingStub:
+            _i4.Future<_i5.ResultDart<void, Exception>>.value(
+                _i6.dummyValue<_i5.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #saveTranslationTargetLanguage,
+            [language],
+          ),
+        )),
+      ) as _i4.Future<_i5.ResultDart<void, Exception>>);
+
+  @override
+  String getTranslationTargetLanguage() => (super.noSuchMethod(
+        Invocation.method(
+          #getTranslationTargetLanguage,
+          [],
+        ),
+        returnValue: _i6.dummyValue<String>(
+          this,
+          Invocation.method(
+            #getTranslationTargetLanguage,
+            [],
+          ),
+        ),
+        returnValueForMissingStub: _i6.dummyValue<String>(
+          this,
+          Invocation.method(
+            #getTranslationTargetLanguage,
+            [],
+          ),
+        ),
+      ) as String);
+
+  @override
+  _i4.Future<_i5.ResultDart<void, Exception>> saveTranslationCacheEnabled(
+          bool? enabled) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #saveTranslationCacheEnabled,
+          [enabled],
+        ),
+        returnValue: _i4.Future<_i5.ResultDart<void, Exception>>.value(
+            _i6.dummyValue<_i5.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #saveTranslationCacheEnabled,
+            [enabled],
+          ),
+        )),
+        returnValueForMissingStub:
+            _i4.Future<_i5.ResultDart<void, Exception>>.value(
+                _i6.dummyValue<_i5.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #saveTranslationCacheEnabled,
+            [enabled],
+          ),
+        )),
+      ) as _i4.Future<_i5.ResultDart<void, Exception>>);
+
+  @override
+  bool getTranslationCacheEnabled() => (super.noSuchMethod(
+        Invocation.method(
+          #getTranslationCacheEnabled,
+          [],
+        ),
+        returnValue: false,
+        returnValueForMissingStub: false,
+      ) as bool);
+
+  @override
+  _i4.Future<_i5.ResultDart<void, Exception>> saveSelectedOpenRouterModel(
+          String? modelId) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #saveSelectedOpenRouterModel,
+          [modelId],
+        ),
+        returnValue: _i4.Future<_i5.ResultDart<void, Exception>>.value(
+            _i6.dummyValue<_i5.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #saveSelectedOpenRouterModel,
+            [modelId],
+          ),
+        )),
+        returnValueForMissingStub:
+            _i4.Future<_i5.ResultDart<void, Exception>>.value(
+                _i6.dummyValue<_i5.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #saveSelectedOpenRouterModel,
+            [modelId],
+          ),
+        )),
+      ) as _i4.Future<_i5.ResultDart<void, Exception>>);
+
+  @override
+  String getSelectedOpenRouterModel() => (super.noSuchMethod(
+        Invocation.method(
+          #getSelectedOpenRouterModel,
+          [],
+        ),
+        returnValue: _i6.dummyValue<String>(
+          this,
+          Invocation.method(
+            #getSelectedOpenRouterModel,
+            [],
+          ),
+        ),
+        returnValueForMissingStub: _i6.dummyValue<String>(
+          this,
+          Invocation.method(
+            #getSelectedOpenRouterModel,
+            [],
+          ),
+        ),
+      ) as String);
+
+  @override
+  void dispose() => super.noSuchMethod(
+        Invocation.method(
+          #dispose,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
+}
+
+/// A class which mocks [WebContentService].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockWebContentService extends _i1.Mock implements _i11.WebContentService {
+  @override
+  void dispose() => super.noSuchMethod(
+        Invocation.method(
+          #dispose,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  _i4.Future<_i5.ResultDart<_i11.WebContent, Exception>> fetchWebContent(
+    String? url, {
+    Duration? timeout = const Duration(seconds: 10),
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #fetchWebContent,
+          [url],
+          {#timeout: timeout},
+        ),
+        returnValue:
+            _i4.Future<_i5.ResultDart<_i11.WebContent, Exception>>.value(
+                _i6.dummyValue<_i5.ResultDart<_i11.WebContent, Exception>>(
+          this,
+          Invocation.method(
+            #fetchWebContent,
+            [url],
+            {#timeout: timeout},
+          ),
+        )),
+        returnValueForMissingStub:
+            _i4.Future<_i5.ResultDart<_i11.WebContent, Exception>>.value(
+                _i6.dummyValue<_i5.ResultDart<_i11.WebContent, Exception>>(
+          this,
+          Invocation.method(
+            #fetchWebContent,
+            [url],
+            {#timeout: timeout},
+          ),
+        )),
+      ) as _i4.Future<_i5.ResultDart<_i11.WebContent, Exception>>);
+}
+
+/// A class which mocks [AiTagRecommendationRepository].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockAiTagRecommendationRepository extends _i1.Mock
+    implements _i12.AiTagRecommendationRepository {
+  @override
+  bool get isAvailable => (super.noSuchMethod(
+        Invocation.getter(#isAvailable),
+        returnValue: false,
+        returnValueForMissingStub: false,
+      ) as bool);
+
+  @override
+  _i4.Future<_i5.ResultDart<List<String>, Exception>>
+      generateTagRecommendations(
+    _i11.WebContent? webContent,
+    List<String>? existingTags, {
+    int? maxTags = 5,
+  }) =>
+          (super.noSuchMethod(
+            Invocation.method(
+              #generateTagRecommendations,
+              [
+                webContent,
+                existingTags,
+              ],
+              {#maxTags: maxTags},
+            ),
+            returnValue:
+                _i4.Future<_i5.ResultDart<List<String>, Exception>>.value(
+                    _i6.dummyValue<_i5.ResultDart<List<String>, Exception>>(
+              this,
+              Invocation.method(
+                #generateTagRecommendations,
+                [
+                  webContent,
+                  existingTags,
+                ],
+                {#maxTags: maxTags},
+              ),
+            )),
+            returnValueForMissingStub:
+                _i4.Future<_i5.ResultDart<List<String>, Exception>>.value(
+                    _i6.dummyValue<_i5.ResultDart<List<String>, Exception>>(
+              this,
+              Invocation.method(
+                #generateTagRecommendations,
+                [
+                  webContent,
+                  existingTags,
+                ],
+                {#maxTags: maxTags},
+              ),
+            )),
+          ) as _i4.Future<_i5.ResultDart<List<String>, Exception>>);
 }

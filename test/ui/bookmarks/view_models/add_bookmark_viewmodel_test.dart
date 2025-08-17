@@ -5,6 +5,9 @@ import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
 import 'package:readeck_app/data/repository/label/label_repository.dart';
+import 'package:readeck_app/data/repository/settings/settings_repository.dart';
+import 'package:readeck_app/data/service/web_content_service.dart';
+import 'package:readeck_app/data/repository/ai_tag_recommendation/ai_tag_recommendation_repository.dart';
 import 'package:readeck_app/domain/models/bookmark/label_info.dart';
 import 'package:readeck_app/main.dart';
 import 'package:readeck_app/ui/bookmarks/view_models/add_bookmark_viewmodel.dart';
@@ -15,6 +18,9 @@ import 'add_bookmark_viewmodel_test.mocks.dart';
 @GenerateNiceMocks([
   MockSpec<BookmarkRepository>(),
   MockSpec<LabelRepository>(),
+  MockSpec<SettingsRepository>(),
+  MockSpec<WebContentService>(),
+  MockSpec<AiTagRecommendationRepository>(),
 ])
 void main() {
   // Set up global command error handler and logger
@@ -40,19 +46,30 @@ void main() {
   group('AddBookmarkViewModel', () {
     late MockBookmarkRepository mockBookmarkRepository;
     late MockLabelRepository mockLabelRepository;
+    late MockSettingsRepository mockSettingsRepository;
+    late MockWebContentService mockWebContentService;
+    late MockAiTagRecommendationRepository mockAiTagRecommendationRepository;
     late AddBookmarkViewModel viewModel;
 
     setUp(() {
       mockBookmarkRepository = MockBookmarkRepository();
       mockLabelRepository = MockLabelRepository();
+      mockSettingsRepository = MockSettingsRepository();
+      mockWebContentService = MockWebContentService();
+      mockAiTagRecommendationRepository = MockAiTagRecommendationRepository();
 
       // 模拟初始状态
       when(mockLabelRepository.labelNames).thenReturn([]);
       when(mockLabelRepository.loadLabels())
           .thenAnswer((_) async => const Success([]));
 
-      viewModel =
-          AddBookmarkViewModel(mockBookmarkRepository, mockLabelRepository);
+      viewModel = AddBookmarkViewModel(
+        mockBookmarkRepository,
+        mockLabelRepository,
+        mockSettingsRepository,
+        mockWebContentService,
+        mockAiTagRecommendationRepository,
+      );
     });
 
     tearDown(() {

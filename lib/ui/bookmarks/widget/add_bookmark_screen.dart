@@ -167,41 +167,79 @@ class _AddBookmarkScreenState extends State<AddBookmarkScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // URL输入字段
-            TextFormField(
-              controller: _urlController,
-              decoration: InputDecoration(
-                labelText: 'URL *',
-                hintText: '请输入网页链接',
-                border: const OutlineInputBorder(),
-                prefixIcon: const Icon(Icons.link),
-                helperText: '必填项',
-                helperStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-              ),
-              keyboardType: TextInputType.url,
-              textInputAction: TextInputAction.next,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return '请输入URL';
-                }
-                if (!viewModel.isValidUrl) {
-                  return '请输入有效的URL（以http://或https://开头）';
-                }
-                return null;
+            ValueListenableBuilder<bool>(
+              valueListenable: viewModel.autoFetchContentCommand.isExecuting,
+              builder: (context, isFetching, _) {
+                return TextFormField(
+                  controller: _urlController,
+                  decoration: InputDecoration(
+                    labelText: 'URL *',
+                    hintText: '请输入网页链接',
+                    border: const OutlineInputBorder(),
+                    prefixIcon: isFetching
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: Padding(
+                              padding: EdgeInsets.all(12.0),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            ),
+                          )
+                        : Icon(
+                            viewModel.isContentFetched
+                                ? Icons.check_circle
+                                : Icons.link,
+                            color: viewModel.isContentFetched
+                                ? Theme.of(context).colorScheme.primary
+                                : null,
+                          ),
+                    suffixIcon:
+                        viewModel.autoFetchContentCommand.errors.value != null
+                            ? IconButton(
+                                icon: const Icon(Icons.refresh),
+                                onPressed: viewModel.retryContentFetch,
+                                tooltip: '重新获取',
+                              )
+                            : null,
+                    helperText: _getUrlHelperText(viewModel, isFetching),
+                    helperStyle:
+                        Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: _getUrlHelperColor(
+                                  context, viewModel, isFetching),
+                            ),
+                  ),
+                  keyboardType: TextInputType.url,
+                  textInputAction: TextInputAction.next,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return '请输入URL';
+                    }
+                    if (!viewModel.isValidUrl) {
+                      return '请输入有效的URL（以http://或https://开头）';
+                    }
+                    return null;
+                  },
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                );
               },
-              autovalidateMode: AutovalidateMode.onUserInteraction,
             ),
             const SizedBox(height: 16),
 
             // 标题输入字段
             TextFormField(
               controller: _titleController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: '标题',
-                hintText: '可选，留空将自动获取',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.title),
+                hintText: viewModel.isContentFetched ? '已自动获取' : '可选，留空将自动获取',
+                border: const OutlineInputBorder(),
+                prefixIcon: Icon(
+                  viewModel.isContentFetched ? Icons.auto_awesome : Icons.title,
+                  color: viewModel.isContentFetched
+                      ? Theme.of(context).colorScheme.primary
+                      : null,
+                ),
               ),
               textInputAction: TextInputAction.done,
               onFieldSubmitted: (_) => _submitForm(),
@@ -209,50 +247,54 @@ class _AddBookmarkScreenState extends State<AddBookmarkScreen> {
             const SizedBox(height: 16),
 
             // 标签选择区域
-            Row(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
+                // 标签标题和编辑按钮
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
                         '标签',
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
-                      const SizedBox(height: 8),
-                      if (viewModel.selectedLabels.isEmpty)
-                        Text(
-                          '未选择标签',
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant,
-                                  ),
-                        )
-                      else
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 4,
-                          children: viewModel.selectedLabels.map((label) {
-                            return Chip(
-                              label: Text(label),
-                              deleteIcon: const Icon(Icons.close, size: 18),
-                              onDeleted: () => viewModel.removeLabel(label),
-                              backgroundColor: Theme.of(context)
-                                  .colorScheme
-                                  .surfaceContainerHighest,
-                            );
-                          }).toList(),
+                    ),
+                    IconButton(
+                      onPressed: _showLabelSelector,
+                      icon: const Icon(Icons.edit),
+                      tooltip: '编辑标签',
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+
+                // AI推荐标签区域
+                if (viewModel.hasAiModelConfigured)
+                  ..._buildAiRecommendationSection(viewModel),
+
+                // 已选择的标签
+                if (viewModel.selectedLabels.isEmpty)
+                  Text(
+                    '未选择标签',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
-                    ],
+                  )
+                else
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: viewModel.selectedLabels.map((label) {
+                      return Chip(
+                        label: Text(label),
+                        deleteIcon: const Icon(Icons.close, size: 18),
+                        onDeleted: () => viewModel.removeLabel(label),
+                        backgroundColor: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerHighest,
+                      );
+                    }).toList(),
                   ),
-                ),
-                IconButton(
-                  onPressed: _showLabelSelector,
-                  icon: const Icon(Icons.edit),
-                  tooltip: '编辑标签',
-                ),
               ],
             ),
             const SizedBox(height: 24),
@@ -294,5 +336,143 @@ class _AddBookmarkScreenState extends State<AddBookmarkScreen> {
         ),
       ),
     );
+  }
+
+  /// 获取URL输入框的帮助文本
+  String _getUrlHelperText(AddBookmarkViewModel viewModel, bool isFetching) {
+    if (isFetching) {
+      return '正在获取网页内容...';
+    }
+    if (viewModel.autoFetchContentCommand.errors.value != null) {
+      return '获取失败，请检查网址或重试';
+    }
+    if (viewModel.isContentFetched) {
+      return '已成功获取网页内容';
+    }
+    return '必填项';
+  }
+
+  /// 获取URL输入框帮助文本的颜色
+  Color? _getUrlHelperColor(
+      BuildContext context, AddBookmarkViewModel viewModel, bool isFetching) {
+    if (isFetching) {
+      return Theme.of(context).colorScheme.primary;
+    }
+    if (viewModel.autoFetchContentCommand.errors.value != null) {
+      return Theme.of(context).colorScheme.error;
+    }
+    if (viewModel.isContentFetched) {
+      return Theme.of(context).colorScheme.primary;
+    }
+    return Theme.of(context).colorScheme.primary;
+  }
+
+  /// 构建AI推荐标签区域
+  List<Widget> _buildAiRecommendationSection(AddBookmarkViewModel viewModel) {
+    return [
+      // AI推荐状态指示器
+      ValueListenableBuilder<bool>(
+        valueListenable: viewModel.autoGenerateTagsCommand.isExecuting,
+        builder: (context, isGenerating, _) {
+          if (isGenerating) {
+            return Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'AI正在分析内容并推荐标签...',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+              ),
+            );
+          }
+          return const SizedBox.shrink();
+        },
+      ),
+
+      // AI推荐标签显示
+      if (viewModel.recommendedTags.isNotEmpty) ...[
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color:
+                  Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.auto_awesome,
+                    size: 16,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'AI推荐标签',
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: viewModel.addAllRecommendedTags,
+                    child: const Text('全部添加'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: viewModel.recommendedTags.map((tag) {
+                  final isSelected = viewModel.selectedLabels.contains(tag);
+                  return ActionChip(
+                    label: Text(tag),
+                    onPressed: isSelected
+                        ? null
+                        : () => viewModel.addRecommendedTag(tag),
+                    backgroundColor: isSelected
+                        ? Theme.of(context).colorScheme.primaryContainer
+                        : Theme.of(context).colorScheme.surfaceContainerHigh,
+                    side: isSelected
+                        ? BorderSide(
+                            color: Theme.of(context).colorScheme.primary,
+                          )
+                        : null,
+                    avatar: isSelected
+                        ? Icon(
+                            Icons.check,
+                            size: 16,
+                            color: Theme.of(context).colorScheme.primary,
+                          )
+                        : null,
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        ),
+      ],
+      const SizedBox(height: 16),
+    ];
   }
 }

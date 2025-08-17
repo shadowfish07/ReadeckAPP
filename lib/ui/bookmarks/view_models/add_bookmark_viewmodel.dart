@@ -2,15 +2,37 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_command/flutter_command.dart';
 import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
 import 'package:readeck_app/data/repository/label/label_repository.dart';
+import 'package:readeck_app/data/repository/settings/settings_repository.dart';
+import 'package:readeck_app/data/service/web_content_service.dart';
+import 'package:readeck_app/data/repository/ai_tag_recommendation/ai_tag_recommendation_repository.dart';
 import 'package:readeck_app/main.dart';
 
 class AddBookmarkViewModel extends ChangeNotifier {
-  AddBookmarkViewModel(this._bookmarkRepository, this._labelRepository) {
+  AddBookmarkViewModel(
+    this._bookmarkRepository,
+    this._labelRepository,
+    SettingsRepository
+        settingsRepository, // Not stored as field, only used for DI
+    this._webContentService,
+    this._aiTagRecommendationRepository,
+  ) {
     createBookmark = Command.createAsync<CreateBookmarkParams, void>(
       _createBookmark,
       initialValue: null,
     );
     loadLabels = Command.createAsyncNoParam(_loadLabels, initialValue: []);
+
+    // 自动获取网页内容的命令
+    autoFetchContentCommand = Command.createAsync<String, void>(
+      _autoFetchContent,
+      initialValue: null,
+    );
+
+    // 自动生成标签推荐的命令
+    autoGenerateTagsCommand = Command.createAsync<WebContent, void>(
+      _autoGenerateTags,
+      initialValue: null,
+    );
 
     // 注册标签数据变化监听器
     _labelRepository.addListener(_onLabelsChanged);
@@ -21,18 +43,30 @@ class AddBookmarkViewModel extends ChangeNotifier {
 
   final BookmarkRepository _bookmarkRepository;
   final LabelRepository _labelRepository;
+  // SettingsRepository is accessed via _aiTagRecommendationRepository
+  final WebContentService _webContentService;
+  final AiTagRecommendationRepository _aiTagRecommendationRepository;
 
   late Command<CreateBookmarkParams, void> createBookmark;
   late Command<void, List<String>> loadLabels;
+  late Command<String, void> autoFetchContentCommand;
+  late Command<WebContent, void> autoGenerateTagsCommand;
 
   String _url = '';
   String _title = '';
   List<String> _selectedLabels = [];
+  List<String> _recommendedTags = [];
+  bool _isContentFetched = false;
+  bool _isTagsGenerated = false;
 
   String get url => _url;
   String get title => _title;
   List<String> get selectedLabels => List.unmodifiable(_selectedLabels);
   List<String> get availableLabels => _labelRepository.labelNames;
+  List<String> get recommendedTags => List.unmodifiable(_recommendedTags);
+  bool get isContentFetched => _isContentFetched;
+  bool get isTagsGenerated => _isTagsGenerated;
+  bool get hasAiModelConfigured => _aiTagRecommendationRepository.isAvailable;
 
   bool get isValidUrl {
     if (_url.isEmpty) return false;
@@ -49,6 +83,18 @@ class AddBookmarkViewModel extends ChangeNotifier {
   void updateUrl(String url) {
     if (_url != url) {
       _url = url;
+
+      // 清除之前的状态
+      _title = '';
+      _recommendedTags.clear();
+      _isContentFetched = false;
+      _isTagsGenerated = false;
+
+      // 如果URL有效，自动获取内容
+      if (isValidUrl) {
+        autoFetchContentCommand.execute(url);
+      }
+
       notifyListeners();
     }
   }
@@ -84,6 +130,9 @@ class AddBookmarkViewModel extends ChangeNotifier {
     _url = '';
     _title = '';
     _selectedLabels.clear();
+    _recommendedTags.clear();
+    _isContentFetched = false;
+    _isTagsGenerated = false;
     notifyListeners();
   }
 
@@ -104,6 +153,31 @@ class AddBookmarkViewModel extends ChangeNotifier {
     }
 
     // 标题字段保持为空，让服务器自动获取
+  }
+
+  /// 添加推荐标签到已选标签
+  void addRecommendedTag(String tag) {
+    if (!_selectedLabels.contains(tag)) {
+      _selectedLabels.add(tag);
+      notifyListeners();
+    }
+  }
+
+  /// 添加所有推荐标签
+  void addAllRecommendedTags() {
+    for (final tag in _recommendedTags) {
+      if (!_selectedLabels.contains(tag)) {
+        _selectedLabels.add(tag);
+      }
+    }
+    notifyListeners();
+  }
+
+  /// 手动重新获取内容和标签推荐
+  void retryContentFetch() {
+    if (isValidUrl) {
+      autoFetchContentCommand.execute(_url);
+    }
   }
 
   Future<void> _createBookmark(CreateBookmarkParams params) async {
@@ -136,6 +210,67 @@ class AddBookmarkViewModel extends ChangeNotifier {
     } else {
       appLogger.e('加载标签失败', error: result.exceptionOrNull());
       throw result.exceptionOrNull()!;
+    }
+  }
+
+  /// 自动获取网页内容
+  Future<void> _autoFetchContent(String url) async {
+    appLogger.i('自动获取网页内容: $url');
+
+    try {
+      final result = await _webContentService.fetchWebContent(url);
+
+      if (result.isSuccess()) {
+        final webContent = result.getOrThrow();
+
+        // 更新标题
+        if (webContent.title.isNotEmpty) {
+          _title = webContent.title;
+          _isContentFetched = true;
+          appLogger.i('自动填充标题: $_title');
+        }
+
+        // 如果配置了AI模型，自动生成标签推荐
+        if (hasAiModelConfigured) {
+          autoGenerateTagsCommand.execute(webContent);
+        }
+
+        notifyListeners();
+      } else {
+        final error = result.exceptionOrNull()!;
+        appLogger.w('获取网页内容失败: $error');
+        throw error;
+      }
+    } catch (e) {
+      appLogger.e('自动获取网页内容时发生异常', error: e);
+      rethrow;
+    }
+  }
+
+  /// 自动生成标签推荐
+  Future<void> _autoGenerateTags(WebContent webContent) async {
+    appLogger.i('自动生成标签推荐');
+
+    try {
+      final result =
+          await _aiTagRecommendationRepository.generateTagRecommendations(
+        webContent,
+        availableLabels,
+      );
+
+      if (result.isSuccess()) {
+        _recommendedTags = result.getOrThrow();
+        _isTagsGenerated = true;
+        appLogger.i('自动生成标签推荐: $_recommendedTags');
+        notifyListeners();
+      } else {
+        final error = result.exceptionOrNull()!;
+        appLogger.w('生成标签推荐失败: $error');
+        throw error;
+      }
+    } catch (e) {
+      appLogger.e('自动生成标签推荐时发生异常', error: e);
+      rethrow;
     }
   }
 
