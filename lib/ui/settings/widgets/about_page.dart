@@ -198,7 +198,7 @@ class AboutPage extends StatelessWidget {
                         subtitle: const Text('了解更多关于 Readeck'),
                         trailing: const Icon(Icons.open_in_new),
                         contentPadding: EdgeInsets.zero,
-                        onTap: () => _launchUrl('https://readeck.org'),
+                        onTap: () => _launchUrl('https://readeck.org/en/'),
                       ),
                       ListTile(
                         leading: const Icon(Icons.bug_report),
@@ -217,35 +217,40 @@ class AboutPage extends StatelessWidget {
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '版权信息',
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '© 2024 Readeck APP. All rights reserved.',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                            ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '本应用基于 MIT 许可证开源',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                            ),
-                      ),
-                    ],
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '版权信息',
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '© 2024 Readeck APP. All rights reserved.',
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '本应用基于 MIT 许可证开源',
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -299,9 +304,17 @@ class AboutPage extends StatelessWidget {
   }
 
   Future<void> _launchUrl(String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    try {
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        // 如果无法启动URL，尝试使用默认模式
+        await launchUrl(uri);
+      }
+    } catch (e) {
+      // 如果启动失败，可以在这里添加错误提示
+      debugPrint('无法打开链接: $url, 错误: $e');
     }
   }
 
