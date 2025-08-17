@@ -1,6 +1,7 @@
 import 'package:flutter_command/flutter_command.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:logger/logger.dart';
+import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
 import 'package:readeck_app/data/repository/label/label_repository.dart';
@@ -12,18 +13,15 @@ import 'package:readeck_app/main.dart';
 import 'package:readeck_app/ui/bookmarks/view_models/add_bookmark_viewmodel.dart';
 import 'package:result_dart/result_dart.dart';
 
-// 简化的Mock类，用于基本测试
-class MockBookmarkRepository extends Mock implements BookmarkRepository {}
+import 'add_bookmark_viewmodel_basic_test.mocks.dart';
 
-class MockLabelRepository extends Mock implements LabelRepository {}
-
-class MockSettingsRepository extends Mock implements SettingsRepository {}
-
-class MockWebContentService extends Mock implements WebContentService {}
-
-class MockAiTagRecommendationRepository extends Mock
-    implements AiTagRecommendationRepository {}
-
+@GenerateMocks([
+  BookmarkRepository,
+  LabelRepository,
+  SettingsRepository,
+  WebContentService,
+  AiTagRecommendationRepository,
+])
 void main() {
   // Set up global command error handler and logger
   setUpAll(() {
@@ -64,10 +62,24 @@ void main() {
       mockAiTagRecommendationRepository = MockAiTagRecommendationRepository();
 
       // 模拟初始状态
-      when(mockLabelRepository.labelNames).thenReturn([]);
+      when(mockLabelRepository.labelNames).thenReturn(<String>[]);
       when(mockLabelRepository.loadLabels())
-          .thenAnswer((_) async => const Success([]));
+          .thenAnswer((_) async => const Success(<LabelInfo>[]));
       when(mockAiTagRecommendationRepository.isAvailable).thenReturn(false);
+
+      // 模拟网页内容获取服务
+      when(mockWebContentService.fetchWebContent(any,
+              timeout: anyNamed('timeout')))
+          .thenAnswer((_) async => const Success(WebContent(
+                url: 'https://example.com',
+                title: 'Test Title',
+                content: 'Test Content',
+              )));
+
+      // 模拟AI标签推荐服务
+      when(mockAiTagRecommendationRepository.generateTagRecommendations(
+              any, any))
+          .thenAnswer((_) async => const Success(<String>['tech', 'web']));
 
       viewModel = AddBookmarkViewModel(
         mockBookmarkRepository,
@@ -96,16 +108,37 @@ void main() {
 
       test('should have correct AI availability status', () {
         expect(viewModel.hasAiModelConfigured, isFalse);
+      });
 
-        // 测试AI可用时的状态
-        when(mockAiTagRecommendationRepository.isAvailable).thenReturn(true);
-        // 需要创建新的viewModel实例来获取更新后的状态
+      test('should have correct AI availability status when AI is available',
+          () {
+        // 创建新的mock实例用于AI可用状态测试
+        final mockAiRepo = MockAiTagRecommendationRepository();
+        when(mockAiRepo.isAvailable).thenReturn(true);
+        when(mockAiRepo.generateTagRecommendations(any, any))
+            .thenAnswer((_) async => const Success(<String>['tech', 'web']));
+
+        // 为新的label repository设置必要的mock
+        final mockLabelRepo = MockLabelRepository();
+        when(mockLabelRepo.labelNames).thenReturn(<String>[]);
+        when(mockLabelRepo.loadLabels())
+            .thenAnswer((_) async => const Success(<LabelInfo>[]));
+
+        // 为新的web content service设置必要的mock
+        final mockWebService = MockWebContentService();
+        when(mockWebService.fetchWebContent(any, timeout: anyNamed('timeout')))
+            .thenAnswer((_) async => const Success(WebContent(
+                  url: 'https://example.com',
+                  title: 'Test Title',
+                  content: 'Test Content',
+                )));
+
         final aiEnabledViewModel = AddBookmarkViewModel(
           mockBookmarkRepository,
-          mockLabelRepository,
+          mockLabelRepo,
           mockSettingsRepository,
-          mockWebContentService,
-          mockAiTagRecommendationRepository,
+          mockWebService,
+          mockAiRepo,
         );
         expect(aiEnabledViewModel.hasAiModelConfigured, isTrue);
         aiEnabledViewModel.dispose();
@@ -113,16 +146,22 @@ void main() {
     });
 
     group('URL 验证', () {
-      test('should validate HTTP URLs as valid', () {
+      test('should validate HTTP URLs as valid', () async {
         viewModel.updateUrl('http://example.com');
         expect(viewModel.isValidUrl, isTrue);
         expect(viewModel.canSubmit, isTrue);
+
+        // 等待异步操作完成
+        await Future.delayed(const Duration(milliseconds: 10));
       });
 
-      test('should validate HTTPS URLs as valid', () {
+      test('should validate HTTPS URLs as valid', () async {
         viewModel.updateUrl('https://example.com');
         expect(viewModel.isValidUrl, isTrue);
         expect(viewModel.canSubmit, isTrue);
+
+        // 等待异步操作完成
+        await Future.delayed(const Duration(milliseconds: 10));
       });
 
       test('should reject invalid URLs', () {
@@ -165,7 +204,7 @@ void main() {
     });
 
     group('表单清理', () {
-      test('should clear all form fields and states', () {
+      test('should clear all form fields and states', () async {
         viewModel.updateUrl('https://example.com');
         viewModel.updateTitle('Test Title');
         viewModel.updateSelectedLabels(['label1', 'label2']);
@@ -178,11 +217,14 @@ void main() {
         expect(viewModel.recommendedTags, isEmpty);
         expect(viewModel.isContentFetched, isFalse);
         expect(viewModel.isTagsGenerated, isFalse);
+
+        // 等待异步操作完成
+        await Future.delayed(const Duration(milliseconds: 10));
       });
     });
 
     group('分享文本处理', () {
-      test('should extract URL from shared text', () {
+      test('should extract URL from shared text', () async {
         const sharedText =
             'Check out this article https://example.com/article Amazing content';
 
@@ -190,15 +232,21 @@ void main() {
 
         expect(viewModel.url, equals('https://example.com/article'));
         expect(viewModel.title, isEmpty); // 标题应该保持为空
+
+        // 等待异步操作完成
+        await Future.delayed(const Duration(milliseconds: 10));
       });
 
-      test('should handle URL-only text', () {
+      test('should handle URL-only text', () async {
         const sharedText = 'https://example.com/path';
 
         viewModel.processSharedText(sharedText);
 
         expect(viewModel.url, equals('https://example.com/path'));
         expect(viewModel.title, isEmpty);
+
+        // 等待异步操作完成
+        await Future.delayed(const Duration(milliseconds: 10));
       });
 
       test('should keep URL empty when no URL found', () {
