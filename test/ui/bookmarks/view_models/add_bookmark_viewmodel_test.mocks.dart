@@ -1041,6 +1041,55 @@ class MockSettingsRepository extends _i1.Mock
       ) as String);
 
   @override
+  _i4.Future<_i5.ResultDart<void, Exception>> saveAiTagTargetLanguage(
+          String? language) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #saveAiTagTargetLanguage,
+          [language],
+        ),
+        returnValue: _i4.Future<_i5.ResultDart<void, Exception>>.value(
+            _i6.dummyValue<_i5.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #saveAiTagTargetLanguage,
+            [language],
+          ),
+        )),
+        returnValueForMissingStub:
+            _i4.Future<_i5.ResultDart<void, Exception>>.value(
+                _i6.dummyValue<_i5.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #saveAiTagTargetLanguage,
+            [language],
+          ),
+        )),
+      ) as _i4.Future<_i5.ResultDart<void, Exception>>);
+
+  @override
+  String getAiTagTargetLanguage() => (super.noSuchMethod(
+        Invocation.method(
+          #getAiTagTargetLanguage,
+          [],
+        ),
+        returnValue: _i6.dummyValue<String>(
+          this,
+          Invocation.method(
+            #getAiTagTargetLanguage,
+            [],
+          ),
+        ),
+        returnValueForMissingStub: _i6.dummyValue<String>(
+          this,
+          Invocation.method(
+            #getAiTagTargetLanguage,
+            [],
+          ),
+        ),
+      ) as String);
+
+  @override
   void dispose() => super.noSuchMethod(
         Invocation.method(
           #dispose,
