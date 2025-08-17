@@ -1,6 +1,3 @@
-import 'package:provider/provider.dart';
-import 'package:readeck_app/main_viewmodel.dart';
-
 import 'package:flutter/material.dart';
 import 'package:readeck_app/ui/settings/view_models/about_viewmodel.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -77,38 +74,106 @@ class AboutPage extends StatelessWidget {
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
               ),
-              Consumer<MainAppViewModel>(
-                builder: (context, mainViewModel, child) {
-                  if (mainViewModel.updateInfo == null) {
-                    return const SizedBox.shrink();
-                  }
-                  return Column(
-                    children: [
-                      const SizedBox(height: 32),
-                      Card(
-                        child: ListTile(
-                          title: Row(
-                            children: [
-                              Text(
-                                '新版本可用: ${mainViewModel.updateInfo!.version}',
+              // 更新信息卡片
+              if (viewModel.updateInfo != null)
+                Column(
+                  children: [
+                    const SizedBox(height: 32),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  '新版本可用: ${viewModel.updateInfo!.version}',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                ),
+                                const SizedBox(width: 8),
+                                const Badge(),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            // 下载进度条
+                            if (viewModel.isDownloading)
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '下载中... ${(viewModel.downloadProgress * 100).toStringAsFixed(1)}%',
+                                    style:
+                                        Theme.of(context).textTheme.bodySmall,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  LinearProgressIndicator(
+                                    value: viewModel.downloadProgress,
+                                  ),
+                                  const SizedBox(height: 16),
+                                ],
                               ),
-                              const SizedBox(width: 8),
-                              const Badge(),
-                            ],
-                          ),
-                          trailing: FilledButton.tonal(
-                            onPressed: () {
-                              _launchUrl(mainViewModel.updateInfo!.downloadUrl);
-                            },
-                            child: const Text('立即更新'),
-                          ),
+                            // 安装状态
+                            if (viewModel.isInstalling)
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        '正在安装...',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall,
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                ],
+                              ),
+                            // 操作按钮
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                TextButton(
+                                  onPressed: () {
+                                    _launchUrl(
+                                        viewModel.updateInfo!.downloadUrl);
+                                  },
+                                  child: const Text('手动下载'),
+                                ),
+                                const SizedBox(width: 8),
+                                FilledButton.tonal(
+                                  onPressed: (viewModel.isDownloading ||
+                                          viewModel.isInstalling)
+                                      ? null
+                                      : () {
+                                          _showUpdateDialog(context, viewModel);
+                                        },
+                                  child: const Text('立即更新'),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 16),
-                    ],
-                  );
-                },
-              ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
               // 应用描述
               Card(
                 child: Padding(
@@ -334,6 +399,52 @@ class AboutPage extends StatelessWidget {
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('知道了'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showUpdateDialog(BuildContext context, AboutViewModel aboutViewModel) {
+    if (aboutViewModel.updateInfo == null) return;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('应用更新'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('发现新版本: ${aboutViewModel.updateInfo!.version}'),
+              const SizedBox(height: 16),
+              const Text('更新功能：'),
+              const SizedBox(height: 8),
+              const Text('• 自动下载更新文件'),
+              const Text('• 自动安装（需要授权）'),
+              const Text('• 实时显示下载进度'),
+              const SizedBox(height: 16),
+              const Text(
+                '注意：如果是首次自动安装，可能需要授权"安装未知应用"权限。',
+                style: TextStyle(fontSize: 12),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('取消'),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                // 执行下载并安装
+                aboutViewModel.downloadAndInstallUpdateCommand
+                    .execute(aboutViewModel.updateInfo!);
+              },
+              child: const Text('立即更新'),
             ),
           ],
         );

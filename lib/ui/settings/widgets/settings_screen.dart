@@ -1,10 +1,10 @@
 import 'package:provider/provider.dart';
-import 'package:readeck_app/main_viewmodel.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:readeck_app/routing/routes.dart';
 import 'package:readeck_app/ui/settings/view_models/settings_viewmodel.dart';
+import 'package:readeck_app/ui/settings/view_models/about_viewmodel.dart';
 import 'package:flutter_command/flutter_command.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -101,20 +101,20 @@ class SettingsScreen extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.info),
             title: const Text('关于'),
-            subtitle: Consumer<MainAppViewModel>(
-              builder: (context, mainViewModel, child) {
-                if (mainViewModel.updateInfo != null) {
-                  return Text('发现新版本 ${mainViewModel.updateInfo!.version}');
+            subtitle: Consumer<AboutViewModel>(
+              builder: (context, aboutViewModel, child) {
+                if (aboutViewModel.updateInfo != null) {
+                  return Text('发现新版本 ${aboutViewModel.updateInfo!.version}');
                 }
                 return const Text('应用信息和版本');
               },
             ),
-            trailing: Consumer<MainAppViewModel>(
-              builder: (context, mainViewModel, child) {
+            trailing: Consumer<AboutViewModel>(
+              builder: (context, aboutViewModel, child) {
                 return Row(
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
-                    if (mainViewModel.updateInfo != null) ...[
+                    if (aboutViewModel.updateInfo != null) ...[
                       const Badge(),
                       const SizedBox(width: 8),
                     ],

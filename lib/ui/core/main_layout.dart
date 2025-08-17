@@ -2,10 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:readeck_app/data/service/update_service.dart';
 import 'package:readeck_app/main_viewmodel.dart';
 import 'package:readeck_app/routing/routes.dart';
 import 'package:readeck_app/ui/core/ui/bookmark_list_fab.dart';
+import 'package:readeck_app/ui/settings/view_models/about_viewmodel.dart';
 
 /// ScrollController提供者，用于FAB和页面之间共享滚动控制器
 class ScrollControllerProvider extends ChangeNotifier {
@@ -55,7 +55,6 @@ class MainLayout extends StatefulWidget {
 
 class _MainLayoutState extends State<MainLayout> {
   StreamSubscription<String>? _shareTextSubscription;
-  StreamSubscription<UpdateInfo>? _updateSubscription;
   bool _isProcessingShare = false;
   bool _hasUpdate = false;
 
@@ -97,15 +96,15 @@ class _MainLayoutState extends State<MainLayout> {
   }
 
   void _setupUpdateListener() {
-    final mainViewModel = context.read<MainAppViewModel>();
-    _updateSubscription = mainViewModel.onUpdateAvailable.listen((updateInfo) {
-      if (mounted) {
+    final aboutViewModel = context.read<AboutViewModel>();
+    aboutViewModel.addListener(() {
+      if (mounted && aboutViewModel.updateInfo != null && !_hasUpdate) {
         setState(() {
           _hasUpdate = true;
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('发现新版本: ${updateInfo.version}'),
+            content: Text('发现新版本: ${aboutViewModel.updateInfo!.version}'),
             action: SnackBarAction(
               label: '前往更新',
               onPressed: () {
@@ -133,7 +132,6 @@ class _MainLayoutState extends State<MainLayout> {
   @override
   void dispose() {
     _shareTextSubscription?.cancel();
-    _updateSubscription?.cancel();
     super.dispose();
   }
 

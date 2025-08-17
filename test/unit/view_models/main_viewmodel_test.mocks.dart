@@ -9,9 +9,6 @@ import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i5;
 import 'package:readeck_app/data/repository/settings/settings_repository.dart'
     as _i2;
-import 'package:readeck_app/data/repository/update/update_repository.dart'
-    as _i6;
-import 'package:readeck_app/data/service/update_service.dart' as _i7;
 import 'package:result_dart/result_dart.dart' as _i4;
 
 // ignore_for_file: type=lint
@@ -345,31 +342,4 @@ class MockSettingsRepository extends _i1.Mock
         ),
         returnValueForMissingStub: null,
       );
-}
-
-/// A class which mocks [UpdateRepository].
-///
-/// See the documentation for Mockito's code generation for more information.
-class MockUpdateRepository extends _i1.Mock implements _i6.UpdateRepository {
-  MockUpdateRepository() {
-    _i1.throwOnMissingStub(this);
-  }
-
-  @override
-  _i3.Future<_i4.ResultDart<_i7.UpdateInfo, Exception>> checkForUpdate() =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #checkForUpdate,
-          [],
-        ),
-        returnValue:
-            _i3.Future<_i4.ResultDart<_i7.UpdateInfo, Exception>>.value(
-                _i5.dummyValue<_i4.ResultDart<_i7.UpdateInfo, Exception>>(
-          this,
-          Invocation.method(
-            #checkForUpdate,
-            [],
-          ),
-        )),
-      ) as _i3.Future<_i4.ResultDart<_i7.UpdateInfo, Exception>>);
 }

@@ -23,9 +23,26 @@ class UpdateService {
       final latestVersion = Version.parse(latestVersionStr);
 
       if (latestVersion > currentVersion) {
+        // 从 assets 中找到 APK 文件
+        final assets = json['assets'] as List;
+        String? apkDownloadUrl;
+
+        for (final asset in assets) {
+          final name = asset['name'] as String;
+          if (name.toLowerCase().endsWith('.apk')) {
+            apkDownloadUrl = asset['browser_download_url'] as String;
+            break;
+          }
+        }
+
+        if (apkDownloadUrl == null) {
+          // 如果没有找到 APK 文件，返回 null
+          return null;
+        }
+
         return UpdateInfo(
           version: latestVersion.toString(),
-          downloadUrl: (json['assets'][0]['browser_download_url'] as String),
+          downloadUrl: apkDownloadUrl,
         );
       }
     }

@@ -1,17 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_command/flutter_command.dart';
 
 import 'data/repository/settings/settings_repository.dart';
-import 'data/repository/update/update_repository.dart';
 import 'data/service/share_intent_service.dart';
-import 'data/service/update_service.dart';
 
 class MainAppViewModel extends ChangeNotifier {
-  final _updateAvailableController = StreamController<UpdateInfo>.broadcast();
-  Stream<UpdateInfo> get onUpdateAvailable => _updateAvailableController.stream;
-
-  MainAppViewModel(this._settingsRepository, this._updateRepository) {
+  MainAppViewModel(this._settingsRepository) {
     _load();
     // 监听SettingsRepository的变化
     _settingsSubscription =
@@ -19,27 +13,7 @@ class MainAppViewModel extends ChangeNotifier {
 
     // 初始化分享Intent服务
     _shareIntentService.initialize();
-
-    _checkUpdateCommand = Command.createAsyncNoParam<UpdateInfo?>(() async {
-      final result = await _updateRepository.checkForUpdate();
-      return result.getOrNull();
-    }, initialValue: null);
-
-    _checkUpdateCommand.results.listen((commandResult, _) {
-      _updateInfo = commandResult.data;
-      if (_updateInfo != null) {
-        _updateAvailableController.add(_updateInfo!);
-      }
-      notifyListeners();
-    });
-
-    _checkUpdateCommand.execute();
   }
-
-  final UpdateRepository _updateRepository;
-  late final Command<void, UpdateInfo?> _checkUpdateCommand;
-  UpdateInfo? _updateInfo;
-  UpdateInfo? get updateInfo => _updateInfo;
 
   final SettingsRepository _settingsRepository;
   final ShareIntentService _shareIntentService = ShareIntentService();
@@ -83,7 +57,6 @@ class MainAppViewModel extends ChangeNotifier {
   void dispose() {
     _settingsSubscription.cancel();
     _shareIntentService.dispose();
-    _updateAvailableController.close();
     super.dispose();
   }
 }
