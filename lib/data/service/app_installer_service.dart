@@ -113,9 +113,7 @@ class AppInstallerService {
       return false;
     } catch (e) {
       _logger.e('请求安装权限失败，可能是插件未正确初始化', error: e);
-      // 如果权限请求失败，尝试直接安装，让系统处理权限
-      _logger.i('将尝试直接安装，让系统处理权限授权');
-      return true;
+      return false;
     }
   }
 
@@ -131,17 +129,6 @@ class AppInstallerService {
       return false;
     } catch (e) {
       _logger.w('检查安装权限失败，可能是插件未正确初始化', error: e);
-      // 如果权限检查失败，暂时返回true，让安装过程继续，在安装时再处理权限
-      return true;
-    }
-  }
-
-  /// 打开应用设置页面（用于手动授权）
-  Future<bool> openAppSettings() async {
-    try {
-      return await Permission.requestInstallPackages.isGranted;
-    } catch (e) {
-      _logger.e('打开应用设置失败', error: e);
       return false;
     }
   }
