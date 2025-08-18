@@ -22,8 +22,14 @@ class ModelSelectionScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: CommandBuilder<void, void>(
           command: viewModel.loadModels,
-          whileExecuting: (context, _, __) =>
-              const Center(child: Loading(text: '正在加载模型列表...')),
+          whileExecuting: (context, _, __) {
+            // 如果已有数据，显示数据内容而不是全屏Loading
+            if (viewModel.availableModels.isNotEmpty) {
+              return _buildModelsList();
+            }
+            // 无数据时显示Loading
+            return const Center(child: Loading(text: '正在加载模型列表...'));
+          },
           onError: (context, error, _, __) => Center(
             child: Card(
               child: Padding(
@@ -58,71 +64,71 @@ class ModelSelectionScreen extends StatelessWidget {
               ),
             ),
           ),
-          onData: (context, _, __) {
-            return ListenableBuilder(
-              listenable: viewModel,
-              builder: (context, child) {
-                if (viewModel.availableModels.isEmpty) {
-                  return Center(
-                    child: Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24.0),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.psychology_outlined,
-                              size: 64,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              '暂无可用模型',
-                              style: Theme.of(context).textTheme.headlineSmall,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '请先配置 API 密钥并点击刷新按钮加载模型列表',
-                              style: Theme.of(context).textTheme.bodyMedium,
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 24),
-                            FilledButton.icon(
-                              onPressed: () => viewModel.loadModels.execute(),
-                              icon: const Icon(Icons.download),
-                              label: const Text('加载模型列表'),
-                            ),
-                          ],
-                        ),
-                      ),
+          onData: (context, _, __) => _buildModelsList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModelsList() {
+    return ListenableBuilder(
+      listenable: viewModel,
+      builder: (context, child) {
+        if (viewModel.availableModels.isEmpty) {
+          return Center(
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.psychology_outlined,
+                      size: 64,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
-                  );
-                }
+                    const SizedBox(height: 16),
+                    Text(
+                      '暂无可用模型',
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '请先配置 API 密钥并点击刷新按钮加载模型列表',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    FilledButton.icon(
+                      onPressed: () => viewModel.loadModels.execute(),
+                      icon: const Icon(Icons.download),
+                      label: const Text('加载模型列表'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
 
-                return ListView.separated(
-                  itemCount: viewModel.availableModels.length,
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(height: 8),
-                  itemBuilder: (context, index) {
-                    final model = viewModel.availableModels[index];
-                    final isSelected = viewModel.selectedModel?.id == model.id;
+        return ListView.separated(
+          itemCount: viewModel.availableModels.length,
+          separatorBuilder: (context, index) => const SizedBox(height: 8),
+          itemBuilder: (context, index) {
+            final model = viewModel.availableModels[index];
+            final isSelected = viewModel.selectedModel?.id == model.id;
 
-                    return ModelCard(
-                      model: model,
-                      isSelected: isSelected,
-                      onTap: () {
-                        viewModel.selectModel(model);
-                        // 选择模型后返回上一页
-                        Navigator.of(context).pop();
-                      },
-                    );
-                  },
-                );
+            return ModelCard(
+              model: model,
+              isSelected: isSelected,
+              onTap: () {
+                viewModel.selectModel(model);
+                Navigator.of(context).pop();
               },
             );
           },
-        ),
-      ),
+        );
+      },
     );
   }
 }
