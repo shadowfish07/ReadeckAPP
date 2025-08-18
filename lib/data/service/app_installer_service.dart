@@ -51,7 +51,7 @@ class AppInstallerService {
 
       if (result.type == ResultType.done) {
         _logger.i('APK文件已打开，系统安装程序已启动');
-        return const Success(());
+        return const Success(unit);
       } else if (result.type == ResultType.fileNotFound) {
         _logger.e('APK文件未找到: $filePath');
         return Failure(InstallException('APK文件不存在或已损坏'));
