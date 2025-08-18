@@ -52,10 +52,9 @@ class ModelSelectionViewModel extends ChangeNotifier {
   late Command<void, void> loadSelectedModel;
 
   void _initCommands() {
-    loadModels = Command.createAsyncNoParam(
-      _loadModelsAsync,
-      initialValue: [],
-    )..execute();
+    loadModels = Command.createAsyncNoParam(_loadModelsAsync,
+        initialValue: [], includeLastResultInCommandResults: true)
+      ..execute();
 
     loadSelectedModel = Command.createAsyncNoParam(
       _loadSelectedModel,

@@ -7,6 +7,7 @@ import 'dart:async' as _i3;
 
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:readeck_app/data/service/update_service.dart' as _i2;
+import 'package:readeck_app/domain/models/update/update_info.dart' as _i4;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -31,11 +32,11 @@ class MockUpdateService extends _i1.Mock implements _i2.UpdateService {
   }
 
   @override
-  _i3.Future<_i2.UpdateInfo?> checkForUpdate() => (super.noSuchMethod(
+  _i3.Future<_i4.UpdateInfo?> checkForUpdate() => (super.noSuchMethod(
         Invocation.method(
           #checkForUpdate,
           [],
         ),
-        returnValue: _i3.Future<_i2.UpdateInfo?>.value(),
-      ) as _i3.Future<_i2.UpdateInfo?>);
+        returnValue: _i3.Future<_i4.UpdateInfo?>.value(),
+      ) as _i3.Future<_i4.UpdateInfo?>);
 }

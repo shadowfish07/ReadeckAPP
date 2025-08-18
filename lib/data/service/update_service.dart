@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:version/version.dart';
+import '../../domain/models/update/update_info.dart';
 
 class UpdateService {
   final http.Client _client;
@@ -53,18 +54,4 @@ class UpdateService {
     }
     return null;
   }
-}
-
-class UpdateInfo {
-  final String version;
-  final String downloadUrl;
-  final String releaseNotes;
-  final String htmlUrl;
-
-  UpdateInfo({
-    required this.version,
-    required this.downloadUrl,
-    required this.releaseNotes,
-    required this.htmlUrl,
-  });
 }

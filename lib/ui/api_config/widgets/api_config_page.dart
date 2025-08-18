@@ -81,6 +81,9 @@ class _ApiConfigPageState extends State<ApiConfigPage> {
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () async {
+                if (_formKey.currentState?.validate() != true) {
+                  return;
+                }
                 try {
                   await widget.viewModel.save.executeWithFuture(
                       (_baseHostController.text, _tokenController.text));

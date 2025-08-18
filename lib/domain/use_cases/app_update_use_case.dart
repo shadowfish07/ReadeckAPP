@@ -3,7 +3,7 @@ import 'package:result_dart/result_dart.dart';
 import 'package:logger/logger.dart';
 import '../../data/service/download_service.dart';
 import '../../data/service/app_installer_service.dart';
-import '../../data/service/update_service.dart';
+import '../models/update/update_info.dart';
 
 class AppUpdateUseCase {
   final DownloadService _downloadService;

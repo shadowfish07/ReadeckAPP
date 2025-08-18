@@ -203,8 +203,17 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
                     GoRoute(
                       path: Routes.aboutRelative,
                       builder: (context, state) {
-                        final viewModel = context.read<AboutViewModel>();
-                        return AboutPage(viewModel: viewModel);
+                        return ChangeNotifierProvider<AboutViewModel>(
+                          create: (context) => AboutViewModel(
+                            context.read(),
+                            context.read(),
+                          ),
+                          child: Consumer<AboutViewModel>(
+                            builder: (context, viewModel, child) {
+                              return AboutPage(viewModel: viewModel);
+                            },
+                          ),
+                        );
                       },
                     ),
                     GoRoute(

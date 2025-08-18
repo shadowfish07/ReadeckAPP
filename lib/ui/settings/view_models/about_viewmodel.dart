@@ -3,15 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_command/flutter_command.dart';
 import 'package:readeck_app/main.dart';
 import 'package:result_dart/result_dart.dart';
-import 'package:logger/logger.dart';
 import '../../../data/repository/update/update_repository.dart';
-import '../../../data/service/update_service.dart';
+import '../../../domain/models/update/update_info.dart';
 import '../../../domain/use_cases/app_update_use_case.dart';
 
 class AboutViewModel extends ChangeNotifier {
   final UpdateRepository _updateRepository;
   final AppUpdateUseCase _appUpdateUseCase;
-  final Logger _logger = Logger();
 
   AboutViewModel(this._updateRepository, this._appUpdateUseCase) {
     load = Command.createAsyncNoParamNoResult(_loadVersion)..execute();
@@ -62,7 +60,7 @@ class AboutViewModel extends ChangeNotifier {
     // 初始化下载并安装更新命令
     _downloadAndInstallUpdateCommand =
         Command.createAsyncNoResult<UpdateInfo>((updateInfo) async {
-      _logger.i('开始下载并安装更新: ${updateInfo.version}');
+      appLogger.i('开始下载并安装更新: ${updateInfo.version}');
       _isDownloading = true;
       _downloadProgress = 0.0;
       notifyListeners();
@@ -80,19 +78,19 @@ class AboutViewModel extends ChangeNotifier {
       _isDownloading = false;
 
       if (result.isError()) {
-        _logger.e('更新失败: ${result.exceptionOrNull()}');
+        appLogger.e('更新失败: ${result.exceptionOrNull()}');
         notifyListeners();
         throw result.exceptionOrNull()!;
       }
 
-      _logger.i('更新完成');
+      appLogger.i('更新完成');
       notifyListeners();
     });
 
     // 初始化仅下载更新命令
     _downloadUpdateCommand =
         Command.createAsync<UpdateInfo, String>((updateInfo) async {
-      _logger.i('开始下载更新文件: ${updateInfo.version}');
+      appLogger.i('开始下载更新文件: ${updateInfo.version}');
       _isDownloading = true;
       _downloadProgress = 0.0;
       notifyListeners();
@@ -110,13 +108,13 @@ class AboutViewModel extends ChangeNotifier {
       _isDownloading = false;
 
       if (result.isError()) {
-        _logger.e('下载失败: ${result.exceptionOrNull()}');
+        appLogger.e('下载失败: ${result.exceptionOrNull()}');
         notifyListeners();
         throw result.exceptionOrNull()!;
       }
 
       final filePath = result.getOrThrow();
-      _logger.i('下载完成: $filePath');
+      appLogger.i('下载完成: $filePath');
       notifyListeners();
       return filePath;
     }, initialValue: '');
@@ -124,7 +122,7 @@ class AboutViewModel extends ChangeNotifier {
     // 初始化安装更新命令
     _installUpdateCommand =
         Command.createAsyncNoResult<String>((filePath) async {
-      _logger.i('开始安装更新文件: $filePath');
+      appLogger.i('开始安装更新文件: $filePath');
       _isInstalling = true;
       notifyListeners();
 
@@ -133,12 +131,12 @@ class AboutViewModel extends ChangeNotifier {
       _isInstalling = false;
 
       if (result.isError()) {
-        _logger.e('安装失败: ${result.exceptionOrNull()}');
+        appLogger.e('安装失败: ${result.exceptionOrNull()}');
         notifyListeners();
         throw result.exceptionOrNull()!;
       }
 
-      _logger.i('安装完成');
+      appLogger.i('安装完成');
       notifyListeners();
     });
   }

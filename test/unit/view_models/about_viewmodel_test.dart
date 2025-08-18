@@ -3,7 +3,7 @@ import 'package:logger/logger.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:readeck_app/data/repository/update/update_repository.dart';
-import 'package:readeck_app/data/service/update_service.dart';
+import 'package:readeck_app/domain/models/update/update_info.dart';
 import 'package:readeck_app/domain/use_cases/app_update_use_case.dart';
 import 'package:readeck_app/ui/settings/view_models/about_viewmodel.dart';
 import 'package:result_dart/result_dart.dart';

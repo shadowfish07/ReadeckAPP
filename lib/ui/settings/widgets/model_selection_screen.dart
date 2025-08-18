@@ -15,8 +15,8 @@ class ModelSelectionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
-      onRefresh: () async {
-        viewModel.loadModels.execute();
+      onRefresh: () {
+        return viewModel.loadModels.executeWithFuture(null);
       },
       child: Padding(
         padding: const EdgeInsets.all(16.0),

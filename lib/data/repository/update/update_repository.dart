@@ -1,5 +1,6 @@
 import 'package:result_dart/result_dart.dart';
 import '../../service/update_service.dart';
+import '../../../domain/models/update/update_info.dart';
 
 class UpdateRepository {
   final UpdateService _updateService;
