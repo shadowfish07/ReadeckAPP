@@ -13,14 +13,14 @@ class AiSettingsViewModel extends ChangeNotifier {
   final SettingsRepository _settingsRepository;
   final OpenRouterRepository _openRouterRepository;
 
-  String _openRouterApiKey = '';
-  String get openRouterApiKey => _openRouterApiKey;
+  String get openRouterApiKey => _settingsRepository.getOpenRouterApiKey();
 
+  // 缓存从API获取的模型详情，用于selectedModel getter
   OpenRouterModel? _selectedModel;
   OpenRouterModel? get selectedModel => _selectedModel;
 
-  String _selectedModelName = '';
-  String get selectedModelName => _selectedModelName;
+  String get selectedModelName =>
+      _settingsRepository.getSelectedOpenRouterModelName();
 
   late Command<String, void> saveApiKey;
   late Command<void, void> loadApiKey;
@@ -48,7 +48,7 @@ class AiSettingsViewModel extends ChangeNotifier {
     // 设置防抖，500ms 后执行保存
     textChangedCommand.debounce(const Duration(milliseconds: 500)).listen(
       (filterText, _) {
-        if (filterText.trim() != _openRouterApiKey) {
+        if (filterText.trim() != _settingsRepository.getOpenRouterApiKey()) {
           saveApiKey.execute(filterText.trim());
         }
       },
@@ -58,7 +58,6 @@ class AiSettingsViewModel extends ChangeNotifier {
   Future<void> _saveApiKey(String apiKey) async {
     final result = await _settingsRepository.saveOpenRouterApiKey(apiKey);
     if (result.isSuccess()) {
-      _openRouterApiKey = apiKey;
       notifyListeners();
     } else {
       appLogger.e('保存 OpenRouter API 密钥失败', error: result.exceptionOrNull()!);
@@ -67,7 +66,7 @@ class AiSettingsViewModel extends ChangeNotifier {
   }
 
   Future<void> _loadApiKeyAsync() async {
-    _openRouterApiKey = _settingsRepository.getOpenRouterApiKey();
+    // 不需要在ViewModel中缓存数据，直接通过getter访问Repository即可
     notifyListeners();
   }
 
@@ -75,10 +74,11 @@ class AiSettingsViewModel extends ChangeNotifier {
     try {
       final selectedModelId = _settingsRepository.getSelectedOpenRouterModel();
 
-      // 优先加载缓存的模型名称，避免闪动
-      _selectedModelName = _settingsRepository.getSelectedOpenRouterModelName();
-      if (_selectedModelName.isNotEmpty) {
-        appLogger.d('成功加载缓存的模型名称: $_selectedModelName');
+      // 优先显示缓存的模型名称，避免闪动
+      final cachedModelName =
+          _settingsRepository.getSelectedOpenRouterModelName();
+      if (cachedModelName.isNotEmpty) {
+        appLogger.d('成功加载缓存的模型名称: $cachedModelName');
         notifyListeners();
       }
 
@@ -93,8 +93,7 @@ class AiSettingsViewModel extends ChangeNotifier {
           if (matchedModel != null) {
             _selectedModel = matchedModel;
             // 如果API返回的模型名称与缓存不一致，更新缓存
-            if (_selectedModelName != matchedModel.name) {
-              _selectedModelName = matchedModel.name;
+            if (cachedModelName != matchedModel.name) {
               appLogger.d('更新模型名称缓存: ${matchedModel.name}');
             }
             appLogger.d('成功加载选中的模型: $selectedModelId (${matchedModel.name})');

@@ -222,8 +222,9 @@ class _TranslationSettingsScreenState extends State<TranslationSettingsScreen> {
             ListTile(
               leading: const Icon(Icons.smart_toy),
               title: const Text('专用模型'),
-              subtitle: Text(
-                  widget.viewModel.selectedTranslationModel?.name ?? '使用全局模型'),
+              subtitle: Text(widget.viewModel.translationModelName.isNotEmpty
+                  ? widget.viewModel.translationModelName
+                  : '使用全局模型'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () {
                 context.push('${Routes.modelSelection}?scenario=translation');

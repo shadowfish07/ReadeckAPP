@@ -71,7 +71,7 @@ class ModelSelectionViewModel extends ChangeNotifier {
         category = 'translation';
         break;
       case 'ai_tag':
-        category = 'ai_tag';
+        category = 'trivia';
         break;
       default:
         category = null; // 全局模型选择，不限制分类

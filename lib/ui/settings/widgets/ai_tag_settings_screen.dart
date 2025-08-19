@@ -180,8 +180,9 @@ class _AiTagSettingsScreenState extends State<AiTagSettingsScreen> {
                         leading: const Icon(Icons.smart_toy),
                         title: const Text('专用模型'),
                         subtitle: Text(
-                            widget.viewModel.selectedAiTagModel?.name ??
-                                '使用全局模型'),
+                            widget.viewModel.aiTagModelName.isNotEmpty
+                                ? widget.viewModel.aiTagModelName
+                                : '使用全局模型'),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () {
                           context

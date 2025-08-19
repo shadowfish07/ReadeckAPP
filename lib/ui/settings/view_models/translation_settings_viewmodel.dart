@@ -16,24 +16,26 @@ class TranslationSettingsViewModel extends ChangeNotifier {
   final ArticleRepository _articleRepository;
   final OpenRouterRepository _openRouterRepository;
 
-  String _translationProvider = 'AI';
-  String _translationTargetLanguage = '中文';
-  bool _translationCacheEnabled = true;
-  String _translationModel = '';
   List<OpenRouterModel> _availableModels = [];
 
-  String get translationProvider => _translationProvider;
-  String get translationTargetLanguage => _translationTargetLanguage;
-  bool get translationCacheEnabled => _translationCacheEnabled;
-  String get translationModel => _translationModel;
+  String get translationProvider =>
+      _settingsRepository.getTranslationProvider();
+  String get translationTargetLanguage =>
+      _settingsRepository.getTranslationTargetLanguage();
+  bool get translationCacheEnabled =>
+      _settingsRepository.getTranslationCacheEnabled();
+  String get translationModel => _settingsRepository.getTranslationModel();
+  String get translationModelName =>
+      _settingsRepository.getTranslationModelName();
   List<OpenRouterModel> get availableModels => _availableModels;
 
   OpenRouterModel? get selectedTranslationModel {
-    if (_translationModel.isEmpty || _availableModels.isEmpty) {
+    final translationModel = _settingsRepository.getTranslationModel();
+    if (translationModel.isEmpty || _availableModels.isEmpty) {
       return null;
     }
     return _availableModels
-        .where((model) => model.id == _translationModel)
+        .where((model) => model.id == translationModel)
         .firstOrNull;
   }
 
@@ -94,7 +96,6 @@ class TranslationSettingsViewModel extends ChangeNotifier {
   Future<void> _saveTranslationProvider(String provider) async {
     final result = await _settingsRepository.saveTranslationProvider(provider);
     if (result.isSuccess()) {
-      _translationProvider = provider;
       notifyListeners();
     } else {
       appLogger.e('保存翻译服务提供方失败', error: result.exceptionOrNull()!);
@@ -106,7 +107,6 @@ class TranslationSettingsViewModel extends ChangeNotifier {
     final result =
         await _settingsRepository.saveTranslationTargetLanguage(language);
     if (result.isSuccess()) {
-      _translationTargetLanguage = language;
       notifyListeners();
 
       // 切换目标语种时清空翻译缓存
@@ -127,7 +127,6 @@ class TranslationSettingsViewModel extends ChangeNotifier {
     final result =
         await _settingsRepository.saveTranslationCacheEnabled(enabled);
     if (result.isSuccess()) {
-      _translationCacheEnabled = enabled;
       notifyListeners();
     } else {
       appLogger.e('保存翻译缓存启用状态失败', error: result.exceptionOrNull()!);
@@ -137,19 +136,13 @@ class TranslationSettingsViewModel extends ChangeNotifier {
 
   void _loadTranslationSettings() {
     // 由于SettingsRepository已经预加载，直接同步获取翻译设置
-    _translationProvider = _settingsRepository.getTranslationProvider();
-    _translationTargetLanguage =
-        _settingsRepository.getTranslationTargetLanguage();
-    _translationCacheEnabled = _settingsRepository.getTranslationCacheEnabled();
-    _translationModel = _settingsRepository.getTranslationModel();
-
+    // 不需要在ViewModel中缓存数据，直接通过getter访问Repository即可
     notifyListeners();
   }
 
   Future<void> _saveTranslationModel(String modelId) async {
     final result = await _settingsRepository.saveTranslationModel(modelId);
     if (result.isSuccess()) {
-      _translationModel = modelId;
       notifyListeners();
       appLogger.d('成功保存翻译场景模型: $modelId');
     } else {

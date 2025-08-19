@@ -14,8 +14,6 @@ class AiTagSettingsViewModel extends ChangeNotifier {
   final SettingsRepository _settingsRepository;
   final OpenRouterRepository _openRouterRepository;
 
-  String _aiTagTargetLanguage = '中文';
-  String _aiTagModel = '';
   List<OpenRouterModel> _availableModels = [];
 
   late final Command<String, void> saveAiTagTargetLanguage;
@@ -33,22 +31,24 @@ class AiTagSettingsViewModel extends ChangeNotifier {
     '한국어',
   ];
 
-  String get aiTagTargetLanguage => _aiTagTargetLanguage;
-  String get aiTagModel => _aiTagModel;
+  String get aiTagTargetLanguage =>
+      _settingsRepository.getAiTagTargetLanguage();
+  String get aiTagModel => _settingsRepository.getAiTagModel();
+  String get aiTagModelName => _settingsRepository.getAiTagModelName();
   List<OpenRouterModel> get availableModels => _availableModels;
 
   OpenRouterModel? get selectedAiTagModel {
-    if (_aiTagModel.isEmpty || _availableModels.isEmpty) {
+    final aiTagModel = _settingsRepository.getAiTagModel();
+    if (aiTagModel.isEmpty || _availableModels.isEmpty) {
       return null;
     }
     return _availableModels
-        .where((model) => model.id == _aiTagModel)
+        .where((model) => model.id == aiTagModel)
         .firstOrNull;
   }
 
   void _loadSettings() {
-    _aiTagTargetLanguage = _settingsRepository.getAiTagTargetLanguage();
-    _aiTagModel = _settingsRepository.getAiTagModel();
+    // 不需要在ViewModel中缓存数据，直接通过getter访问Repository即可
   }
 
   void _initializeCommands() {
@@ -60,7 +60,6 @@ class AiTagSettingsViewModel extends ChangeNotifier {
           await _settingsRepository.saveAiTagTargetLanguage(language);
 
       if (result.isSuccess()) {
-        _aiTagTargetLanguage = language;
         notifyListeners();
         appLogger.i('AI标签目标语言保存成功: $language');
       } else {
@@ -76,7 +75,6 @@ class AiTagSettingsViewModel extends ChangeNotifier {
       final result = await _settingsRepository.saveAiTagModel(modelId);
 
       if (result.isSuccess()) {
-        _aiTagModel = modelId;
         notifyListeners();
         appLogger.i('AI标签模型保存成功: $modelId');
       } else {
