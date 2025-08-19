@@ -86,3 +86,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - [Readeck](https://readeck.org/en/) - The excellent read-later service that inspired this project
 - Flutter community for the amazing framework and packages
+
+## Activity
+
+![Alt](https://repobeats.axiom.co/api/embed/430e563b36a674be5e30f70f5991342c9488283a.svg "Repobeats analytics image")

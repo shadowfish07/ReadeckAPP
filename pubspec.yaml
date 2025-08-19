@@ -1,7 +1,7 @@
 name: readeck_app
 description: "ReadeckAPP - A mobile client for Readeck bookmark service."
 publish_to: "none"
-version: 0.4.1
+version: 0.6.0
 
 environment:
   sdk: ">=3.3.1 <4.0.0"
