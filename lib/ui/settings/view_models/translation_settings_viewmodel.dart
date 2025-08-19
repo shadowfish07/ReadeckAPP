@@ -141,7 +141,7 @@ class TranslationSettingsViewModel extends ChangeNotifier {
   }
 
   Future<void> _saveTranslationModel(String modelId) async {
-    final result = await _settingsRepository.saveTranslationModel(modelId);
+    final result = await _settingsRepository.saveTranslationModel(modelId, '');
     if (result.isSuccess()) {
       notifyListeners();
       appLogger.d('成功保存翻译场景模型: $modelId');

@@ -72,7 +72,7 @@ class AiTagSettingsViewModel extends ChangeNotifier {
     saveAiTagModel = Command.createAsyncNoResult((String modelId) async {
       appLogger.i('开始保存AI标签模型: $modelId');
 
-      final result = await _settingsRepository.saveAiTagModel(modelId);
+      final result = await _settingsRepository.saveAiTagModel(modelId, '');
 
       if (result.isSuccess()) {
         notifyListeners();

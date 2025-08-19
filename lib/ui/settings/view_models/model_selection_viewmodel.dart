@@ -49,6 +49,21 @@ class ModelSelectionViewModel extends ChangeNotifier {
         .firstOrNull;
   }
 
+  /// 是否正在使用全局模型（即专用模型ID为空）
+  bool get isUsingGlobalModel {
+    return _selectedModelId == null || _selectedModelId!.isEmpty;
+  }
+
+  /// 获取全局模型名称
+  String get globalModelName {
+    return _settingsRepository.getSelectedOpenRouterModelName();
+  }
+
+  /// 获取全局模型ID
+  String get globalModelId {
+    return _settingsRepository.getSelectedOpenRouterModel();
+  }
+
   late Command<void, List<OpenRouterModel>> loadModels;
   late Command<void, void> loadSelectedModel;
 
@@ -100,6 +115,13 @@ class ModelSelectionViewModel extends ChangeNotifier {
     _saveSelectedModel(model);
   }
 
+  void selectGlobalModel() {
+    _selectedModelId = '';
+    notifyListeners();
+    // 保存空字符串以表示使用全局模型
+    _saveGlobalModel();
+  }
+
   Future<void> _saveSelectedModel(OpenRouterModel model) async {
     late final Future<dynamic> result;
 
@@ -124,6 +146,32 @@ class ModelSelectionViewModel extends ChangeNotifier {
     } else {
       appLogger.e('保存选中的模型失败', error: saveResult.exceptionOrNull()!);
       throw '保存选中的模型失败';
+    }
+  }
+
+  Future<void> _saveGlobalModel() async {
+    late final Future<dynamic> result;
+
+    // 根据场景保存空字符串到不同的存储位置，表示使用全局模型
+    switch (scenario) {
+      case 'translation':
+        result = _settingsRepository.saveTranslationModel('', '');
+        break;
+      case 'ai_tag':
+        result = _settingsRepository.saveAiTagModel('', '');
+        break;
+      default:
+        result = _settingsRepository.saveSelectedOpenRouterModel('', '');
+        break;
+    }
+
+    final saveResult = await result;
+    if (saveResult.isSuccess()) {
+      final scenarioText = scenario != null ? '$scenario场景' : '全局';
+      appLogger.d('成功设置$scenarioText为使用全局模型');
+    } else {
+      appLogger.e('保存全局模型设置失败', error: saveResult.exceptionOrNull()!);
+      throw '保存全局模型设置失败';
     }
   }
 

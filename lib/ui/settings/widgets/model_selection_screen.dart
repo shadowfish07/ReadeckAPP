@@ -116,11 +116,27 @@ class ModelSelectionScreen extends StatelessWidget {
           );
         }
 
+        final itemCount = viewModel.availableModels.length +
+            (viewModel.scenario != null ? 1 : 0); // 场景模式下增加全局模型选项
+
         return ListView.separated(
-          itemCount: viewModel.availableModels.length,
+          itemCount: itemCount,
           separatorBuilder: (context, index) => const SizedBox(height: 8),
           itemBuilder: (context, index) {
-            final model = viewModel.availableModels[index];
+            // 在场景模式下，第一个项目是"使用全局模型"选项
+            if (viewModel.scenario != null && index == 0) {
+              return _GlobalModelCard(
+                viewModel: viewModel,
+                onTap: () {
+                  viewModel.selectGlobalModel();
+                  Navigator.of(context).pop();
+                },
+              );
+            }
+
+            // 计算实际的模型索引（如果有全局模型选项，需要减1）
+            final modelIndex = viewModel.scenario != null ? index - 1 : index;
+            final model = viewModel.availableModels[modelIndex];
             final isSelected = viewModel.selectedModel?.id == model.id;
 
             return ModelCard(
@@ -134,6 +150,76 @@ class ModelSelectionScreen extends StatelessWidget {
           },
         );
       },
+    );
+  }
+}
+
+class _GlobalModelCard extends StatelessWidget {
+  const _GlobalModelCard({
+    required this.viewModel,
+    required this.onTap,
+  });
+
+  final ModelSelectionViewModel viewModel;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final globalModelName = viewModel.globalModelName;
+    final hasGlobalModel = globalModelName.isNotEmpty;
+
+    return Card(
+      elevation: viewModel.isUsingGlobalModel ? 4 : 1,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              Icon(
+                Icons.public,
+                color: viewModel.isUsingGlobalModel
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '使用全局模型',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: viewModel.isUsingGlobalModel
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                            color: viewModel.isUsingGlobalModel
+                                ? Theme.of(context).colorScheme.primary
+                                : null,
+                          ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      hasGlobalModel ? globalModelName : '未配置全局模型',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: hasGlobalModel
+                                ? null
+                                : Theme.of(context).colorScheme.error,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              if (viewModel.isUsingGlobalModel)
+                Icon(
+                  Icons.check_circle,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
