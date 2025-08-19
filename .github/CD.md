@@ -19,38 +19,57 @@
 
 ## 🚀 发布流程
 
-### 1. 创建标签
+### 1. 自动化发布流程
 
-```bash
-# 创建正式版本标签
-git tag v1.0.0
-git push origin v1.0.0
+推送到主分支（main 或 beta）后，GitHub Actions 将自动执行以下流程：
 
-# 创建预发布版本标签
-git tag v1.0.0-beta.1
-git push origin v1.0.0-beta.1
+#### 🔄 新的智能发布流程
+```
+代码推送 → 测试 → Dry Run 检查 → 人工确认 → 发布
 ```
 
-### 2. 自动构建
+1. **测试阶段**：
+   - 运行所有单元测试
+   - 代码质量检查
 
-推送标签后，GitHub Actions 将自动：
+2. **Dry Run 检查阶段**：
+   - 使用 semantic-release 的 dry-run 模式检查是否需要发布
+   - 如果没有符合发布条件的提交，流程会在此处停止
+   - 如果检测到需要发布，会提取版本号和发布说明
 
-1. **更新版本号**：
+3. **人工确认阶段**（仅在需要发布时触发）：
+   - 显示即将发布的版本信息
+   - 显示发布说明预览
+   - 等待手动确认部署
 
+4. **发布阶段**：
    - 自动更新 `pubspec.yaml` 中的版本号
-   - 自动更新 About 页面中显示的版本号
+   - 构建 Android APK 和 AAB
+   - 创建 GitHub Release
+   - 上传构建产物
 
-2. **构建多平台应用**：
+### 2. 手动发布（跳过确认）
 
-   - Android APK
-   - Android App Bundle (AAB)
-   - Web 版本
-   - Linux 版本
+如果需要跳过人工确认步骤，可以使用工作流派发：
 
-3. **创建 GitHub Release**：
-   - 正式版本：创建正式发布
-   - Beta 版本：创建预发布版本
-   - 自动上传所有构建产物
+```bash
+# 在 GitHub Actions 页面手动触发工作流
+# 勾选 "跳过手动确认步骤" 选项
+```
+
+### 3. 发布条件
+
+只有包含以下类型的提交才会触发发布：
+- **feat**: 新功能（minor 版本）
+- **fix**: 错误修复（patch 版本）
+- **BREAKING CHANGE**: 破坏性更改（major 版本）
+
+以下提交类型不会触发发布：
+- **chore**: 杂项任务
+- **docs**: 文档更新
+- **style**: 代码格式化
+- **refactor**: 代码重构（无功能变更）
+- **test**: 测试相关
 
 ## 📦 构建产物
 
@@ -65,21 +84,24 @@ git push origin v1.0.0-beta.1
 
 工作流文件位于 `.github/workflows/release.yml`，主要特性：
 
-- **触发条件**：推送以 `v` 开头的标签
-- **多平台构建**：支持 Android、Web、Linux
-- **版本自动更新**：从标签提取版本号并更新代码
-- **智能发布**：根据版本号判断是否为预发布版本
+- **触发条件**：推送到 main 或 beta 分支
+- **智能检查**：Dry Run 模式预先检查是否需要发布
+- **条件性执行**：只有在确实需要发布时才会触发人工确认
+- **版本自动更新**：从 semantic-release 获取版本号并更新代码
+- **多平台构建**：支持 Android APK 和 AAB
+- **人工确认**：生产环境部署前的安全检查点
 
 ## 📋 使用注意事项
 
-1. **标签命名**：必须以 `v` 开头，如 `v1.0.0`
-2. **版本号格式**：遵循语义化版本控制规范
-3. **Beta 版本**：包含 `beta` 关键字的版本将标记为预发布
-4. **权限要求**：需要 `GITHUB_TOKEN` 权限（自动提供）
+1. **提交格式**：遵循 [Conventional Commits](https://www.conventionalcommits.org/) 规范
+2. **分支发布**：main 分支发布正式版本，beta 分支发布预发布版本
+3. **智能触发**：只有符合发布条件的提交才会进入发布流程
+4. **人工确认**：生产发布前需要手动确认，确保发布安全
+5. **权限要求**：需要 `GITHUB_TOKEN` 权限（自动提供）
 
 ## 🛠️ 本地测试
 
-在推送标签前，建议本地测试构建：
+在推送代码前，建议本地测试构建：
 
 ```bash
 # 获取依赖
@@ -87,18 +109,29 @@ flutter pub get
 
 # 测试构建
 flutter build apk --release
-flutter build web --release
 
 # 运行测试
 flutter test
+
+# 检查代码质量
+flutter analyze
 ```
 
 ## 📝 版本发布检查清单
 
-- [ ] 代码已提交并推送到主分支
-- [ ] 更新了 CHANGELOG.md（如果有）
+- [ ] 代码已提交并推送到对应分支（main 或 beta）
+- [ ] 提交信息遵循 Conventional Commits 规范
 - [ ] 本地测试通过
-- [ ] 确认版本号符合语义化版本控制
-- [ ] 创建并推送标签
-- [ ] 检查 GitHub Actions 构建状态
+- [ ] 确认提交类型符合发布条件（feat/fix/BREAKING CHANGE）
+- [ ] 检查 GitHub Actions Dry Run 结果
+- [ ] 如需要发布，确认人工审批
 - [ ] 验证 Release 页面的构建产物
+
+## 🔍 发布流程监控
+
+你可以在 GitHub Actions 页面监控发布流程：
+
+1. **Dry Run 检查**：查看是否检测到需要发布的更改
+2. **人工确认**：如果需要发布，在 Environment 页面进行确认
+3. **构建状态**：监控 APK 和 AAB 构建进度
+4. **发布结果**：检查 Release 页面的最终产物

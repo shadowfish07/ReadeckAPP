@@ -27,11 +27,70 @@ jobs:
       pull-requests: write
       actions: read
 
-  approval:
-    name: Manual Approval Required
+  dry_run_check:
+    name: Check if Release is Needed (Dry Run)
     runs-on: ubuntu-latest
     needs: test
     if: |
+      github.event_name == 'push' && 
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta') &&
+      !contains(github.event.head_commit.message, '[skip ci]') &&
+      !contains(github.event.head_commit.message, 'chore: sync beta with main') &&
+      !github.event.inputs.skip_approval
+    outputs:
+      needs_release: ${{ steps.check_release.outputs.needs_release }}
+      next_version: ${{ steps.check_release.outputs.next_version }}
+      release_notes: ${{ steps.check_release.outputs.release_notes }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install semantic-release dependencies
+        run: npm ci
+
+      - name: Check if release is needed
+        id: check_release
+        run: |
+          echo "正在检查是否需要发布新版本..."
+          
+          # 运行 semantic-release dry-run 检查是否有新版本
+          SEMANTIC_OUTPUT=$(npx semantic-release --dry-run --no-ci 2>&1)
+          echo "$SEMANTIC_OUTPUT"
+          
+          # 检查是否会创建新版本
+          if echo "$SEMANTIC_OUTPUT" | grep -q "The next release version is"; then
+            NEXT_VERSION=$(echo "$SEMANTIC_OUTPUT" | grep -oP 'The next release version is \K[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+\.[0-9]+)?')
+            echo "✅ 检测到需要发布新版本: $NEXT_VERSION"
+            echo "needs_release=true" >> $GITHUB_OUTPUT
+            echo "next_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
+            
+            # 提取发布说明
+            RELEASE_NOTES=$(echo "$SEMANTIC_OUTPUT" | sed -n '/Release note/,/^$/p' | head -20)
+            echo "release_notes<<EOF" >> $GITHUB_OUTPUT
+            echo "$RELEASE_NOTES" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "ℹ️  无需发布新版本 - 没有检测到符合版本发布条件的提交"
+            echo "needs_release=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  approval:
+    name: Manual Approval Required
+    runs-on: ubuntu-latest
+    needs: [test, dry_run_check]
+    if: |
+      needs.dry_run_check.outputs.needs_release == 'true' &&
       github.event_name == 'push' && 
       (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta') &&
       !contains(github.event.head_commit.message, '[skip ci]') &&
@@ -41,17 +100,23 @@ jobs:
     steps:
       - name: Manual approval checkpoint
         run: |
-          echo "等待手动确认部署..."
-          echo "分支: ${{ github.ref }}"
-          echo "提交: ${{ github.event.head_commit.message }}"
-          echo "提交者: ${{ github.event.head_commit.author.name }}"
+          echo "🚀 准备发布新版本，等待手动确认..."
+          echo "📋 发布信息:"
+          echo "  • 分支: ${{ github.ref }}"
+          echo "  • 版本: ${{ needs.dry_run_check.outputs.next_version }}"
+          echo "  • 提交: ${{ github.event.head_commit.message }}"
+          echo "  • 提交者: ${{ github.event.head_commit.author.name }}"
+          echo ""
+          echo "📝 发布说明:"
+          echo "${{ needs.dry_run_check.outputs.release_notes }}"
 
   release:
     name: Release
     runs-on: ubuntu-latest
-    needs: [test, approval]
+    needs: [test, dry_run_check, approval]
     if: |
-      (github.event_name == 'push' && 
+      (needs.dry_run_check.outputs.needs_release == 'true' &&
+       github.event_name == 'push' && 
        (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta') &&
        !contains(github.event.head_commit.message, '[skip ci]') &&
        !contains(github.event.head_commit.message, 'chore: sync beta with main')) ||
@@ -128,26 +193,20 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Run semantic-release (dry-run to get version)
-        id: semantic_release_dry
+      - name: Prepare version for build
+        id: prepare_version
         run: |
-          # Run semantic-release in dry-run mode to get the next version
-          NEXT_VERSION=$(npx semantic-release --dry-run --no-ci | grep -oP 'The next release version is \K[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+\.[0-9]+)?' || echo "")
-          if [ -n "$NEXT_VERSION" ]; then
-            echo "next_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
-            echo "has_release=true" >> $GITHUB_OUTPUT
-            # Update pubspec.yaml with the new version
-            sed -i "s/^version: .*/version: $NEXT_VERSION/" pubspec.yaml
-            echo "Updated pubspec.yaml version to: $NEXT_VERSION"
-          else
-            echo "has_release=false" >> $GITHUB_OUTPUT
-            echo "No release will be created"
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Use the version determined in dry_run_check
+          NEXT_VERSION="${{ needs.dry_run_check.outputs.next_version }}"
+          echo "next_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
+          echo "has_release=true" >> $GITHUB_OUTPUT
+          
+          # Update pubspec.yaml with the new version
+          sed -i "s/^version: .*/version: $NEXT_VERSION/" pubspec.yaml
+          echo "✅ Updated pubspec.yaml version to: $NEXT_VERSION"
 
       - name: Setup signing
-        if: steps.semantic_release_dry.outputs.has_release == 'true'
+        if: steps.prepare_version.outputs.has_release == 'true'
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/release-key.jks
           echo "storeFile=release-key.jks" > key.properties
@@ -156,19 +215,19 @@ jobs:
           echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> key.properties
 
       - name: Build signed APK
-        if: steps.semantic_release_dry.outputs.has_release == 'true'
+        if: steps.prepare_version.outputs.has_release == 'true'
         run: flutter build apk --release
 
       - name: Build App Bundle
-        if: steps.semantic_release_dry.outputs.has_release == 'true'
+        if: steps.prepare_version.outputs.has_release == 'true'
         continue-on-error: true
         run: flutter build appbundle --release
 
       - name: Prepare release assets
-        if: steps.semantic_release_dry.outputs.has_release == 'true'
+        if: steps.prepare_version.outputs.has_release == 'true'
         run: |
           mkdir -p release-files
-          VERSION=${{ steps.semantic_release_dry.outputs.next_version }}
+          VERSION=${{ steps.prepare_version.outputs.next_version }}
 
           # Copy APK if exists
           if [ -f "build/app/outputs/flutter-apk/app-release.apk" ]; then
@@ -181,7 +240,7 @@ jobs:
           fi
 
       - name: Clean up signing files
-        if: steps.semantic_release_dry.outputs.has_release == 'true' && env.KEYSTORE_BASE64 != ''
+        if: steps.prepare_version.outputs.has_release == 'true' && env.KEYSTORE_BASE64 != ''
         run: |
           rm -f android/app/release-key.jks
           rm -f android/key.properties
@@ -189,7 +248,7 @@ jobs:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
 
       - name: Run semantic-release
-        if: steps.semantic_release_dry.outputs.has_release == 'true'
+        if: steps.prepare_version.outputs.has_release == 'true'
         run: npx semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
