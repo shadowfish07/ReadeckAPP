@@ -805,6 +805,71 @@ class MockSettingsRepository extends _i1.Mock
       ) as String);
 
   @override
+  _i4.Future<_i5.ResultDart<void, Exception>> saveTranslationModel(
+          String? modelId) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #saveTranslationModel,
+          [modelId],
+        ),
+        returnValue: _i4.Future<_i5.ResultDart<void, Exception>>.value(
+            _i6.dummyValue<_i5.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #saveTranslationModel,
+            [modelId],
+          ),
+        )),
+      ) as _i4.Future<_i5.ResultDart<void, Exception>>);
+
+  @override
+  String getTranslationModel() => (super.noSuchMethod(
+        Invocation.method(
+          #getTranslationModel,
+          [],
+        ),
+        returnValue: _i6.dummyValue<String>(
+          this,
+          Invocation.method(
+            #getTranslationModel,
+            [],
+          ),
+        ),
+      ) as String);
+
+  @override
+  _i4.Future<_i5.ResultDart<void, Exception>> saveAiTagModel(String? modelId) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #saveAiTagModel,
+          [modelId],
+        ),
+        returnValue: _i4.Future<_i5.ResultDart<void, Exception>>.value(
+            _i6.dummyValue<_i5.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #saveAiTagModel,
+            [modelId],
+          ),
+        )),
+      ) as _i4.Future<_i5.ResultDart<void, Exception>>);
+
+  @override
+  String getAiTagModel() => (super.noSuchMethod(
+        Invocation.method(
+          #getAiTagModel,
+          [],
+        ),
+        returnValue: _i6.dummyValue<String>(
+          this,
+          Invocation.method(
+            #getAiTagModel,
+            [],
+          ),
+        ),
+      ) as String);
+
+  @override
   void dispose() => super.noSuchMethod(
         Invocation.method(
           #dispose,

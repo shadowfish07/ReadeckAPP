@@ -1,30 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_command/flutter_command.dart';
 import 'package:readeck_app/data/repository/article/article_repository.dart';
+import 'package:readeck_app/data/repository/openrouter/openrouter_repository.dart';
 import 'package:readeck_app/data/repository/settings/settings_repository.dart';
+import 'package:readeck_app/domain/models/openrouter_model/openrouter_model.dart';
 import 'package:readeck_app/main.dart';
 
 class TranslationSettingsViewModel extends ChangeNotifier {
-  TranslationSettingsViewModel(
-      this._settingsRepository, this._articleRepository) {
+  TranslationSettingsViewModel(this._settingsRepository,
+      this._articleRepository, this._openRouterRepository) {
     _initCommands();
   }
 
   final SettingsRepository _settingsRepository;
   final ArticleRepository _articleRepository;
+  final OpenRouterRepository _openRouterRepository;
 
   String _translationProvider = 'AI';
   String _translationTargetLanguage = '中文';
   bool _translationCacheEnabled = true;
+  String _translationModel = '';
+  List<OpenRouterModel> _availableModels = [];
 
   String get translationProvider => _translationProvider;
   String get translationTargetLanguage => _translationTargetLanguage;
   bool get translationCacheEnabled => _translationCacheEnabled;
+  String get translationModel => _translationModel;
+  List<OpenRouterModel> get availableModels => _availableModels;
+
+  OpenRouterModel? get selectedTranslationModel {
+    if (_translationModel.isEmpty || _availableModels.isEmpty) {
+      return null;
+    }
+    return _availableModels
+        .where((model) => model.id == _translationModel)
+        .firstOrNull;
+  }
 
   late Command<String, void> saveTranslationProvider;
   late Command<String, void> saveTranslationTargetLanguage;
   late Command<bool, void> saveTranslationCacheEnabled;
+  late Command<String, void> saveTranslationModel;
   late Command<void, void> loadTranslationSettings;
+  late Command<void, List<OpenRouterModel>> loadModels;
   late Command<void, void> clearTranslationCache;
 
   // 支持的语言列表
@@ -54,10 +72,18 @@ class TranslationSettingsViewModel extends ChangeNotifier {
       _saveTranslationCacheEnabled,
     );
 
+    saveTranslationModel = Command.createAsyncNoResult<String>(
+      _saveTranslationModel,
+    );
+
     loadTranslationSettings = Command.createSyncNoParam(
       _loadTranslationSettings,
       initialValue: null,
     )..execute();
+
+    loadModels = Command.createAsyncNoParam(_loadModelsAsync,
+        initialValue: [], includeLastResultInCommandResults: true)
+      ..execute();
 
     clearTranslationCache = Command.createAsyncNoParam(
       _clearTranslationCacheAsync,
@@ -115,8 +141,45 @@ class TranslationSettingsViewModel extends ChangeNotifier {
     _translationTargetLanguage =
         _settingsRepository.getTranslationTargetLanguage();
     _translationCacheEnabled = _settingsRepository.getTranslationCacheEnabled();
+    _translationModel = _settingsRepository.getTranslationModel();
 
     notifyListeners();
+  }
+
+  Future<void> _saveTranslationModel(String modelId) async {
+    final result = await _settingsRepository.saveTranslationModel(modelId);
+    if (result.isSuccess()) {
+      _translationModel = modelId;
+      notifyListeners();
+      appLogger.d('成功保存翻译场景模型: $modelId');
+    } else {
+      appLogger.e('保存翻译场景模型失败', error: result.exceptionOrNull()!);
+      throw result.exceptionOrNull()!;
+    }
+  }
+
+  Future<List<OpenRouterModel>> _loadModelsAsync() async {
+    final result =
+        await _openRouterRepository.getModels(category: 'translation');
+    if (result.isSuccess()) {
+      _availableModels = result.getOrNull() ?? [];
+      appLogger.d('成功加载 ${_availableModels.length} 个OpenRouter翻译模型');
+      notifyListeners();
+      return _availableModels;
+    } else {
+      appLogger.e('获取OpenRouter翻译模型列表失败', error: result.exceptionOrNull()!);
+      _availableModels = [];
+      notifyListeners();
+      throw result.exceptionOrNull()!;
+    }
+  }
+
+  void selectTranslationModel(OpenRouterModel model) {
+    saveTranslationModel.execute(model.id);
+  }
+
+  void clearTranslationModel() {
+    saveTranslationModel.execute('');
   }
 
   Future<void> _clearTranslationCacheAsync() async {
@@ -135,7 +198,9 @@ class TranslationSettingsViewModel extends ChangeNotifier {
     saveTranslationProvider.dispose();
     saveTranslationTargetLanguage.dispose();
     saveTranslationCacheEnabled.dispose();
+    saveTranslationModel.dispose();
     loadTranslationSettings.dispose();
+    loadModels.dispose();
     clearTranslationCache.dispose();
     super.dispose();
   }

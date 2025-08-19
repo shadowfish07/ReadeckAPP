@@ -14,6 +14,9 @@ class SharedPreferencesService {
   static const String _kTranslationCacheEnabled = 'translationCacheEnabled';
   static const String _kAiTagTargetLanguage = 'aiTagTargetLanguage';
 
+  static const String _kTranslationModel = 'translationModel';
+  static const String _kAiTagModel = 'aiTagModel';
+
   AsyncResult<void> setThemeMode(int value) async {
     final prefs = await SharedPreferences.getInstance();
     try {
@@ -198,6 +201,52 @@ class SharedPreferencesService {
     final prefs = await SharedPreferences.getInstance();
     try {
       final value = prefs.getString(_kAiTagTargetLanguage) ?? '中文';
+      return Success(value);
+    } on Exception catch (e) {
+      return Failure(e);
+    }
+  }
+
+  /// 设置翻译场景专用模型
+  AsyncResult<void> setTranslationModel(String value) async {
+    final prefs = await SharedPreferences.getInstance();
+    try {
+      await prefs.setString(_kTranslationModel, value);
+      return const Success(unit);
+    } on Exception catch (e) {
+      return Failure(e);
+    }
+  }
+
+  /// 获取翻译场景专用模型
+  /// 默认值为空字符串（使用全局模型）
+  AsyncResult<String> getTranslationModel() async {
+    final prefs = await SharedPreferences.getInstance();
+    try {
+      final value = prefs.getString(_kTranslationModel) ?? '';
+      return Success(value);
+    } on Exception catch (e) {
+      return Failure(e);
+    }
+  }
+
+  /// 设置AI标签场景专用模型
+  AsyncResult<void> setAiTagModel(String value) async {
+    final prefs = await SharedPreferences.getInstance();
+    try {
+      await prefs.setString(_kAiTagModel, value);
+      return const Success(unit);
+    } on Exception catch (e) {
+      return Failure(e);
+    }
+  }
+
+  /// 获取AI标签场景专用模型
+  /// 默认值为空字符串（使用全局模型）
+  AsyncResult<String> getAiTagModel() async {
+    final prefs = await SharedPreferences.getInstance();
+    try {
+      final value = prefs.getString(_kAiTagModel) ?? '';
       return Success(value);
     } on Exception catch (e) {
       return Failure(e);

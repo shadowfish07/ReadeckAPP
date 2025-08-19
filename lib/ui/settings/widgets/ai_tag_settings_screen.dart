@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_command/flutter_command.dart';
+import 'package:go_router/go_router.dart';
 import 'package:readeck_app/main.dart';
+import 'package:readeck_app/routing/routes.dart';
 import 'package:readeck_app/ui/settings/view_models/ai_tag_settings_viewmodel.dart';
 import 'package:readeck_app/ui/core/ui/snack_bar_helper.dart';
 
@@ -14,14 +16,16 @@ class AiTagSettingsScreen extends StatefulWidget {
 }
 
 class _AiTagSettingsScreenState extends State<AiTagSettingsScreen> {
-  late ListenableSubscription _successSubscription;
-  late ListenableSubscription _errorSubscription;
+  late ListenableSubscription _languageSuccessSubscription;
+  late ListenableSubscription _languageErrorSubscription;
+  late ListenableSubscription _modelSuccessSubscription;
+  late ListenableSubscription _modelErrorSubscription;
 
   @override
   void initState() {
     super.initState();
 
-    _successSubscription =
+    _languageSuccessSubscription =
         widget.viewModel.saveAiTagTargetLanguage.listen((result, _) {
       if (mounted) {
         SnackBarHelper.showSuccess(
@@ -31,10 +35,32 @@ class _AiTagSettingsScreenState extends State<AiTagSettingsScreen> {
       }
     });
 
-    _errorSubscription = widget.viewModel.saveAiTagTargetLanguage.errors
+    _languageErrorSubscription = widget.viewModel.saveAiTagTargetLanguage.errors
         .where((x) => x != null)
         .listen((error, _) {
       appLogger.e('保存AI标签目标语言错误: $error');
+      if (mounted && error != null) {
+        SnackBarHelper.showError(
+          context,
+          '保存失败：${error.error.toString()}',
+        );
+      }
+    });
+
+    _modelSuccessSubscription =
+        widget.viewModel.saveAiTagModel.listen((result, _) {
+      if (mounted) {
+        SnackBarHelper.showSuccess(
+          context,
+          'AI标签模型保存成功',
+        );
+      }
+    });
+
+    _modelErrorSubscription = widget.viewModel.saveAiTagModel.errors
+        .where((x) => x != null)
+        .listen((error, _) {
+      appLogger.e('保存AI标签模型错误: $error');
       if (mounted && error != null) {
         SnackBarHelper.showError(
           context,
@@ -46,8 +72,10 @@ class _AiTagSettingsScreenState extends State<AiTagSettingsScreen> {
 
   @override
   void dispose() {
-    _successSubscription.cancel();
-    _errorSubscription.cancel();
+    _languageSuccessSubscription.cancel();
+    _languageErrorSubscription.cancel();
+    _modelSuccessSubscription.cancel();
+    _modelErrorSubscription.cancel();
     super.dispose();
   }
 
@@ -141,6 +169,20 @@ class _AiTagSettingsScreenState extends State<AiTagSettingsScreen> {
                       subtitle: Text(widget.viewModel.aiTagTargetLanguage),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: _showLanguageSelectionDialog,
+                    ),
+                    const Divider(),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.smart_toy),
+                      title: const Text('专用模型'),
+                      subtitle: Text(
+                          widget.viewModel.selectedAiTagModel?.name ??
+                              '使用全局模型'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () {
+                        context
+                            .push('${Routes.modelSelection}?scenario=ai_tag');
+                      },
                     ),
                   ],
                 ),

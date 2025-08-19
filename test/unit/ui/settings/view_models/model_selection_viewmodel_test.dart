@@ -75,6 +75,12 @@ void main() {
       when(mockSettingsRepository.getSelectedOpenRouterModel()).thenReturn('');
       when(mockSettingsRepository.saveSelectedOpenRouterModel(any))
           .thenAnswer((_) async => const Success(()));
+      when(mockSettingsRepository.getTranslationModel()).thenReturn('');
+      when(mockSettingsRepository.getAiTagModel()).thenReturn('');
+      when(mockSettingsRepository.saveTranslationModel(any))
+          .thenAnswer((_) async => const Success(()));
+      when(mockSettingsRepository.saveAiTagModel(any))
+          .thenAnswer((_) async => const Success(()));
 
       viewModel = ModelSelectionViewModel(
           mockSettingsRepository, mockOpenRouterRepository);
@@ -94,8 +100,7 @@ void main() {
         // Wait for commands to complete
         await Future.delayed(const Duration(milliseconds: 100));
 
-        verify(mockOpenRouterRepository.getModels(category: 'translation'))
-            .called(1);
+        verify(mockOpenRouterRepository.getModels(category: null)).called(1);
         expect(viewModel.availableModels, hasLength(3));
       });
 
@@ -277,6 +282,99 @@ void main() {
         expect(nonExistentViewModel.availableModels[0].id, 'model1');
 
         nonExistentViewModel.dispose();
+      });
+    });
+
+    group('场景功能测试', () {
+      test('should load translation models when scenario is translation',
+          () async {
+        final translationViewModel = ModelSelectionViewModel(
+            mockSettingsRepository, mockOpenRouterRepository,
+            scenario: 'translation');
+
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        verify(mockOpenRouterRepository.getModels(category: 'translation'))
+            .called(1);
+
+        translationViewModel.dispose();
+      });
+
+      test('should load ai_tag models when scenario is ai_tag', () async {
+        final aiTagViewModel = ModelSelectionViewModel(
+            mockSettingsRepository, mockOpenRouterRepository,
+            scenario: 'ai_tag');
+
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        verify(mockOpenRouterRepository.getModels(category: 'ai_tag'))
+            .called(1);
+
+        aiTagViewModel.dispose();
+      });
+
+      test(
+          'should load translation model selection on initialization for translation scenario',
+          () async {
+        when(mockSettingsRepository.getTranslationModel()).thenReturn('model2');
+
+        final translationViewModel = ModelSelectionViewModel(
+            mockSettingsRepository, mockOpenRouterRepository,
+            scenario: 'translation');
+
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        verify(mockSettingsRepository.getTranslationModel()).called(1);
+        expect(translationViewModel.selectedModel?.id, 'model2');
+
+        translationViewModel.dispose();
+      });
+
+      test(
+          'should load ai_tag model selection on initialization for ai_tag scenario',
+          () async {
+        when(mockSettingsRepository.getAiTagModel()).thenReturn('model3');
+
+        final aiTagViewModel = ModelSelectionViewModel(
+            mockSettingsRepository, mockOpenRouterRepository,
+            scenario: 'ai_tag');
+
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        verify(mockSettingsRepository.getAiTagModel()).called(1);
+        expect(aiTagViewModel.selectedModel?.id, 'model3');
+
+        aiTagViewModel.dispose();
+      });
+
+      test('should save to correct repository method based on scenario',
+          () async {
+        final translationViewModel = ModelSelectionViewModel(
+            mockSettingsRepository, mockOpenRouterRepository,
+            scenario: 'translation');
+
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        translationViewModel.selectModel(testModels[1]);
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        verify(mockSettingsRepository.saveTranslationModel('model2')).called(1);
+
+        translationViewModel.dispose();
+
+        // Test ai_tag scenario
+        final aiTagViewModel = ModelSelectionViewModel(
+            mockSettingsRepository, mockOpenRouterRepository,
+            scenario: 'ai_tag');
+
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        aiTagViewModel.selectModel(testModels[2]);
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        verify(mockSettingsRepository.saveAiTagModel('model3')).called(1);
+
+        aiTagViewModel.dispose();
       });
     });
 

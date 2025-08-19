@@ -6,13 +6,14 @@ import 'package:readeck_app/domain/models/openrouter_model/openrouter_model.dart
 import 'package:readeck_app/main.dart';
 
 class ModelSelectionViewModel extends ChangeNotifier {
-  ModelSelectionViewModel(
-      this._settingsRepository, this._openRouterRepository) {
+  ModelSelectionViewModel(this._settingsRepository, this._openRouterRepository,
+      {this.scenario}) {
     _initCommands();
   }
 
   final SettingsRepository _settingsRepository;
   final OpenRouterRepository _openRouterRepository;
+  final String? scenario;
 
   List<OpenRouterModel> _availableModels = [];
   List<OpenRouterModel> get availableModels {
@@ -63,15 +64,29 @@ class ModelSelectionViewModel extends ChangeNotifier {
   }
 
   Future<List<OpenRouterModel>> _loadModelsAsync() async {
-    final result =
-        await _openRouterRepository.getModels(category: 'translation');
+    // 根据场景选择不同的分类
+    String? category;
+    switch (scenario) {
+      case 'translation':
+        category = 'translation';
+        break;
+      case 'ai_tag':
+        category = 'ai_tag';
+        break;
+      default:
+        category = null; // 全局模型选择，不限制分类
+        break;
+    }
+
+    final result = await _openRouterRepository.getModels(category: category);
     if (result.isSuccess()) {
       _availableModels = result.getOrNull() ?? [];
-      appLogger.d('成功加载 ${_availableModels.length} 个OpenRouter翻译模型');
+      final scenarioText = scenario != null ? '$scenario场景' : '全局';
+      appLogger.d('成功加载 ${_availableModels.length} 个OpenRouter$scenarioText模型');
       notifyListeners();
       return _availableModels;
     } else {
-      appLogger.e('获取OpenRouter翻译模型列表失败', error: result.exceptionOrNull()!);
+      appLogger.e('获取OpenRouter模型列表失败', error: result.exceptionOrNull()!);
       _availableModels = [];
       notifyListeners();
       throw result.exceptionOrNull()!;
@@ -86,22 +101,52 @@ class ModelSelectionViewModel extends ChangeNotifier {
   }
 
   Future<void> _saveSelectedModel(String modelId) async {
-    final result =
-        await _settingsRepository.saveSelectedOpenRouterModel(modelId);
-    if (result.isSuccess()) {
-      appLogger.d('成功保存选中的模型: $modelId');
+    late final Future<dynamic> result;
+
+    // 根据场景保存到不同的存储位置
+    switch (scenario) {
+      case 'translation':
+        result = _settingsRepository.saveTranslationModel(modelId);
+        break;
+      case 'ai_tag':
+        result = _settingsRepository.saveAiTagModel(modelId);
+        break;
+      default:
+        result = _settingsRepository.saveSelectedOpenRouterModel(modelId);
+        break;
+    }
+
+    final saveResult = await result;
+    if (saveResult.isSuccess()) {
+      final scenarioText = scenario != null ? '$scenario场景' : '全局';
+      appLogger.d('成功保存$scenarioText选中的模型: $modelId');
     } else {
-      appLogger.e('保存选中的模型失败', error: result.exceptionOrNull()!);
+      appLogger.e('保存选中的模型失败', error: saveResult.exceptionOrNull()!);
       throw '保存选中的模型失败';
     }
   }
 
   Future<void> _loadSelectedModel() async {
     try {
-      final selectedModelId = _settingsRepository.getSelectedOpenRouterModel();
+      String selectedModelId;
+
+      // 根据场景从不同的存储位置加载
+      switch (scenario) {
+        case 'translation':
+          selectedModelId = _settingsRepository.getTranslationModel();
+          break;
+        case 'ai_tag':
+          selectedModelId = _settingsRepository.getAiTagModel();
+          break;
+        default:
+          selectedModelId = _settingsRepository.getSelectedOpenRouterModel();
+          break;
+      }
+
       if (selectedModelId.isNotEmpty) {
         _selectedModelId = selectedModelId;
-        appLogger.d('成功加载选中的模型ID: $selectedModelId');
+        final scenarioText = scenario != null ? '$scenario场景' : '全局';
+        appLogger.d('成功加载$scenarioText选中的模型ID: $selectedModelId');
         notifyListeners();
       }
     } catch (e) {

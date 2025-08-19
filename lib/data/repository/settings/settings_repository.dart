@@ -26,6 +26,8 @@ class SettingsRepository {
   String? _translationTargetLanguage;
   bool? _translationCacheEnabled;
   String? _aiTagTargetLanguage;
+  String? _translationModel;
+  String? _aiTagModel;
 
   bool _isLoaded = false;
 
@@ -126,6 +128,25 @@ class SettingsRepository {
             '加载AI标签目标语言失败: ${aiTagLanguageResult.exceptionOrNull()}'));
       }
       _aiTagTargetLanguage = aiTagLanguageResult.getOrThrow();
+
+      // 加载翻译场景专用模型
+      final translationModelResult = await _prefsService.getTranslationModel();
+      if (translationModelResult.isError()) {
+        appLogger.e('加载翻译场景模型失败',
+            error: translationModelResult.exceptionOrNull());
+        return Failure(Exception(
+            '加载翻译场景模型失败: ${translationModelResult.exceptionOrNull()}'));
+      }
+      _translationModel = translationModelResult.getOrThrow();
+
+      // 加载AI标签场景专用模型
+      final aiTagModelResult = await _prefsService.getAiTagModel();
+      if (aiTagModelResult.isError()) {
+        appLogger.e('加载AI标签场景模型失败', error: aiTagModelResult.exceptionOrNull());
+        return Failure(
+            Exception('加载AI标签场景模型失败: ${aiTagModelResult.exceptionOrNull()}'));
+      }
+      _aiTagModel = aiTagModelResult.getOrThrow();
 
       _isLoaded = true;
       appLogger.i('应用配置加载完成');
@@ -328,6 +349,48 @@ class SettingsRepository {
   String getAiTagTargetLanguage() {
     _ensureLoaded();
     return _aiTagTargetLanguage!;
+  }
+
+  /// 保存翻译场景专用模型
+  AsyncResult<void> saveTranslationModel(String modelId) async {
+    _ensureLoaded();
+
+    final result = await _prefsService.setTranslationModel(modelId);
+    if (result.isError()) {
+      appLogger.e("保存翻译场景模型失败", error: result.exceptionOrNull());
+      return result;
+    }
+
+    // 更新缓存
+    _translationModel = modelId;
+    return const Success(unit);
+  }
+
+  /// 同步获取翻译场景专用模型
+  String getTranslationModel() {
+    _ensureLoaded();
+    return _translationModel!;
+  }
+
+  /// 保存AI标签场景专用模型
+  AsyncResult<void> saveAiTagModel(String modelId) async {
+    _ensureLoaded();
+
+    final result = await _prefsService.setAiTagModel(modelId);
+    if (result.isError()) {
+      appLogger.e("保存AI标签场景模型失败", error: result.exceptionOrNull());
+      return result;
+    }
+
+    // 更新缓存
+    _aiTagModel = modelId;
+    return const Success(unit);
+  }
+
+  /// 同步获取AI标签场景专用模型
+  String getAiTagModel() {
+    _ensureLoaded();
+    return _aiTagModel!;
   }
 
   /// 释放资源

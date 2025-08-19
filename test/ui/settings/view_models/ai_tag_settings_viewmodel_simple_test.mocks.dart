@@ -7,8 +7,12 @@ import 'dart:async' as _i3;
 
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i5;
+import 'package:readeck_app/data/repository/openrouter/openrouter_repository.dart'
+    as _i6;
 import 'package:readeck_app/data/repository/settings/settings_repository.dart'
     as _i2;
+import 'package:readeck_app/domain/models/openrouter_model/openrouter_model.dart'
+    as _i7;
 import 'package:result_dart/result_dart.dart' as _i4;
 
 // ignore_for_file: type=lint
@@ -335,6 +339,71 @@ class MockSettingsRepository extends _i1.Mock
       ) as String);
 
   @override
+  _i3.Future<_i4.ResultDart<void, Exception>> saveTranslationModel(
+          String? modelId) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #saveTranslationModel,
+          [modelId],
+        ),
+        returnValue: _i3.Future<_i4.ResultDart<void, Exception>>.value(
+            _i5.dummyValue<_i4.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #saveTranslationModel,
+            [modelId],
+          ),
+        )),
+      ) as _i3.Future<_i4.ResultDart<void, Exception>>);
+
+  @override
+  String getTranslationModel() => (super.noSuchMethod(
+        Invocation.method(
+          #getTranslationModel,
+          [],
+        ),
+        returnValue: _i5.dummyValue<String>(
+          this,
+          Invocation.method(
+            #getTranslationModel,
+            [],
+          ),
+        ),
+      ) as String);
+
+  @override
+  _i3.Future<_i4.ResultDart<void, Exception>> saveAiTagModel(String? modelId) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #saveAiTagModel,
+          [modelId],
+        ),
+        returnValue: _i3.Future<_i4.ResultDart<void, Exception>>.value(
+            _i5.dummyValue<_i4.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #saveAiTagModel,
+            [modelId],
+          ),
+        )),
+      ) as _i3.Future<_i4.ResultDart<void, Exception>>);
+
+  @override
+  String getAiTagModel() => (super.noSuchMethod(
+        Invocation.method(
+          #getAiTagModel,
+          [],
+        ),
+        returnValue: _i5.dummyValue<String>(
+          this,
+          Invocation.method(
+            #getAiTagModel,
+            [],
+          ),
+        ),
+      ) as String);
+
+  @override
   void dispose() => super.noSuchMethod(
         Invocation.method(
           #dispose,
@@ -342,4 +411,36 @@ class MockSettingsRepository extends _i1.Mock
         ),
         returnValueForMissingStub: null,
       );
+}
+
+/// A class which mocks [OpenRouterRepository].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockOpenRouterRepository extends _i1.Mock
+    implements _i6.OpenRouterRepository {
+  MockOpenRouterRepository() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i3.Future<_i4.ResultDart<List<_i7.OpenRouterModel>, Exception>> getModels(
+          {String? category}) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getModels,
+          [],
+          {#category: category},
+        ),
+        returnValue: _i3
+            .Future<_i4.ResultDart<List<_i7.OpenRouterModel>, Exception>>.value(
+            _i5.dummyValue<
+                _i4.ResultDart<List<_i7.OpenRouterModel>, Exception>>(
+          this,
+          Invocation.method(
+            #getModels,
+            [],
+            {#category: category},
+          ),
+        )),
+      ) as _i3.Future<_i4.ResultDart<List<_i7.OpenRouterModel>, Exception>>);
 }

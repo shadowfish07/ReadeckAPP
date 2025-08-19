@@ -234,8 +234,10 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
                     GoRoute(
                       path: Routes.modelSelectionRelative,
                       builder: (context, state) {
+                        final scenario = state.uri.queryParameters['scenario'];
                         final viewModel = ModelSelectionViewModel(
-                            context.read(), context.read());
+                            context.read(), context.read(),
+                            scenario: scenario);
                         return ModelSelectionScreen(
                           viewModel: viewModel,
                         );
@@ -245,15 +247,15 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
                       path: Routes.translationSettingRelative,
                       builder: (context, state) {
                         final viewModel = TranslationSettingsViewModel(
-                            context.read(), context.read());
+                            context.read(), context.read(), context.read());
                         return TranslationSettingsScreen(viewModel: viewModel);
                       },
                     ),
                     GoRoute(
                       path: Routes.aiTagSettingRelative,
                       builder: (context, state) {
-                        final viewModel =
-                            AiTagSettingsViewModel(context.read());
+                        final viewModel = AiTagSettingsViewModel(
+                            context.read(), context.read());
                         return AiTagSettingsScreen(viewModel: viewModel);
                       },
                     ),

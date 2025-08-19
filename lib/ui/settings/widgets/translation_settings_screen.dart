@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_command/flutter_command.dart';
+import 'package:go_router/go_router.dart';
 import 'package:readeck_app/main.dart';
+import 'package:readeck_app/routing/routes.dart';
 import 'package:readeck_app/ui/settings/view_models/translation_settings_viewmodel.dart';
 import 'package:readeck_app/ui/core/ui/snack_bar_helper.dart';
 
@@ -21,6 +23,8 @@ class _TranslationSettingsScreenState extends State<TranslationSettingsScreen> {
   late ListenableSubscription _languageErrorSubscription;
   late ListenableSubscription _cacheSuccessSubscription;
   late ListenableSubscription _cacheErrorSubscription;
+  late ListenableSubscription _modelSuccessSubscription;
+  late ListenableSubscription _modelErrorSubscription;
 
   @override
   void initState() {
@@ -96,6 +100,29 @@ class _TranslationSettingsScreenState extends State<TranslationSettingsScreen> {
         );
       }
     });
+
+    // 监听保存翻译模型命令的结果
+    _modelSuccessSubscription =
+        widget.viewModel.saveTranslationModel.listen((result, _) {
+      if (mounted) {
+        SnackBarHelper.showSuccess(
+          context,
+          '翻译模型保存成功',
+        );
+      }
+    });
+
+    _modelErrorSubscription = widget.viewModel.saveTranslationModel.errors
+        .where((x) => x != null)
+        .listen((error, _) {
+      appLogger.e('保存翻译模型错误: $error');
+      if (mounted && error != null) {
+        SnackBarHelper.showError(
+          context,
+          '保存失败：${error.error.toString()}',
+        );
+      }
+    });
   }
 
   @override
@@ -106,6 +133,8 @@ class _TranslationSettingsScreenState extends State<TranslationSettingsScreen> {
     _languageErrorSubscription.cancel();
     _cacheSuccessSubscription.cancel();
     _cacheErrorSubscription.cancel();
+    _modelSuccessSubscription.cancel();
+    _modelErrorSubscription.cancel();
     super.dispose();
   }
 
@@ -184,6 +213,17 @@ class _TranslationSettingsScreenState extends State<TranslationSettingsScreen> {
             subtitle: Text(widget.viewModel.translationTargetLanguage),
             trailing: const Icon(Icons.chevron_right),
             onTap: _showLanguageSelectionDialog,
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.smart_toy),
+            title: const Text('专用模型'),
+            subtitle: Text(
+                widget.viewModel.selectedTranslationModel?.name ?? '使用全局模型'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              context.push('${Routes.modelSelection}?scenario=translation');
+            },
           ),
           const Divider(),
           SwitchListTile(
