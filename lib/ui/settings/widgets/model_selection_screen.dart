@@ -14,57 +14,62 @@ class ModelSelectionScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RefreshIndicator(
-      onRefresh: () {
-        return viewModel.loadModels.executeWithFuture(null);
-      },
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: CommandBuilder<void, void>(
-          command: viewModel.loadModels,
-          whileExecuting: (context, _, __) {
-            // 如果已有数据，显示数据内容而不是全屏Loading
-            if (viewModel.availableModels.isNotEmpty) {
-              return _buildModelsList();
-            }
-            // 无数据时显示Loading
-            return const Center(child: Loading(text: '正在加载模型列表...'));
-          },
-          onError: (context, error, _, __) => Center(
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      color: Theme.of(context).colorScheme.error,
-                      size: 64,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      '加载模型失败',
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      error.toString(),
-                      style: Theme.of(context).textTheme.bodyMedium,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    FilledButton.icon(
-                      onPressed: () => viewModel.loadModels.execute(),
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('重试'),
-                    ),
-                  ],
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('选择模型'),
+      ),
+      body: RefreshIndicator(
+        onRefresh: () {
+          return viewModel.loadModels.executeWithFuture(null);
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: CommandBuilder<void, void>(
+            command: viewModel.loadModels,
+            whileExecuting: (context, _, __) {
+              // 如果已有数据，显示数据内容而不是全屏Loading
+              if (viewModel.availableModels.isNotEmpty) {
+                return _buildModelsList();
+              }
+              // 无数据时显示Loading
+              return const Center(child: Loading(text: '正在加载模型列表...'));
+            },
+            onError: (context, error, _, __) => Center(
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        color: Theme.of(context).colorScheme.error,
+                        size: 64,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        '加载模型失败',
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        error.toString(),
+                        style: Theme.of(context).textTheme.bodyMedium,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 24),
+                      FilledButton.icon(
+                        onPressed: () => viewModel.loadModels.execute(),
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('重试'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
+            onData: (context, _, __) => _buildModelsList(),
           ),
-          onData: (context, _, __) => _buildModelsList(),
         ),
       ),
     );

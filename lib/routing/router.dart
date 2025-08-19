@@ -199,70 +199,69 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
                       ),
                     );
                   },
-                  routes: [
-                    GoRoute(
-                      path: Routes.aboutRelative,
-                      builder: (context, state) {
-                        return ChangeNotifierProvider<AboutViewModel>(
-                          create: (context) => AboutViewModel(
-                            context.read(),
-                            context.read(),
-                          ),
-                          child: Consumer<AboutViewModel>(
-                            builder: (context, viewModel, child) {
-                              return AboutPage(viewModel: viewModel);
-                            },
-                          ),
-                        );
-                      },
-                    ),
-                    GoRoute(
-                      path: Routes.apiConfigSettingRelative,
-                      builder: (context, state) {
-                        final viewModel = ApiConfigViewModel(context.read());
-                        return ApiConfigPage(viewModel: viewModel);
-                      },
-                    ),
-                    GoRoute(
-                      path: Routes.aiSettingRelative,
-                      builder: (context, state) {
-                        final viewModel =
-                            AiSettingsViewModel(context.read(), context.read());
-                        return AiSettingsScreen(viewModel: viewModel);
-                      },
-                    ),
-                    GoRoute(
-                      path: Routes.modelSelectionRelative,
-                      builder: (context, state) {
-                        final scenario = state.uri.queryParameters['scenario'];
-                        final viewModel = ModelSelectionViewModel(
-                            context.read(), context.read(),
-                            scenario: scenario);
-                        return ModelSelectionScreen(
-                          viewModel: viewModel,
-                        );
-                      },
-                    ),
-                    GoRoute(
-                      path: Routes.translationSettingRelative,
-                      builder: (context, state) {
-                        final viewModel = TranslationSettingsViewModel(
-                            context.read(), context.read(), context.read());
-                        return TranslationSettingsScreen(viewModel: viewModel);
-                      },
-                    ),
-                    GoRoute(
-                      path: Routes.aiTagSettingRelative,
-                      builder: (context, state) {
-                        final viewModel = AiTagSettingsViewModel(
-                            context.read(), context.read());
-                        return AiTagSettingsScreen(viewModel: viewModel);
-                      },
-                    ),
-                  ],
                 ),
               ])
             ]),
+        // 设置子页面作为独立的顶级路由
+        GoRoute(
+          path: Routes.about,
+          builder: (context, state) {
+            return ChangeNotifierProvider<AboutViewModel>(
+              create: (context) => AboutViewModel(
+                context.read(),
+                context.read(),
+              ),
+              child: Consumer<AboutViewModel>(
+                builder: (context, viewModel, child) {
+                  return AboutPage(viewModel: viewModel);
+                },
+              ),
+            );
+          },
+        ),
+        GoRoute(
+          path: Routes.apiConfigSetting,
+          builder: (context, state) {
+            final viewModel = ApiConfigViewModel(context.read());
+            return ApiConfigPage(viewModel: viewModel);
+          },
+        ),
+        GoRoute(
+          path: Routes.aiSetting,
+          builder: (context, state) {
+            final viewModel =
+                AiSettingsViewModel(context.read(), context.read());
+            return AiSettingsScreen(viewModel: viewModel);
+          },
+        ),
+        GoRoute(
+          path: Routes.modelSelection,
+          builder: (context, state) {
+            final scenario = state.uri.queryParameters['scenario'];
+            final viewModel = ModelSelectionViewModel(
+                context.read(), context.read(),
+                scenario: scenario);
+            return ModelSelectionScreen(
+              viewModel: viewModel,
+            );
+          },
+        ),
+        GoRoute(
+          path: Routes.translationSetting,
+          builder: (context, state) {
+            final viewModel = TranslationSettingsViewModel(
+                context.read(), context.read(), context.read());
+            return TranslationSettingsScreen(viewModel: viewModel);
+          },
+        ),
+        GoRoute(
+          path: Routes.aiTagSetting,
+          builder: (context, state) {
+            final viewModel =
+                AiTagSettingsViewModel(context.read(), context.read());
+            return AiTagSettingsScreen(viewModel: viewModel);
+          },
+        ),
         GoRoute(
             path: '${Routes.bookmarkDetail}/:id',
             builder: (context, state) {
