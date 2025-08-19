@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_command/flutter_command.dart';
 import 'package:readeck_app/data/repository/openrouter/openrouter_repository.dart';
@@ -8,10 +9,13 @@ import 'package:readeck_app/main.dart';
 class AiSettingsViewModel extends ChangeNotifier {
   AiSettingsViewModel(this._settingsRepository, this._openRouterRepository) {
     _initCommands();
+    _listenToSettingsChanges();
   }
 
   final SettingsRepository _settingsRepository;
   final OpenRouterRepository _openRouterRepository;
+
+  StreamSubscription<void>? _settingsSubscription;
 
   String get openRouterApiKey => _settingsRepository.getOpenRouterApiKey();
 
@@ -108,8 +112,16 @@ class AiSettingsViewModel extends ChangeNotifier {
     }
   }
 
+  void _listenToSettingsChanges() {
+    _settingsSubscription = _settingsRepository.settingsChanged.listen((_) {
+      appLogger.d('AI设置页面收到配置变更通知，刷新页面');
+      notifyListeners();
+    });
+  }
+
   @override
   void dispose() {
+    _settingsSubscription?.cancel();
     saveApiKey.dispose();
     loadApiKey.dispose();
     loadSelectedModel.dispose();

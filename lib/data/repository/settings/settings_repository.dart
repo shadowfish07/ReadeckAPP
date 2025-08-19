@@ -228,6 +228,9 @@ class SettingsRepository {
     // 更新 API 客户端配置
     _apiClient.updateConfig(host, token);
 
+    // 通知监听者配置已变更
+    _settingsChangedController.add(null);
+
     return const Success(unit);
   }
 
@@ -272,6 +275,8 @@ class SettingsRepository {
 
     // 更新缓存
     _openRouterApiKey = apiKey;
+    // 通知监听者配置已变更
+    _settingsChangedController.add(null);
     return const Success(unit);
   }
 
@@ -293,6 +298,8 @@ class SettingsRepository {
 
     // 更新缓存
     _translationProvider = provider;
+    // 通知监听者配置已变更
+    _settingsChangedController.add(null);
     return const Success(unit);
   }
 
@@ -314,6 +321,8 @@ class SettingsRepository {
 
     // 更新缓存
     _translationTargetLanguage = language;
+    // 通知监听者配置已变更
+    _settingsChangedController.add(null);
     return const Success(unit);
   }
 
@@ -335,6 +344,8 @@ class SettingsRepository {
 
     // 更新缓存
     _translationCacheEnabled = enabled;
+    // 通知监听者配置已变更
+    _settingsChangedController.add(null);
     return const Success(unit);
   }
 
@@ -370,6 +381,8 @@ class SettingsRepository {
 
     // 更新缓存
     _selectedOpenRouterModel = modelId;
+    // 通知监听者配置已变更
+    _settingsChangedController.add(null);
     return const Success(unit);
   }
 
@@ -397,6 +410,8 @@ class SettingsRepository {
 
     // 更新缓存
     _aiTagTargetLanguage = language;
+    // 通知监听者配置已变更
+    _settingsChangedController.add(null);
     return const Success(unit);
   }
 
@@ -430,6 +445,8 @@ class SettingsRepository {
 
     // 更新缓存
     _translationModel = modelId;
+    // 通知监听者配置已变更
+    _settingsChangedController.add(null);
     return const Success(unit);
   }
 
@@ -468,6 +485,8 @@ class SettingsRepository {
 
     // 更新缓存
     _aiTagModel = modelId;
+    // 通知监听者配置已变更
+    _settingsChangedController.add(null);
     return const Success(unit);
   }
 

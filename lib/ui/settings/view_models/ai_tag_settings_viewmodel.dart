@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_command/flutter_command.dart';
 import 'package:readeck_app/data/repository/openrouter/openrouter_repository.dart';
@@ -9,10 +10,13 @@ class AiTagSettingsViewModel extends ChangeNotifier {
   AiTagSettingsViewModel(this._settingsRepository, this._openRouterRepository) {
     _loadSettings();
     _initializeCommands();
+    _listenToSettingsChanges();
   }
 
   final SettingsRepository _settingsRepository;
   final OpenRouterRepository _openRouterRepository;
+
+  StreamSubscription<void>? _settingsSubscription;
 
   List<OpenRouterModel> _availableModels = [];
 
@@ -110,5 +114,18 @@ class AiTagSettingsViewModel extends ChangeNotifier {
 
   void clearAiTagModel() {
     saveAiTagModel.execute('');
+  }
+
+  void _listenToSettingsChanges() {
+    _settingsSubscription = _settingsRepository.settingsChanged.listen((_) {
+      appLogger.d('AI标签设置页面收到配置变更通知，刷新页面');
+      notifyListeners();
+    });
+  }
+
+  @override
+  void dispose() {
+    _settingsSubscription?.cancel();
+    super.dispose();
   }
 }
