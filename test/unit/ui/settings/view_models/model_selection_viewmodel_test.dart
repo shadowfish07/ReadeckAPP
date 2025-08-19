@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:logger/logger.dart';
+import 'package:flutter_command/flutter_command.dart';
 import 'package:readeck_app/data/repository/openrouter/openrouter_repository.dart';
 import 'package:readeck_app/data/repository/settings/settings_repository.dart';
 import 'package:readeck_app/domain/models/openrouter_model/openrouter_model.dart';
@@ -20,7 +21,18 @@ void main() {
     late List<OpenRouterModel> testModels;
 
     setUpAll(() {
-      appLogger = Logger();
+      // Setup global exception handler for flutter_command
+      Command.globalExceptionHandler = (error, stackTrace) {
+        // Handle errors in tests
+      };
+
+      appLogger = Logger(
+        printer: PrettyPrinter(
+          methodCount: 0,
+          dateTimeFormat: DateTimeFormat.none,
+        ),
+        level: Level.warning, // Reduce log noise in tests
+      );
 
       // Provide dummy values for Mockito
       provideDummy<Result<List<OpenRouterModel>>>(
