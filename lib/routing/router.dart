@@ -54,6 +54,7 @@ final Map<String, String> _routeTitleMap = {
 
 // 根据路由获取标题
 String? _getTitleForRoute(String location) {
+  // 直接匹配
   return _routeTitleMap[location];
 }
 
@@ -66,7 +67,8 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
         StatefulShellRoute.indexedStack(
             builder: (context, state, child) {
               // 根据当前路由确定页面标题
-              final title = _getTitleForRoute(state.matchedLocation);
+              final title =
+                  _getTitleForRoute(state.fullPath ?? state.matchedLocation);
 
               // 检查是否为书签列表页面，需要显示FAB
               final isBookmarkListRoute = [
@@ -75,10 +77,11 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
                 Routes.reading,
                 Routes.archived,
                 Routes.marked,
-              ].contains(state.matchedLocation);
+              ].contains(state.fullPath ?? state.matchedLocation);
 
               // 从设置页返回，跳转首页
-              if (state.matchedLocation == Routes.settings) {
+              if ((state.fullPath ?? state.matchedLocation) ==
+                  Routes.settings) {
                 return MainLayout(
                   title: title,
                   child: PopScope(
@@ -196,50 +199,68 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
                       ),
                     );
                   },
+                  routes: [
+                    GoRoute(
+                      path: Routes.aboutRelative,
+                      builder: (context, state) {
+                        return ChangeNotifierProvider<AboutViewModel>(
+                          create: (context) => AboutViewModel(
+                            context.read(),
+                            context.read(),
+                          ),
+                          child: Consumer<AboutViewModel>(
+                            builder: (context, viewModel, child) {
+                              return AboutPage(viewModel: viewModel);
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                    GoRoute(
+                      path: Routes.apiConfigSettingRelative,
+                      builder: (context, state) {
+                        final viewModel = ApiConfigViewModel(context.read());
+                        return ApiConfigPage(viewModel: viewModel);
+                      },
+                    ),
+                    GoRoute(
+                      path: Routes.aiSettingRelative,
+                      builder: (context, state) {
+                        final viewModel =
+                            AiSettingsViewModel(context.read(), context.read());
+                        return AiSettingsScreen(viewModel: viewModel);
+                      },
+                    ),
+                    GoRoute(
+                      path: Routes.modelSelectionRelative,
+                      builder: (context, state) {
+                        final viewModel = ModelSelectionViewModel(
+                            context.read(), context.read());
+                        return ModelSelectionScreen(
+                          viewModel: viewModel,
+                        );
+                      },
+                    ),
+                    GoRoute(
+                      path: Routes.translationSettingRelative,
+                      builder: (context, state) {
+                        final viewModel = TranslationSettingsViewModel(
+                            context.read(), context.read());
+                        return TranslationSettingsScreen(viewModel: viewModel);
+                      },
+                    ),
+                    GoRoute(
+                      path: Routes.aiTagSettingRelative,
+                      builder: (context, state) {
+                        final viewModel =
+                            AiTagSettingsViewModel(context.read());
+                        return AiTagSettingsScreen(viewModel: viewModel);
+                      },
+                    ),
+                  ],
                 ),
               ])
             ]),
-        GoRoute(
-            path: Routes.about,
-            builder: (context, state) {
-              final viewModel = AboutViewModel();
-              return AboutPage(viewModel: viewModel);
-            }),
-        GoRoute(
-            path: Routes.apiConfigSetting,
-            builder: (context, state) {
-              final viewModel = ApiConfigViewModel(context.read());
-              return ApiConfigPage(viewModel: viewModel);
-            }),
-        GoRoute(
-            path: Routes.aiSetting,
-            builder: (context, state) {
-              final viewModel =
-                  AiSettingsViewModel(context.read(), context.read());
-              return AiSettingsScreen(viewModel: viewModel);
-            }),
-        GoRoute(
-            path: Routes.modelSelection,
-            builder: (context, state) {
-              final viewModel =
-                  ModelSelectionViewModel(context.read(), context.read());
-              return ModelSelectionScreen(
-                viewModel: viewModel,
-              );
-            }),
-        GoRoute(
-            path: Routes.translationSetting,
-            builder: (context, state) {
-              final viewModel =
-                  TranslationSettingsViewModel(context.read(), context.read());
-              return TranslationSettingsScreen(viewModel: viewModel);
-            }),
-        GoRoute(
-            path: Routes.aiTagSetting,
-            builder: (context, state) {
-              final viewModel = AiTagSettingsViewModel(context.read());
-              return AiTagSettingsScreen(viewModel: viewModel);
-            }),
         GoRoute(
             path: '${Routes.bookmarkDetail}/:id',
             builder: (context, state) {

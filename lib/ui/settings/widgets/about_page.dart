@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:readeck_app/ui/settings/view_models/about_viewmodel.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -9,216 +10,374 @@ class AboutPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('关于'),
-      ),
-      body: ListenableBuilder(
-        listenable: viewModel,
-        builder: (BuildContext context, _) {
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(height: 32),
-                // 应用图标
-                Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
+    return ListenableBuilder(
+      listenable: viewModel,
+      builder: (BuildContext context, _) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const SizedBox(height: 32),
+              // 应用图标
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    width: 120,
+                    height: 120,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary,
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: Icon(
+                          Icons.book,
+                          size: 60,
+                          color: Theme.of(context).colorScheme.onPrimary,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              // 应用名称
+              Text(
+                'Readeck APP',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              // 版本信息
+              Text(
+                '版本 ${viewModel.version}',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
+              // 更新信息卡片
+              if (viewModel.updateInfo != null)
+                Column(
+                  children: [
+                    const SizedBox(height: 32),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  '新版本可用: ${viewModel.updateInfo!.version}',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                ),
+                                const SizedBox(width: 8),
+                                const Badge(),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            // 显示更新日志
+                            if (viewModel.updateInfo!.releaseNotes.isNotEmpty)
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '更新内容：',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .surfaceContainerHighest,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: MarkdownBody(
+                                      data: viewModel.updateInfo!.releaseNotes,
+                                      styleSheet: MarkdownStyleSheet(
+                                        p: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                            ),
+                                        h1: Theme.of(context)
+                                            .textTheme
+                                            .titleLarge
+                                            ?.copyWith(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                            ),
+                                        h2: Theme.of(context)
+                                            .textTheme
+                                            .titleMedium
+                                            ?.copyWith(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                            ),
+                                        h3: Theme.of(context)
+                                            .textTheme
+                                            .titleSmall
+                                            ?.copyWith(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                            ),
+                                        listBullet: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                            ),
+                                        code: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                              fontFamily: 'monospace',
+                                              backgroundColor: Theme.of(context)
+                                                  .colorScheme
+                                                  .surfaceContainer,
+                                            ),
+                                      ),
+                                      onTapLink: (text, href, title) {
+                                        if (href != null) {
+                                          _launchUrl(href);
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                ],
+                              ),
+                            // 下载进度条
+                            if (viewModel.isDownloading)
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '下载中... ${(viewModel.downloadProgress * 100).toStringAsFixed(1)}%',
+                                    style:
+                                        Theme.of(context).textTheme.bodySmall,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  LinearProgressIndicator(
+                                    value: viewModel.downloadProgress,
+                                  ),
+                                  const SizedBox(height: 16),
+                                ],
+                              ),
+                            // 安装状态
+                            if (viewModel.isInstalling)
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        '正在安装...',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall,
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                ],
+                              ),
+                            // 操作按钮
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                TextButton.icon(
+                                  onPressed: () {
+                                    _launchUrl(viewModel.updateInfo!.htmlUrl);
+                                  },
+                                  icon: const Icon(Icons.open_in_new, size: 16),
+                                  label: const Text('Github'),
+                                ),
+                                const SizedBox(width: 8),
+                                FilledButton.tonal(
+                                  onPressed: (viewModel.isDownloading ||
+                                          viewModel.isInstalling)
+                                      ? null
+                                      : () {
+                                          // 直接执行下载并安装，无需弹窗确认
+                                          viewModel
+                                              .downloadAndInstallUpdateCommand
+                                              .execute(viewModel.updateInfo!);
+                                        },
+                                  child: const Text('立即更新'),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              // 应用描述
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '应用简介',
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Readeck APP 是一个基于 Material Design 2 设计的移动端应用，用于连接和管理 Readeck 书签服务。通过这个应用，您可以方便地浏览、管理和阅读您保存的书签内容。',
+                        style: Theme.of(context).textTheme.bodyMedium,
                       ),
                     ],
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(24),
-                    child: Image.asset(
-                      'assets/images/logo.png',
-                      width: 120,
-                      height: 120,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          width: 120,
-                          height: 120,
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primary,
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                          child: Icon(
-                            Icons.book,
-                            size: 60,
-                            color: Theme.of(context).colorScheme.onPrimary,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
                 ),
-                const SizedBox(height: 24),
-                // 应用名称
-                Text(
-                  'Readeck APP',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(height: 16),
+              // 功能特性
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '主要功能',
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
-                ),
-                const SizedBox(height: 8),
-                // 版本信息
-                Text(
-                  '版本 ${viewModel.version}',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      const SizedBox(height: 12),
+                      _buildFeatureItem(
+                        context,
+                        Icons.bookmark,
+                        '书签管理',
+                        '浏览和管理您的书签收藏',
                       ),
-                ),
-                const SizedBox(height: 32),
-                // 应用描述
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '应用简介',
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Readeck APP 是一个基于 Material Design 2 设计的移动端应用，用于连接和管理 Readeck 书签服务。通过这个应用，您可以方便地浏览、管理和阅读您保存的书签内容。',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                      ],
-                    ),
+                      _buildFeatureItem(
+                        context,
+                        Icons.shuffle,
+                        '随机推荐',
+                        '发现您可能感兴趣的未读内容',
+                      ),
+                      _buildFeatureItem(
+                        context,
+                        Icons.settings,
+                        'API 配置',
+                        '灵活配置您的 Readeck 服务器连接',
+                      ),
+                      _buildFeatureItem(
+                        context,
+                        Icons.palette,
+                        'Material Design',
+                        '遵循 Material Design 2 设计规范',
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 16),
-                // 功能特性
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '主要功能',
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                        ),
-                        const SizedBox(height: 12),
-                        _buildFeatureItem(
-                          context,
-                          Icons.bookmark,
-                          '书签管理',
-                          '浏览和管理您的书签收藏',
-                        ),
-                        _buildFeatureItem(
-                          context,
-                          Icons.shuffle,
-                          '随机推荐',
-                          '发现您可能感兴趣的未读内容',
-                        ),
-                        _buildFeatureItem(
-                          context,
-                          Icons.settings,
-                          'API 配置',
-                          '灵活配置您的 Readeck 服务器连接',
-                        ),
-                        _buildFeatureItem(
-                          context,
-                          Icons.palette,
-                          'Material Design',
-                          '遵循 Material Design 2 设计规范',
-                        ),
-                      ],
-                    ),
+              ),
+              const SizedBox(height: 16),
+              // 链接和联系方式
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '相关链接',
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                      ),
+                      const SizedBox(height: 12),
+                      ListTile(
+                        leading: const Icon(Icons.web),
+                        title: const Text('Readeck 官网'),
+                        subtitle: const Text('了解更多关于 Readeck'),
+                        trailing: const Icon(Icons.open_in_new),
+                        contentPadding: EdgeInsets.zero,
+                        onTap: () => _launchUrl('https://readeck.org/en/'),
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.bug_report),
+                        title: const Text('反馈问题'),
+                        subtitle: const Text('报告 Bug 或提出建议'),
+                        trailing: const Icon(Icons.open_in_new),
+                        contentPadding: EdgeInsets.zero,
+                        onTap: () => _showFeedbackDialog(context),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 16),
-                // 开发者信息
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '开发者信息',
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                        ),
-                        const SizedBox(height: 12),
-                        const ListTile(
-                          leading: Icon(Icons.code),
-                          title: Text('开发者'),
-                          subtitle: Text('ShadowFish'),
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                        const ListTile(
-                          leading: Icon(Icons.flutter_dash),
-                          title: Text('技术栈'),
-                          subtitle: Text('Flutter & Dart'),
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                // 链接和联系方式
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '相关链接',
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                        ),
-                        const SizedBox(height: 12),
-                        ListTile(
-                          leading: const Icon(Icons.web),
-                          title: const Text('Readeck 官网'),
-                          subtitle: const Text('了解更多关于 Readeck'),
-                          trailing: const Icon(Icons.open_in_new),
-                          contentPadding: EdgeInsets.zero,
-                          onTap: () => _launchUrl('https://readeck.org'),
-                        ),
-                        ListTile(
-                          leading: const Icon(Icons.bug_report),
-                          title: const Text('反馈问题'),
-                          subtitle: const Text('报告 Bug 或提出建议'),
-                          trailing: const Icon(Icons.open_in_new),
-                          contentPadding: EdgeInsets.zero,
-                          onTap: () => _showFeedbackDialog(context),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                // 版权信息
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
+              ),
+              const SizedBox(height: 16),
+              // 版权信息
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: SizedBox(
+                    width: double.infinity,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -253,12 +412,12 @@ class AboutPage extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 32),
-              ],
-            ),
-          );
-        },
-      ),
+              ),
+              const SizedBox(height: 32),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -304,9 +463,17 @@ class AboutPage extends StatelessWidget {
   }
 
   Future<void> _launchUrl(String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    try {
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        // 如果无法启动URL，尝试使用默认模式
+        await launchUrl(uri);
+      }
+    } catch (e) {
+      // 如果启动失败，可以在这里添加错误提示
+      debugPrint('无法打开链接: $url, 错误: $e');
     }
   }
 

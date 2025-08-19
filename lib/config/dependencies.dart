@@ -18,7 +18,14 @@ import 'package:readeck_app/data/repository/label/label_repository.dart';
 
 import '../data/service/shared_preference_service.dart';
 
+import 'package:readeck_app/data/service/update_service.dart';
+import 'package:readeck_app/data/repository/update/update_repository.dart';
+import 'package:readeck_app/data/service/download_service.dart';
+import 'package:readeck_app/data/service/app_installer_service.dart';
+import 'package:readeck_app/domain/use_cases/app_update_use_case.dart';
+
 import '../main_viewmodel.dart';
+import '../ui/settings/view_models/about_viewmodel.dart';
 
 List<SingleChildWidget> providers(String host, String token) {
   return [
@@ -46,9 +53,24 @@ List<SingleChildWidget> providers(String host, String token) {
       return AiTagRecommendationRepository(
           openRouterClient, settingsRepository);
     }),
+    Provider(create: (context) => UpdateService()),
+    Provider(create: (context) => UpdateRepository(context.read())),
+    Provider(create: (context) => DownloadService()),
+    Provider(create: (context) => AppInstallerService()),
+    Provider(
+        create: (context) => AppUpdateUseCase(
+              downloadService: context.read(),
+              installerService: context.read(),
+            )),
     ChangeNotifierProvider(
       create: (context) => MainAppViewModel(
         context.read<SettingsRepository>(),
+      ),
+    ),
+    ChangeNotifierProvider(
+      create: (context) => AboutViewModel(
+        context.read<UpdateRepository>(),
+        context.read<AppUpdateUseCase>(),
       ),
     ),
     Provider(

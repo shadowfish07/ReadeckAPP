@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+
 import 'data/repository/settings/settings_repository.dart';
 import 'data/service/share_intent_service.dart';
 

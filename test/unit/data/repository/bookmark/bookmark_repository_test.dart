@@ -27,7 +27,7 @@ void main() {
 
     setUpAll(() {
       // 初始化全局logger，避免LateInitializationError
-      appLogger = Logger();
+      appLogger = Logger(level: Level.off);
 
       // 为Mockito提供dummy值
       provideDummy<Result<List<Bookmark>>>(const Success(<Bookmark>[]));

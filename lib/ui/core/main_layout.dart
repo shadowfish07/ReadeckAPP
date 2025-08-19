@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:readeck_app/main_viewmodel.dart';
 import 'package:readeck_app/routing/routes.dart';
 import 'package:readeck_app/ui/core/ui/bookmark_list_fab.dart';
+import 'package:readeck_app/ui/settings/view_models/about_viewmodel.dart';
 
 /// ScrollController提供者，用于FAB和页面之间共享滚动控制器
 class ScrollControllerProvider extends ChangeNotifier {
@@ -55,11 +56,13 @@ class MainLayout extends StatefulWidget {
 class _MainLayoutState extends State<MainLayout> {
   StreamSubscription<String>? _shareTextSubscription;
   bool _isProcessingShare = false;
+  bool _hasUpdate = false;
 
   @override
   void initState() {
     super.initState();
     _setupShareIntentListener();
+    _setupUpdateListener();
   }
 
   void _setupShareIntentListener() {
@@ -92,6 +95,40 @@ class _MainLayoutState extends State<MainLayout> {
     });
   }
 
+  void _setupUpdateListener() {
+    final aboutViewModel = context.read<AboutViewModel>();
+    aboutViewModel.addListener(() {
+      if (mounted && aboutViewModel.updateInfo != null && !_hasUpdate) {
+        setState(() {
+          _hasUpdate = true;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('发现新版本: ${aboutViewModel.updateInfo!.version}'),
+            action: SnackBarAction(
+              label: '前往更新',
+              onPressed: () {
+                context.go(Routes.about);
+              },
+            ),
+          ),
+        );
+      }
+    });
+  }
+
+  void _navigateToRoute(BuildContext context, String route) {
+    // 关闭抽屉
+    Navigator.of(context).pop();
+
+    // 延迟一帧执行导航，确保抽屉完全关闭
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.go(route);
+      }
+    });
+  }
+
   @override
   void dispose() {
     _shareTextSubscription?.cancel();
@@ -115,50 +152,43 @@ class _MainLayoutState extends State<MainLayout> {
                   )
                 : AppBar(
                     automaticallyImplyLeading: widget.automaticallyImplyLeading,
+                    leading: Builder(
+                      builder: (context) {
+                        return IconButton(
+                          icon: const Icon(Icons.menu),
+                          onPressed: () {
+                            Scaffold.of(context).openDrawer();
+                          },
+                        );
+                      },
+                    ),
                   )),
         drawer: NavigationDrawer(
           children: [
             ListTile(
               title: const Text('每日阅读'),
-              onTap: () {
-                context.pop();
-                context.go(Routes.dailyRead);
-              },
+              onTap: () => _navigateToRoute(context, Routes.dailyRead),
             ),
             ListTile(
               title: const Text('未读'),
-              onTap: () {
-                context.pop();
-                context.go(Routes.unarchived);
-              },
+              onTap: () => _navigateToRoute(context, Routes.unarchived),
             ),
             ListTile(
               title: const Text('阅读中'),
-              onTap: () {
-                context.pop();
-                context.go(Routes.reading);
-              },
+              onTap: () => _navigateToRoute(context, Routes.reading),
             ),
             ListTile(
               title: const Text('已归档'),
-              onTap: () {
-                context.pop();
-                context.go(Routes.archived);
-              },
+              onTap: () => _navigateToRoute(context, Routes.archived),
             ),
             ListTile(
               title: const Text('收藏'),
-              onTap: () {
-                context.pop();
-                context.go(Routes.marked);
-              },
+              onTap: () => _navigateToRoute(context, Routes.marked),
             ),
             ListTile(
               title: const Text('设置'),
-              onTap: () {
-                context.pop();
-                context.go(Routes.settings);
-              },
+              trailing: _hasUpdate ? const Badge() : null,
+              onTap: () => _navigateToRoute(context, Routes.settings),
             ),
           ],
         ),

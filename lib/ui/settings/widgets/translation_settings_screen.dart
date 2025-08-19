@@ -160,93 +160,87 @@ class _TranslationSettingsScreenState extends State<TranslationSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('翻译设置'),
-      ),
-      body: ListenableBuilder(
-        listenable: widget.viewModel,
-        builder: (context, _) => ListView(
-          children: [
-            ListTile(
-              leading: const Icon(Icons.translate),
-              title: const Text('翻译服务提供方'),
-              subtitle: Text(widget.viewModel.translationProvider),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                // 目前只支持AI，所以暂时不提供选择
-                SnackBarHelper.showInfo(
-                  context,
-                  '目前只支持 AI 翻译服务',
-                );
-              },
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.language),
-              title: const Text('翻译目标语种'),
-              subtitle: Text(widget.viewModel.translationTargetLanguage),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: _showLanguageSelectionDialog,
-            ),
-            const Divider(),
-            SwitchListTile(
-              secondary: const Icon(Icons.cached),
-              title: const Text('启用翻译缓存'),
-              subtitle: const Text('缓存翻译结果以提高性能'),
-              value: widget.viewModel.translationCacheEnabled,
-              onChanged: (bool value) {
-                widget.viewModel.saveTranslationCacheEnabled.execute(value);
-              },
-            ),
-            const Divider(),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            color: Theme.of(context).colorScheme.primary,
+    return ListenableBuilder(
+      listenable: widget.viewModel,
+      builder: (context, _) => ListView(
+        children: [
+          ListTile(
+            leading: const Icon(Icons.translate),
+            title: const Text('翻译服务提供方'),
+            subtitle: Text(widget.viewModel.translationProvider),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              // 目前只支持AI，所以暂时不提供选择
+              SnackBarHelper.showInfo(
+                context,
+                '目前只支持 AI 翻译服务',
+              );
+            },
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.language),
+            title: const Text('翻译目标语种'),
+            subtitle: Text(widget.viewModel.translationTargetLanguage),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: _showLanguageSelectionDialog,
+          ),
+          const Divider(),
+          SwitchListTile(
+            secondary: const Icon(Icons.cached),
+            title: const Text('启用翻译缓存'),
+            subtitle: const Text('缓存翻译结果以提高性能'),
+            value: widget.viewModel.translationCacheEnabled,
+            onChanged: (bool value) {
+              widget.viewModel.saveTranslationCacheEnabled.execute(value);
+            },
+          ),
+          const Divider(),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '关于翻译功能',
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      '翻译功能使用 AI 服务将文章内容翻译为您选择的目标语言。请确保已在 AI 设置中配置了 OpenRouter API 密钥。',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '• 支持多种主流语言\n• 启用缓存可以提高翻译速度\n• 翻译质量取决于所选的 AI 模型',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '关于翻译功能',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        '翻译功能使用 AI 服务将文章内容翻译为您选择的目标语言。请确保已在 AI 设置中配置了 OpenRouter API 密钥。',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '• 支持多种主流语言\n• 启用缓存可以提高翻译速度\n• 翻译质量取决于所选的 AI 模型',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                            ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
