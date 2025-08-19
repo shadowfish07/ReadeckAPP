@@ -23,8 +23,6 @@ class _TranslationSettingsScreenState extends State<TranslationSettingsScreen> {
   late ListenableSubscription _languageErrorSubscription;
   late ListenableSubscription _cacheSuccessSubscription;
   late ListenableSubscription _cacheErrorSubscription;
-  late ListenableSubscription _modelSuccessSubscription;
-  late ListenableSubscription _modelErrorSubscription;
 
   @override
   void initState() {
@@ -100,29 +98,6 @@ class _TranslationSettingsScreenState extends State<TranslationSettingsScreen> {
         );
       }
     });
-
-    // 监听保存翻译模型命令的结果
-    _modelSuccessSubscription =
-        widget.viewModel.saveTranslationModel.listen((result, _) {
-      if (mounted) {
-        SnackBarHelper.showSuccess(
-          context,
-          '翻译模型保存成功',
-        );
-      }
-    });
-
-    _modelErrorSubscription = widget.viewModel.saveTranslationModel.errors
-        .where((x) => x != null)
-        .listen((error, _) {
-      appLogger.e('保存翻译模型错误: $error');
-      if (mounted && error != null) {
-        SnackBarHelper.showError(
-          context,
-          '保存失败：${error.error.toString()}',
-        );
-      }
-    });
   }
 
   @override
@@ -133,8 +108,6 @@ class _TranslationSettingsScreenState extends State<TranslationSettingsScreen> {
     _languageErrorSubscription.cancel();
     _cacheSuccessSubscription.cancel();
     _cacheErrorSubscription.cancel();
-    _modelSuccessSubscription.cancel();
-    _modelErrorSubscription.cancel();
     super.dispose();
   }
 
