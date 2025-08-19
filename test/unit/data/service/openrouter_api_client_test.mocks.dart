@@ -530,18 +530,26 @@ class MockSettingsRepository extends _i1.Mock
 
   @override
   _i3.Future<_i8.ResultDart<void, Exception>> saveSelectedOpenRouterModel(
-          String? modelId) =>
+    String? modelId, [
+    String? modelName,
+  ]) =>
       (super.noSuchMethod(
         Invocation.method(
           #saveSelectedOpenRouterModel,
-          [modelId],
+          [
+            modelId,
+            modelName,
+          ],
         ),
         returnValue: _i3.Future<_i8.ResultDart<void, Exception>>.value(
             _i5.dummyValue<_i8.ResultDart<void, Exception>>(
           this,
           Invocation.method(
             #saveSelectedOpenRouterModel,
-            [modelId],
+            [
+              modelId,
+              modelName,
+            ],
           ),
         )),
       ) as _i3.Future<_i8.ResultDart<void, Exception>>);
@@ -556,6 +564,21 @@ class MockSettingsRepository extends _i1.Mock
           this,
           Invocation.method(
             #getSelectedOpenRouterModel,
+            [],
+          ),
+        ),
+      ) as String);
+
+  @override
+  String getSelectedOpenRouterModelName() => (super.noSuchMethod(
+        Invocation.method(
+          #getSelectedOpenRouterModelName,
+          [],
+        ),
+        returnValue: _i5.dummyValue<String>(
+          this,
+          Invocation.method(
+            #getSelectedOpenRouterModelName,
             [],
           ),
         ),
@@ -596,18 +619,26 @@ class MockSettingsRepository extends _i1.Mock
 
   @override
   _i3.Future<_i8.ResultDart<void, Exception>> saveTranslationModel(
-          String? modelId) =>
+    String? modelId, [
+    String? modelName,
+  ]) =>
       (super.noSuchMethod(
         Invocation.method(
           #saveTranslationModel,
-          [modelId],
+          [
+            modelId,
+            modelName,
+          ],
         ),
         returnValue: _i3.Future<_i8.ResultDart<void, Exception>>.value(
             _i5.dummyValue<_i8.ResultDart<void, Exception>>(
           this,
           Invocation.method(
             #saveTranslationModel,
-            [modelId],
+            [
+              modelId,
+              modelName,
+            ],
           ),
         )),
       ) as _i3.Future<_i8.ResultDart<void, Exception>>);
@@ -628,18 +659,42 @@ class MockSettingsRepository extends _i1.Mock
       ) as String);
 
   @override
-  _i3.Future<_i8.ResultDart<void, Exception>> saveAiTagModel(String? modelId) =>
+  String getTranslationModelName() => (super.noSuchMethod(
+        Invocation.method(
+          #getTranslationModelName,
+          [],
+        ),
+        returnValue: _i5.dummyValue<String>(
+          this,
+          Invocation.method(
+            #getTranslationModelName,
+            [],
+          ),
+        ),
+      ) as String);
+
+  @override
+  _i3.Future<_i8.ResultDart<void, Exception>> saveAiTagModel(
+    String? modelId, [
+    String? modelName,
+  ]) =>
       (super.noSuchMethod(
         Invocation.method(
           #saveAiTagModel,
-          [modelId],
+          [
+            modelId,
+            modelName,
+          ],
         ),
         returnValue: _i3.Future<_i8.ResultDart<void, Exception>>.value(
             _i5.dummyValue<_i8.ResultDart<void, Exception>>(
           this,
           Invocation.method(
             #saveAiTagModel,
-            [modelId],
+            [
+              modelId,
+              modelName,
+            ],
           ),
         )),
       ) as _i3.Future<_i8.ResultDart<void, Exception>>);
@@ -654,6 +709,21 @@ class MockSettingsRepository extends _i1.Mock
           this,
           Invocation.method(
             #getAiTagModel,
+            [],
+          ),
+        ),
+      ) as String);
+
+  @override
+  String getAiTagModelName() => (super.noSuchMethod(
+        Invocation.method(
+          #getAiTagModelName,
+          [],
+        ),
+        returnValue: _i5.dummyValue<String>(
+          this,
+          Invocation.method(
+            #getAiTagModelName,
             [],
           ),
         ),

@@ -8,6 +8,8 @@ class SharedPreferencesService {
   static const String _kReadeckApiToken = 'readeckApiToken';
   static const String _kOpenRouterApiKey = 'openRouterApiKey';
   static const String _kSelectedOpenRouterModel = 'selectedOpenRouterModel';
+  static const String _kSelectedOpenRouterModelName =
+      'selectedOpenRouterModelName';
 
   static const String _kTranslationProvider = 'translationProvider';
   static const String _kTranslationTargetLanguage = 'translationTargetLanguage';
@@ -15,7 +17,9 @@ class SharedPreferencesService {
   static const String _kAiTagTargetLanguage = 'aiTagTargetLanguage';
 
   static const String _kTranslationModel = 'translationModel';
+  static const String _kTranslationModelName = 'translationModelName';
   static const String _kAiTagModel = 'aiTagModel';
+  static const String _kAiTagModelName = 'aiTagModelName';
 
   AsyncResult<void> setThemeMode(int value) async {
     final prefs = await SharedPreferences.getInstance();
@@ -230,6 +234,28 @@ class SharedPreferencesService {
     }
   }
 
+  /// 设置翻译场景专用模型名称
+  AsyncResult<void> setTranslationModelName(String value) async {
+    final prefs = await SharedPreferences.getInstance();
+    try {
+      await prefs.setString(_kTranslationModelName, value);
+      return const Success(unit);
+    } on Exception catch (e) {
+      return Failure(e);
+    }
+  }
+
+  /// 获取翻译场景专用模型名称
+  AsyncResult<String> getTranslationModelName() async {
+    final prefs = await SharedPreferences.getInstance();
+    try {
+      final value = prefs.getString(_kTranslationModelName) ?? '';
+      return Success(value);
+    } on Exception catch (e) {
+      return Failure(e);
+    }
+  }
+
   /// 设置AI标签场景专用模型
   AsyncResult<void> setAiTagModel(String value) async {
     final prefs = await SharedPreferences.getInstance();
@@ -247,6 +273,50 @@ class SharedPreferencesService {
     final prefs = await SharedPreferences.getInstance();
     try {
       final value = prefs.getString(_kAiTagModel) ?? '';
+      return Success(value);
+    } on Exception catch (e) {
+      return Failure(e);
+    }
+  }
+
+  /// 设置AI标签场景专用模型名称
+  AsyncResult<void> setAiTagModelName(String value) async {
+    final prefs = await SharedPreferences.getInstance();
+    try {
+      await prefs.setString(_kAiTagModelName, value);
+      return const Success(unit);
+    } on Exception catch (e) {
+      return Failure(e);
+    }
+  }
+
+  /// 获取AI标签场景专用模型名称
+  AsyncResult<String> getAiTagModelName() async {
+    final prefs = await SharedPreferences.getInstance();
+    try {
+      final value = prefs.getString(_kAiTagModelName) ?? '';
+      return Success(value);
+    } on Exception catch (e) {
+      return Failure(e);
+    }
+  }
+
+  /// 设置选中的 OpenRouter 模型名称
+  AsyncResult<void> setSelectedOpenRouterModelName(String value) async {
+    final prefs = await SharedPreferences.getInstance();
+    try {
+      await prefs.setString(_kSelectedOpenRouterModelName, value);
+      return const Success(unit);
+    } on Exception catch (e) {
+      return Failure(e);
+    }
+  }
+
+  /// 获取选中的 OpenRouter 模型名称
+  AsyncResult<String> getSelectedOpenRouterModelName() async {
+    final prefs = await SharedPreferences.getInstance();
+    try {
+      final value = prefs.getString(_kSelectedOpenRouterModelName) ?? '';
       return Success(value);
     } on Exception catch (e) {
       return Failure(e);

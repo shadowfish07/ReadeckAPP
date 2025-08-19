@@ -97,29 +97,30 @@ class ModelSelectionViewModel extends ChangeNotifier {
     _selectedModelId = model.id;
     notifyListeners();
     // 自动保存选中的模型
-    _saveSelectedModel(model.id);
+    _saveSelectedModel(model);
   }
 
-  Future<void> _saveSelectedModel(String modelId) async {
+  Future<void> _saveSelectedModel(OpenRouterModel model) async {
     late final Future<dynamic> result;
 
     // 根据场景保存到不同的存储位置
     switch (scenario) {
       case 'translation':
-        result = _settingsRepository.saveTranslationModel(modelId);
+        result = _settingsRepository.saveTranslationModel(model.id, model.name);
         break;
       case 'ai_tag':
-        result = _settingsRepository.saveAiTagModel(modelId);
+        result = _settingsRepository.saveAiTagModel(model.id, model.name);
         break;
       default:
-        result = _settingsRepository.saveSelectedOpenRouterModel(modelId);
+        result = _settingsRepository.saveSelectedOpenRouterModel(
+            model.id, model.name);
         break;
     }
 
     final saveResult = await result;
     if (saveResult.isSuccess()) {
       final scenarioText = scenario != null ? '$scenario场景' : '全局';
-      appLogger.d('成功保存$scenarioText选中的模型: $modelId');
+      appLogger.d('成功保存$scenarioText选中的模型: ${model.id} (${model.name})');
     } else {
       appLogger.e('保存选中的模型失败', error: saveResult.exceptionOrNull()!);
       throw '保存选中的模型失败';

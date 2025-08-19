@@ -19,6 +19,9 @@ class AiSettingsViewModel extends ChangeNotifier {
   OpenRouterModel? _selectedModel;
   OpenRouterModel? get selectedModel => _selectedModel;
 
+  String _selectedModelName = '';
+  String get selectedModelName => _selectedModelName;
+
   late Command<String, void> saveApiKey;
   late Command<void, void> loadApiKey;
   late Command<void, void> loadSelectedModel;
@@ -71,6 +74,14 @@ class AiSettingsViewModel extends ChangeNotifier {
   Future<void> _loadSelectedModelAsync() async {
     try {
       final selectedModelId = _settingsRepository.getSelectedOpenRouterModel();
+
+      // 优先加载缓存的模型名称，避免闪动
+      _selectedModelName = _settingsRepository.getSelectedOpenRouterModelName();
+      if (_selectedModelName.isNotEmpty) {
+        appLogger.d('成功加载缓存的模型名称: $_selectedModelName');
+        notifyListeners();
+      }
+
       if (selectedModelId.isNotEmpty) {
         // 需要从 Repository 获取模型详情
         final modelsResult = await _openRouterRepository.getModels();
@@ -81,7 +92,12 @@ class AiSettingsViewModel extends ChangeNotifier {
               .firstOrNull;
           if (matchedModel != null) {
             _selectedModel = matchedModel;
-            appLogger.d('成功加载选中的模型: $selectedModelId');
+            // 如果API返回的模型名称与缓存不一致，更新缓存
+            if (_selectedModelName != matchedModel.name) {
+              _selectedModelName = matchedModel.name;
+              appLogger.d('更新模型名称缓存: ${matchedModel.name}');
+            }
+            appLogger.d('成功加载选中的模型: $selectedModelId (${matchedModel.name})');
             notifyListeners();
           }
         } else {

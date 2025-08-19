@@ -386,6 +386,41 @@ class MockSharedPreferencesService extends _i1.Mock
       ) as _i3.Future<_i4.ResultDart<String, Exception>>);
 
   @override
+  _i3.Future<_i4.ResultDart<void, Exception>> setTranslationModelName(
+          String? value) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #setTranslationModelName,
+          [value],
+        ),
+        returnValue: _i3.Future<_i4.ResultDart<void, Exception>>.value(
+            _i5.dummyValue<_i4.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #setTranslationModelName,
+            [value],
+          ),
+        )),
+      ) as _i3.Future<_i4.ResultDart<void, Exception>>);
+
+  @override
+  _i3.Future<_i4.ResultDart<String, Exception>> getTranslationModelName() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getTranslationModelName,
+          [],
+        ),
+        returnValue: _i3.Future<_i4.ResultDart<String, Exception>>.value(
+            _i5.dummyValue<_i4.ResultDart<String, Exception>>(
+          this,
+          Invocation.method(
+            #getTranslationModelName,
+            [],
+          ),
+        )),
+      ) as _i3.Future<_i4.ResultDart<String, Exception>>);
+
+  @override
   _i3.Future<_i4.ResultDart<void, Exception>> setAiTagModel(String? value) =>
       (super.noSuchMethod(
         Invocation.method(
@@ -418,6 +453,76 @@ class MockSharedPreferencesService extends _i1.Mock
           ),
         )),
       ) as _i3.Future<_i4.ResultDart<String, Exception>>);
+
+  @override
+  _i3.Future<_i4.ResultDart<void, Exception>> setAiTagModelName(
+          String? value) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #setAiTagModelName,
+          [value],
+        ),
+        returnValue: _i3.Future<_i4.ResultDart<void, Exception>>.value(
+            _i5.dummyValue<_i4.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #setAiTagModelName,
+            [value],
+          ),
+        )),
+      ) as _i3.Future<_i4.ResultDart<void, Exception>>);
+
+  @override
+  _i3.Future<_i4.ResultDart<String, Exception>> getAiTagModelName() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getAiTagModelName,
+          [],
+        ),
+        returnValue: _i3.Future<_i4.ResultDart<String, Exception>>.value(
+            _i5.dummyValue<_i4.ResultDart<String, Exception>>(
+          this,
+          Invocation.method(
+            #getAiTagModelName,
+            [],
+          ),
+        )),
+      ) as _i3.Future<_i4.ResultDart<String, Exception>>);
+
+  @override
+  _i3.Future<_i4.ResultDart<void, Exception>> setSelectedOpenRouterModelName(
+          String? value) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #setSelectedOpenRouterModelName,
+          [value],
+        ),
+        returnValue: _i3.Future<_i4.ResultDart<void, Exception>>.value(
+            _i5.dummyValue<_i4.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #setSelectedOpenRouterModelName,
+            [value],
+          ),
+        )),
+      ) as _i3.Future<_i4.ResultDart<void, Exception>>);
+
+  @override
+  _i3.Future<_i4.ResultDart<String, Exception>>
+      getSelectedOpenRouterModelName() => (super.noSuchMethod(
+            Invocation.method(
+              #getSelectedOpenRouterModelName,
+              [],
+            ),
+            returnValue: _i3.Future<_i4.ResultDart<String, Exception>>.value(
+                _i5.dummyValue<_i4.ResultDart<String, Exception>>(
+              this,
+              Invocation.method(
+                #getSelectedOpenRouterModelName,
+                [],
+              ),
+            )),
+          ) as _i3.Future<_i4.ResultDart<String, Exception>>);
 }
 
 /// A class which mocks [ReadeckApiClient].

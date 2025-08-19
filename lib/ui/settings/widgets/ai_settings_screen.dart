@@ -181,7 +181,9 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
                         ListTile(
                           contentPadding: EdgeInsets.zero,
                           title: Text(
-                            selectedModel?.name ?? '未选择模型',
+                            widget.viewModel.selectedModelName.isNotEmpty
+                                ? widget.viewModel.selectedModelName
+                                : selectedModel?.name ?? '未选择模型',
                           ),
                           trailing: const Icon(Icons.arrow_forward_ios),
                           onTap: () async {
