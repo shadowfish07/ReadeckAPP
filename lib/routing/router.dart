@@ -257,8 +257,7 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
         GoRoute(
           path: Routes.aiTagSetting,
           builder: (context, state) {
-            final viewModel =
-                AiTagSettingsViewModel(context.read(), context.read());
+            final viewModel = AiTagSettingsViewModel(context.read());
             return AiTagSettingsScreen(viewModel: viewModel);
           },
         ),

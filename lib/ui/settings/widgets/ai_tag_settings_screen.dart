@@ -18,8 +18,6 @@ class AiTagSettingsScreen extends StatefulWidget {
 class _AiTagSettingsScreenState extends State<AiTagSettingsScreen> {
   late ListenableSubscription _languageSuccessSubscription;
   late ListenableSubscription _languageErrorSubscription;
-  late ListenableSubscription _modelSuccessSubscription;
-  late ListenableSubscription _modelErrorSubscription;
 
   @override
   void initState() {
@@ -46,36 +44,12 @@ class _AiTagSettingsScreenState extends State<AiTagSettingsScreen> {
         );
       }
     });
-
-    _modelSuccessSubscription =
-        widget.viewModel.saveAiTagModel.listen((result, _) {
-      if (mounted) {
-        SnackBarHelper.showSuccess(
-          context,
-          'AI标签模型保存成功',
-        );
-      }
-    });
-
-    _modelErrorSubscription = widget.viewModel.saveAiTagModel.errors
-        .where((x) => x != null)
-        .listen((error, _) {
-      appLogger.e('保存AI标签模型错误: $error');
-      if (mounted && error != null) {
-        SnackBarHelper.showError(
-          context,
-          '保存失败：${error.error.toString()}',
-        );
-      }
-    });
   }
 
   @override
   void dispose() {
     _languageSuccessSubscription.cancel();
     _languageErrorSubscription.cancel();
-    _modelSuccessSubscription.cancel();
-    _modelErrorSubscription.cancel();
     super.dispose();
   }
 

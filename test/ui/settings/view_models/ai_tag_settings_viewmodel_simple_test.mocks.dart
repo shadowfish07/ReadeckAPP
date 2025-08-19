@@ -7,12 +7,8 @@ import 'dart:async' as _i3;
 
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i5;
-import 'package:readeck_app/data/repository/openrouter/openrouter_repository.dart'
-    as _i6;
 import 'package:readeck_app/data/repository/settings/settings_repository.dart'
     as _i2;
-import 'package:readeck_app/domain/models/openrouter_model/openrouter_model.dart'
-    as _i7;
 import 'package:result_dart/result_dart.dart' as _i4;
 
 // ignore_for_file: type=lint
@@ -481,36 +477,4 @@ class MockSettingsRepository extends _i1.Mock
         ),
         returnValueForMissingStub: null,
       );
-}
-
-/// A class which mocks [OpenRouterRepository].
-///
-/// See the documentation for Mockito's code generation for more information.
-class MockOpenRouterRepository extends _i1.Mock
-    implements _i6.OpenRouterRepository {
-  MockOpenRouterRepository() {
-    _i1.throwOnMissingStub(this);
-  }
-
-  @override
-  _i3.Future<_i4.ResultDart<List<_i7.OpenRouterModel>, Exception>> getModels(
-          {String? category}) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #getModels,
-          [],
-          {#category: category},
-        ),
-        returnValue: _i3
-            .Future<_i4.ResultDart<List<_i7.OpenRouterModel>, Exception>>.value(
-            _i5.dummyValue<
-                _i4.ResultDart<List<_i7.OpenRouterModel>, Exception>>(
-          this,
-          Invocation.method(
-            #getModels,
-            [],
-            {#category: category},
-          ),
-        )),
-      ) as _i3.Future<_i4.ResultDart<List<_i7.OpenRouterModel>, Exception>>);
 }

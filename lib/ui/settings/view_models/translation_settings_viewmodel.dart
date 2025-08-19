@@ -46,7 +46,7 @@ class TranslationSettingsViewModel extends ChangeNotifier {
   late Command<String, void> saveTranslationProvider;
   late Command<String, void> saveTranslationTargetLanguage;
   late Command<bool, void> saveTranslationCacheEnabled;
-  late Command<String, void> saveTranslationModel;
+  late Command<(String, String), void> saveTranslationModel;
   late Command<void, void> loadTranslationSettings;
   late Command<void, List<OpenRouterModel>> loadModels;
   late Command<void, void> clearTranslationCache;
@@ -78,8 +78,8 @@ class TranslationSettingsViewModel extends ChangeNotifier {
       _saveTranslationCacheEnabled,
     );
 
-    saveTranslationModel = Command.createAsyncNoResult<String>(
-      _saveTranslationModel,
+    saveTranslationModel = Command.createAsyncNoResult<(String, String)>(
+      (params) => _saveTranslationModel(params.$1, params.$2),
     );
 
     loadTranslationSettings = Command.createSyncNoParam(
@@ -144,11 +144,12 @@ class TranslationSettingsViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _saveTranslationModel(String modelId) async {
-    final result = await _settingsRepository.saveTranslationModel(modelId, '');
+  Future<void> _saveTranslationModel(String modelId, String modelName) async {
+    final result =
+        await _settingsRepository.saveTranslationModel(modelId, modelName);
     if (result.isSuccess()) {
       notifyListeners();
-      appLogger.d('成功保存翻译场景模型: $modelId');
+      appLogger.d('成功保存翻译场景模型: $modelId, $modelName');
     } else {
       appLogger.e('保存翻译场景模型失败', error: result.exceptionOrNull()!);
       throw result.exceptionOrNull()!;
@@ -172,11 +173,11 @@ class TranslationSettingsViewModel extends ChangeNotifier {
   }
 
   void selectTranslationModel(OpenRouterModel model) {
-    saveTranslationModel.execute(model.id);
+    saveTranslationModel.execute((model.id, model.name));
   }
 
   void clearTranslationModel() {
-    saveTranslationModel.execute('');
+    saveTranslationModel.execute(('', ''));
   }
 
   Future<void> _clearTranslationCacheAsync() async {

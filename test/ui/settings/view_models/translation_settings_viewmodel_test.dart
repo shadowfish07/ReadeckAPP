@@ -111,7 +111,8 @@ void main() {
             isA<Command<String, void>>());
         expect(
             viewModel.saveTranslationCacheEnabled, isA<Command<bool, void>>());
-        expect(viewModel.saveTranslationModel, isA<Command<String, void>>());
+        expect(viewModel.saveTranslationModel,
+            isA<Command<(String, String), void>>());
         expect(
             viewModel.loadModels, isA<Command<void, List<OpenRouterModel>>>());
       });
@@ -282,17 +283,20 @@ void main() {
 
       test('should save translation model successfully', () async {
         const modelId = 'translation-model-1';
+        const modelName = 'Test Model Name';
 
         when(mockSettingsRepository.getTranslationProvider()).thenReturn('AI');
-        when(mockSettingsRepository.saveTranslationModel(modelId))
+        when(mockSettingsRepository.saveTranslationModel(modelId, modelName))
             .thenAnswer((_) async => const Success(()));
 
         viewModel = TranslationSettingsViewModel(mockSettingsRepository,
             mockArticleRepository, mockOpenRouterRepository);
 
-        await viewModel.saveTranslationModel.executeWithFuture(modelId);
+        await viewModel.saveTranslationModel
+            .executeWithFuture((modelId, modelName));
 
-        verify(mockSettingsRepository.saveTranslationModel(modelId)).called(1);
+        verify(mockSettingsRepository.saveTranslationModel(modelId, modelName))
+            .called(1);
       });
 
       test('should return selected translation model from loaded models',
