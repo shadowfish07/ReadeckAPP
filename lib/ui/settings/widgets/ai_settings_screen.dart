@@ -74,248 +74,53 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
     }
   }
 
+  /// 构建分组标题
+  Widget _buildSectionHeader(BuildContext context, String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.w500,
+            ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('AI 设置'),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '配置 OpenRouter API 密钥和选择 AI 模型以启用 AI 能力',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-            ),
-            const SizedBox(height: 24),
+      body: ListenableBuilder(
+        listenable: widget.viewModel,
+        builder: (context, _) {
+          final hasApiKey = widget.viewModel.openRouterApiKey.isNotEmpty;
+          final selectedModel = widget.viewModel.selectedModel;
 
-            // API 密钥配置卡片
-            Card(
-              child: Padding(
+          return ListView(
+            children: [
+              // 页面描述
+              Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.key,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'API 密钥',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _apiKeyController,
-                      decoration: const InputDecoration(
-                        labelText: 'OpenRouter API 密钥',
-                        hintText: '请输入您的 API 密钥',
-                        border: OutlineInputBorder(),
-                      ),
-                      obscureText: true,
-                      onChanged: widget.viewModel.textChangedCommand.call,
-                      onFieldSubmitted: (_) => _saveApiKey(),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // 模型选择配置卡片
-            Card(
-              child: ListenableBuilder(
-                listenable: widget.viewModel,
-                builder: (context, child) {
-                  final selectedModel = widget.viewModel.selectedModel;
-                  final hasApiKey =
-                      widget.viewModel.openRouterApiKey.isNotEmpty;
-
-                  return Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.smart_toy,
-                              color: hasApiKey
-                                  ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'AI 模型',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
-                                  ?.copyWith(
-                                    color: hasApiKey
-                                        ? Theme.of(context).colorScheme.primary
-                                        : Theme.of(context)
-                                            .colorScheme
-                                            .onSurfaceVariant,
-                                  ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(
-                            widget.viewModel.selectedModelName.isNotEmpty
-                                ? widget.viewModel.selectedModelName
-                                : selectedModel?.name ?? '未选择模型',
+                    Text(
+                      hasApiKey ? '配置 AI 功能和模型选择' : '开始使用 AI 功能',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w500,
                           ),
-                          trailing: const Icon(Icons.arrow_forward_ios),
-                          onTap: () async {
-                            await context.push(Routes.modelSelection);
-                            // 从模型选择页面返回后，重新加载选中的模型
-                            widget.viewModel.loadSelectedModel.execute();
-                          },
-                        ),
-                      ],
                     ),
-                  );
-                },
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // 翻译设置配置卡片
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.translate,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          '翻译设置',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: const Text('翻译服务配置'),
-                      subtitle: const Text('配置翻译目标语言和缓存设置'),
-                      trailing: const Icon(Icons.arrow_forward_ios),
-                      onTap: () {
-                        context.push(Routes.translationSetting);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // AI标签设置配置卡片
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.label,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'AI 标签设置',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: const Text('标签推荐配置'),
-                      subtitle: const Text('配置AI标签推荐的目标语言'),
-                      trailing: const Icon(Icons.arrow_forward_ios),
-                      onTap: () {
-                        context.push(Routes.aiTagSetting);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          '关于 OpenRouter',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 4),
                     Text(
-                      'OpenRouter 是一个统一的 AI 模型 API 平台，支持多种大语言模型。您可以在 openrouter.ai 注册账户并获取 API 密钥。',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '• 支持 GPT、Claude、Llama 等多种模型\n• 按使用量付费，价格透明\n• 提供详细的使用统计',
+                      hasApiKey
+                          ? '您的 API 密钥已配置，可以使用 AI 翻译和标签功能'
+                          : '首先配置 OpenRouter API 密钥以启用 AI 翻译和智能标签功能',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color:
                                 Theme.of(context).colorScheme.onSurfaceVariant,
@@ -324,9 +129,105 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
                   ],
                 ),
               ),
-            ),
-          ],
-        ),
+
+              // API 配置分组
+              _buildSectionHeader(context, 'API 配置'),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: TextField(
+                  controller: _apiKeyController,
+                  decoration: InputDecoration(
+                    labelText: 'OpenRouter API 密钥',
+                    hintText: hasApiKey ? '已配置 API 密钥' : '请输入您的 API 密钥',
+                    prefixIcon: Icon(
+                      Icons.key,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    suffixIcon: hasApiKey
+                        ? Icon(
+                            Icons.check_circle,
+                            color: Theme.of(context).colorScheme.primary,
+                            size: 20,
+                          )
+                        : null,
+                    border: const OutlineInputBorder(),
+                  ),
+                  obscureText: true,
+                  onChanged: widget.viewModel.textChangedCommand.call,
+                  onSubmitted: (_) => _saveApiKey(),
+                ),
+              ),
+
+              // AI 功能分组
+              _buildSectionHeader(context, 'AI 功能'),
+              ListTile(
+                leading: Icon(
+                  Icons.smart_toy,
+                  color: hasApiKey
+                      ? Theme.of(context).colorScheme.onSurface
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                title: const Text('模型选择'),
+                subtitle: Text(
+                  hasApiKey
+                      ? widget.viewModel.selectedModelName.isNotEmpty
+                          ? widget.viewModel.selectedModelName
+                          : selectedModel?.name ?? '未选择模型'
+                      : '需要先配置 API 密钥',
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                enabled: hasApiKey,
+                onTap: hasApiKey
+                    ? () async {
+                        await context.push(Routes.modelSelection);
+                        widget.viewModel.loadSelectedModel.execute();
+                      }
+                    : null,
+              ),
+
+              ListTile(
+                leading: Icon(
+                  Icons.translate,
+                  color: hasApiKey
+                      ? Theme.of(context).colorScheme.onSurface
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                title: const Text('翻译设置'),
+                subtitle: Text(
+                  hasApiKey ? '配置阅读翻译功能' : '需要先配置 API 密钥',
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                enabled: hasApiKey,
+                onTap: hasApiKey
+                    ? () {
+                        context.push(Routes.translationSetting);
+                      }
+                    : null,
+              ),
+
+              ListTile(
+                leading: Icon(
+                  Icons.label,
+                  color: hasApiKey
+                      ? Theme.of(context).colorScheme.onSurface
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                title: const Text('AI 标签设置'),
+                subtitle: Text(
+                  hasApiKey ? '配置 AI 标签推荐功能' : '需要先配置 API 密钥',
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                enabled: hasApiKey,
+                onTap: hasApiKey
+                    ? () {
+                        context.push(Routes.aiTagSetting);
+                      }
+                    : null,
+              ),
+            ],
+          );
+        },
       ),
     );
   }

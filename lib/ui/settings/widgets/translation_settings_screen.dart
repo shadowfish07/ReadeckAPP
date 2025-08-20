@@ -119,32 +119,34 @@ class _TranslationSettingsScreenState extends State<TranslationSettingsScreen> {
           title: const Text('选择翻译目标语种'),
           content: SizedBox(
             width: double.maxFinite,
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: TranslationSettingsViewModel.supportedLanguages.length,
-              itemBuilder: (context, index) {
-                final language =
-                    TranslationSettingsViewModel.supportedLanguages[index];
-                return ListTile(
-                  title: Text(language),
-                  leading: Radio<String>(
-                    value: language,
-                    groupValue: widget.viewModel.translationTargetLanguage,
-                    onChanged: (String? value) {
-                      if (value != null) {
-                        widget.viewModel.saveTranslationTargetLanguage
-                            .execute(value);
-                        Navigator.of(context).pop();
-                      }
-                    },
-                  ),
-                  onTap: () {
-                    widget.viewModel.saveTranslationTargetLanguage
-                        .execute(language);
-                    Navigator.of(context).pop();
-                  },
-                );
+            child: RadioGroup<String>(
+              groupValue: widget.viewModel.translationTargetLanguage,
+              onChanged: (String? value) {
+                if (value != null) {
+                  widget.viewModel.saveTranslationTargetLanguage.execute(value);
+                  Navigator.of(context).pop();
+                }
               },
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount:
+                    TranslationSettingsViewModel.supportedLanguages.length,
+                itemBuilder: (context, index) {
+                  final language =
+                      TranslationSettingsViewModel.supportedLanguages[index];
+                  return ListTile(
+                    title: Text(language),
+                    leading: Radio<String>(
+                      value: language,
+                    ),
+                    onTap: () {
+                      widget.viewModel.saveTranslationTargetLanguage
+                          .execute(language);
+                      Navigator.of(context).pop();
+                    },
+                  );
+                },
+              ),
             ),
           ),
           actions: [

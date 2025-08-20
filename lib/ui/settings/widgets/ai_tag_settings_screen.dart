@@ -61,30 +61,33 @@ class _AiTagSettingsScreenState extends State<AiTagSettingsScreen> {
           title: const Text('选择AI标签目标语言'),
           content: SizedBox(
             width: double.maxFinite,
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: AiTagSettingsViewModel.supportedLanguages.length,
-              itemBuilder: (context, index) {
-                final language =
-                    AiTagSettingsViewModel.supportedLanguages[index];
-                return ListTile(
-                  title: Text(language),
-                  leading: Radio<String>(
-                    value: language,
-                    groupValue: widget.viewModel.aiTagTargetLanguage,
-                    onChanged: (String? value) {
-                      if (value != null) {
-                        widget.viewModel.saveAiTagTargetLanguage.execute(value);
-                        Navigator.of(context).pop();
-                      }
-                    },
-                  ),
-                  onTap: () {
-                    widget.viewModel.saveAiTagTargetLanguage.execute(language);
-                    Navigator.of(context).pop();
-                  },
-                );
+            child: RadioGroup<String>(
+              groupValue: widget.viewModel.aiTagTargetLanguage,
+              onChanged: (String? value) {
+                if (value != null) {
+                  widget.viewModel.saveAiTagTargetLanguage.execute(value);
+                  Navigator.of(context).pop();
+                }
               },
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: AiTagSettingsViewModel.supportedLanguages.length,
+                itemBuilder: (context, index) {
+                  final language =
+                      AiTagSettingsViewModel.supportedLanguages[index];
+                  return ListTile(
+                    title: Text(language),
+                    leading: Radio<String>(
+                      value: language,
+                    ),
+                    onTap: () {
+                      widget.viewModel.saveAiTagTargetLanguage
+                          .execute(language);
+                      Navigator.of(context).pop();
+                    },
+                  );
+                },
+              ),
             ),
           ),
           actions: [
