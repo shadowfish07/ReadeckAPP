@@ -103,6 +103,20 @@ class _AiTagSettingsScreenState extends State<AiTagSettingsScreen> {
     );
   }
 
+  /// 构建分组标题
+  Widget _buildSectionHeader(BuildContext context, String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.w500,
+            ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -111,117 +125,61 @@ class _AiTagSettingsScreenState extends State<AiTagSettingsScreen> {
       ),
       body: ListenableBuilder(
         listenable: widget.viewModel,
-        builder: (context, _) => ListView(
-          children: [
-            const SizedBox(height: 16),
-
-            // AI标签目标语言设置卡片
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.language,
-                            color: Theme.of(context).colorScheme.primary,
+        builder: (context, _) {
+          return ListView(
+            children: [
+              // 页面描述
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '配置 AI 标签功能',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w500,
                           ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '标签目标语言',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '设置 AI 标签推荐的目标语言和专用模型',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.translate),
-                        title: const Text('AI标签推荐语言'),
-                        subtitle: Text(widget.viewModel.aiTagTargetLanguage),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: _showLanguageSelectionDialog,
-                      ),
-                      const Divider(),
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.smart_toy),
-                        title: const Text('专用模型'),
-                        subtitle: Text(
-                            widget.viewModel.aiTagModelName.isNotEmpty
-                                ? widget.viewModel.aiTagModelName
-                                : '使用全局模型'),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () {
-                          context
-                              .push('${Routes.modelSelection}?scenario=ai_tag');
-                        },
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-            ),
 
-            const SizedBox(height: 16),
-
-            // 说明信息卡片
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '关于 AI 标签功能',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'AI 标签功能会根据网页内容智能推荐合适的标签，帮助您更好地组织和管理书签。',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '• 支持多种语言的标签推荐\n• 基于网页内容智能分析\n• 优先使用已有标签保持一致性\n• 需要配置 OpenRouter API 才能使用',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                            ),
-                      ),
-                    ],
-                  ),
-                ),
+              // 基础设置分组
+              _buildSectionHeader(context, '基础设置'),
+              ListTile(
+                leading: const Icon(Icons.translate),
+                title: const Text('标签推荐语言'),
+                subtitle: Text(widget.viewModel.aiTagTargetLanguage),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: _showLanguageSelectionDialog,
               ),
-            ),
-          ],
-        ),
+
+              // 模型配置分组
+              _buildSectionHeader(context, '模型配置'),
+              ListTile(
+                leading: const Icon(Icons.smart_toy),
+                title: const Text('专用模型'),
+                subtitle: Text(widget.viewModel.aiTagModelName.isNotEmpty
+                    ? widget.viewModel.aiTagModelName
+                    : '使用全局模型'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  context.push('${Routes.modelSelection}?scenario=ai_tag');
+                },
+              ),
+            ],
+          );
+        },
       ),
     );
   }
