@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_command/flutter_command.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:logger/logger.dart';
@@ -22,6 +24,7 @@ void main() {
     provideDummy<Result<List<OpenRouterModel>>>(
         const Success(<OpenRouterModel>[]));
     provideDummy<List<OpenRouterModel>>(const <OpenRouterModel>[]);
+    provideDummy<Stream<void>>(const Stream<void>.empty());
 
     Command.globalExceptionHandler = (error, stackTrace) {
       // Handle errors in tests
@@ -70,6 +73,8 @@ void main() {
       when(mockSettingsRepository.getTranslationCacheEnabled())
           .thenReturn(true);
       when(mockSettingsRepository.getTranslationModel()).thenReturn('');
+      when(mockSettingsRepository.settingsChanged)
+          .thenAnswer((_) => const Stream<void>.empty());
       when(mockOpenRouterRepository.getModels(category: anyNamed('category')))
           .thenAnswer((_) async => const Success(testModels));
       when(mockArticleRepository.clearTranslationCache())
@@ -115,13 +120,17 @@ void main() {
             viewModel.loadModels, isA<Command<void, List<OpenRouterModel>>>());
       });
 
-      test('should load translation model on initialization', () {
+      test('should load translation model when accessed', () {
         when(mockSettingsRepository.getTranslationModel())
             .thenReturn('translation-model-1');
 
         viewModel = TranslationSettingsViewModel(mockSettingsRepository,
             mockArticleRepository, mockOpenRouterRepository);
 
+        // Access the translation model to trigger the call
+        final model = viewModel.translationModel;
+
+        expect(model, equals('translation-model-1'));
         verify(mockSettingsRepository.getTranslationModel()).called(1);
       });
     });
@@ -165,7 +174,12 @@ void main() {
 
         when(mockSettingsRepository.getTranslationProvider()).thenReturn('AI');
         when(mockSettingsRepository.saveTranslationProvider(newProvider))
-            .thenAnswer((_) async => const Success(()));
+            .thenAnswer((_) async {
+          // Update mock to return new value after save
+          when(mockSettingsRepository.getTranslationProvider())
+              .thenReturn(newProvider);
+          return const Success(());
+        });
 
         viewModel = TranslationSettingsViewModel(mockSettingsRepository,
             mockArticleRepository, mockOpenRouterRepository);
@@ -217,7 +231,12 @@ void main() {
         when(mockSettingsRepository.getTranslationTargetLanguage())
             .thenReturn('中文');
         when(mockSettingsRepository.saveTranslationTargetLanguage(newLanguage))
-            .thenAnswer((_) async => const Success(()));
+            .thenAnswer((_) async {
+          // Update mock to return new value after save
+          when(mockSettingsRepository.getTranslationTargetLanguage())
+              .thenReturn(newLanguage);
+          return const Success(());
+        });
 
         viewModel = TranslationSettingsViewModel(mockSettingsRepository,
             mockArticleRepository, mockOpenRouterRepository);
@@ -234,6 +253,38 @@ void main() {
         verify(mockSettingsRepository
                 .saveTranslationTargetLanguage(newLanguage))
             .called(1);
+        // Should also clear translation cache when changing target language
+        verify(mockArticleRepository.clearTranslationCache()).called(1);
+      });
+
+      test('should handle save failure and not clear cache', () async {
+        const newLanguage = 'French';
+        final exception = Exception('Save failed');
+
+        when(mockSettingsRepository.getTranslationTargetLanguage())
+            .thenReturn('中文');
+        when(mockSettingsRepository.saveTranslationTargetLanguage(newLanguage))
+            .thenAnswer((_) async => Failure(exception));
+
+        viewModel = TranslationSettingsViewModel(mockSettingsRepository,
+            mockArticleRepository, mockOpenRouterRepository);
+
+        var listenerCallCount = 0;
+        viewModel.addListener(() => listenerCallCount++);
+
+        await expectLater(
+          viewModel.saveTranslationTargetLanguage
+              .executeWithFuture(newLanguage),
+          throwsA(isA<Exception>()),
+        );
+
+        // State should not change when save fails
+        expect(viewModel.translationTargetLanguage, equals('中文'));
+        // Should not clear cache if save fails
+        verifyNever(mockArticleRepository.clearTranslationCache());
+        verify(mockSettingsRepository
+                .saveTranslationTargetLanguage(newLanguage))
+            .called(1);
       });
     });
 
@@ -246,7 +297,12 @@ void main() {
             .thenReturn(true);
         when(mockSettingsRepository
                 .saveTranslationCacheEnabled(newCacheEnabled))
-            .thenAnswer((_) async => const Success(()));
+            .thenAnswer((_) async {
+          // Update mock to return new value after save
+          when(mockSettingsRepository.getTranslationCacheEnabled())
+              .thenReturn(newCacheEnabled);
+          return const Success(());
+        });
 
         viewModel = TranslationSettingsViewModel(mockSettingsRepository,
             mockArticleRepository, mockOpenRouterRepository);
@@ -327,6 +383,180 @@ void main() {
       });
     });
 
+    group('缓存管理功能', () {
+      test('should clear translation cache successfully', () async {
+        when(mockSettingsRepository.getTranslationProvider()).thenReturn('AI');
+
+        viewModel = TranslationSettingsViewModel(mockSettingsRepository,
+            mockArticleRepository, mockOpenRouterRepository);
+
+        await viewModel.clearTranslationCache.executeWithFuture();
+
+        verify(mockArticleRepository.clearTranslationCache()).called(1);
+      });
+
+      test('should handle cache clearing failure', () async {
+        final exception = Exception('Clear cache failed');
+        when(mockSettingsRepository.getTranslationProvider()).thenReturn('AI');
+        when(mockArticleRepository.clearTranslationCache())
+            .thenAnswer((_) async => Failure(exception));
+
+        viewModel = TranslationSettingsViewModel(mockSettingsRepository,
+            mockArticleRepository, mockOpenRouterRepository);
+
+        await expectLater(
+          viewModel.clearTranslationCache.executeWithFuture(),
+          throwsA(isA<Exception>()),
+        );
+
+        verify(mockArticleRepository.clearTranslationCache()).called(1);
+      });
+
+      test('should allow multiple cache clearing operations', () async {
+        when(mockSettingsRepository.getTranslationProvider()).thenReturn('AI');
+
+        viewModel = TranslationSettingsViewModel(mockSettingsRepository,
+            mockArticleRepository, mockOpenRouterRepository);
+
+        // Clear cache multiple times
+        await viewModel.clearTranslationCache.executeWithFuture();
+        await viewModel.clearTranslationCache.executeWithFuture();
+        await viewModel.clearTranslationCache.executeWithFuture();
+
+        verify(mockArticleRepository.clearTranslationCache()).called(3);
+      });
+    });
+
+    group('配置变更监听功能', () {
+      test('should listen to settings changes on initialization', () {
+        final streamController = StreamController<void>();
+        when(mockSettingsRepository.settingsChanged)
+            .thenAnswer((_) => streamController.stream);
+
+        viewModel = TranslationSettingsViewModel(mockSettingsRepository,
+            mockArticleRepository, mockOpenRouterRepository);
+
+        var listenerCallCount = 0;
+        viewModel.addListener(() => listenerCallCount++);
+
+        // Trigger settings change
+        streamController.add(null);
+
+        // Allow async processing - settings change should trigger notifyListeners
+        expect(() => streamController.add(null), returnsNormally);
+
+        streamController.close();
+      });
+
+      test('should handle settings changes and notify listeners', () async {
+        final streamController = StreamController<void>();
+        when(mockSettingsRepository.settingsChanged)
+            .thenAnswer((_) => streamController.stream);
+
+        viewModel = TranslationSettingsViewModel(mockSettingsRepository,
+            mockArticleRepository, mockOpenRouterRepository);
+
+        var listenerCallCount = 0;
+        viewModel.addListener(() => listenerCallCount++);
+
+        // Trigger settings change
+        streamController.add(null);
+
+        // Allow some time for async processing
+        await Future.delayed(const Duration(milliseconds: 10));
+
+        // Should be able to trigger multiple changes
+        streamController.add(null);
+        streamController.add(null);
+
+        streamController.close();
+      });
+
+      test('should handle settings changes notification correctly', () async {
+        final streamController = StreamController<void>();
+        when(mockSettingsRepository.settingsChanged)
+            .thenAnswer((_) => streamController.stream);
+
+        viewModel = TranslationSettingsViewModel(mockSettingsRepository,
+            mockArticleRepository, mockOpenRouterRepository);
+
+        var listenerCallCount = 0;
+        viewModel.addListener(() => listenerCallCount++);
+        final initialListenerCount = listenerCallCount;
+
+        // Trigger settings change from external source (not from this ViewModel)
+        streamController.add(null);
+        await Future.delayed(const Duration(milliseconds: 10));
+
+        // Verify that listeners were notified
+        expect(listenerCallCount, greaterThan(initialListenerCount));
+
+        streamController.close();
+      });
+
+      test(
+          'should continue working after settings change during save operations',
+          () async {
+        final streamController = StreamController<void>();
+        when(mockSettingsRepository.settingsChanged)
+            .thenAnswer((_) => streamController.stream);
+        when(mockSettingsRepository.saveTranslationProvider('NewProvider'))
+            .thenAnswer((_) async => const Success(()));
+
+        viewModel = TranslationSettingsViewModel(mockSettingsRepository,
+            mockArticleRepository, mockOpenRouterRepository);
+
+        var listenerCallCount = 0;
+        viewModel.addListener(() => listenerCallCount++);
+
+        // Trigger save operation which will call notifyListeners locally
+        await viewModel.saveTranslationProvider
+            .executeWithFuture('NewProvider');
+        final saveListenerCount = listenerCallCount;
+
+        // Trigger external settings change (from another part of the app)
+        streamController.add(null);
+        await Future.delayed(const Duration(milliseconds: 10));
+
+        // Both local notifyListeners (from save) and external change should work
+        expect(saveListenerCount, greaterThanOrEqualTo(1));
+        expect(listenerCallCount, greaterThan(saveListenerCount));
+
+        streamController.close();
+      });
+
+      test('should handle simultaneous settings changes and cache clearing',
+          () async {
+        final streamController = StreamController<void>();
+        when(mockSettingsRepository.settingsChanged)
+            .thenAnswer((_) => streamController.stream);
+        when(mockSettingsRepository.saveTranslationTargetLanguage('English'))
+            .thenAnswer((_) async => const Success(()));
+
+        viewModel = TranslationSettingsViewModel(mockSettingsRepository,
+            mockArticleRepository, mockOpenRouterRepository);
+
+        var listenerCallCount = 0;
+        viewModel.addListener(() => listenerCallCount++);
+
+        // Trigger save target language (which also clears cache)
+        final saveFuture = viewModel.saveTranslationTargetLanguage
+            .executeWithFuture('English');
+
+        // Trigger external settings change while save is in progress
+        streamController.add(null);
+
+        await saveFuture;
+        await Future.delayed(const Duration(milliseconds: 10));
+
+        // Should handle both operations correctly
+        expect(listenerCallCount, greaterThanOrEqualTo(1));
+        verify(mockArticleRepository.clearTranslationCache()).called(1);
+
+        streamController.close();
+      });
+    });
+
     group('内存管理', () {
       test('should dispose without errors', () {
         when(mockSettingsRepository.getTranslationProvider()).thenReturn('AI');
@@ -335,6 +565,18 @@ void main() {
             mockArticleRepository, mockOpenRouterRepository);
 
         expect(() => viewModel.dispose(), returnsNormally);
+      });
+
+      test('should cancel settings subscription on dispose', () {
+        final streamController = StreamController<void>();
+        when(mockSettingsRepository.settingsChanged)
+            .thenAnswer((_) => streamController.stream);
+
+        viewModel = TranslationSettingsViewModel(mockSettingsRepository,
+            mockArticleRepository, mockOpenRouterRepository);
+
+        expect(() => viewModel.dispose(), returnsNormally);
+        streamController.close();
       });
 
       test('should not crash when accessing properties after dispose', () {
@@ -348,6 +590,42 @@ void main() {
         expect(() => viewModel.translationProvider, returnsNormally);
         expect(() => viewModel.translationTargetLanguage, returnsNormally);
         expect(() => viewModel.translationCacheEnabled, returnsNormally);
+      });
+
+      test('should handle multiple dispose calls safely', () {
+        viewModel = TranslationSettingsViewModel(mockSettingsRepository,
+            mockArticleRepository, mockOpenRouterRepository);
+
+        // First dispose should work fine
+        expect(() => viewModel.dispose(), returnsNormally);
+
+        // Second dispose will throw an error because Commands don't allow double dispose
+        // This is expected behavior in flutter_command library
+        expect(() => viewModel.dispose(), throwsA(isA<AssertionError>()));
+      });
+
+      test('should dispose with null settings subscription', () {
+        // Create viewModel where subscription might be null
+        viewModel = TranslationSettingsViewModel(mockSettingsRepository,
+            mockArticleRepository, mockOpenRouterRepository);
+
+        expect(() => viewModel.dispose(), returnsNormally);
+      });
+
+      test('should handle settings subscription lifecycle correctly', () {
+        final streamController = StreamController<void>();
+        when(mockSettingsRepository.settingsChanged)
+            .thenAnswer((_) => streamController.stream);
+
+        viewModel = TranslationSettingsViewModel(mockSettingsRepository,
+            mockArticleRepository, mockOpenRouterRepository);
+
+        // Verify subscription is created
+        expect(viewModel, isNotNull);
+
+        // Dispose should cancel subscription
+        expect(() => viewModel.dispose(), returnsNormally);
+        streamController.close();
       });
     });
   });

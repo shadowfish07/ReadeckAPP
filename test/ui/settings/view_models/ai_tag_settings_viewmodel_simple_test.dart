@@ -103,7 +103,7 @@ void main() {
         verify(mockSettingsRepository.getAiTagModelName()).called(1);
       });
 
-      test('should listen to settings changes', () {
+      test('should listen to settings changes and notify listeners', () async {
         final streamController = StreamController<void>();
         when(mockSettingsRepository.getAiTagTargetLanguage()).thenReturn('中文');
         when(mockSettingsRepository.settingsChanged)
@@ -117,8 +117,37 @@ void main() {
         // Trigger settings change
         streamController.add(null);
 
-        // Allow async processing
-        expect(() => streamController.add(null), returnsNormally);
+        // Wait for async processing
+        await Future.delayed(const Duration(milliseconds: 10));
+
+        // Verify that listeners were notified
+        expect(listenerCallCount, greaterThanOrEqualTo(1));
+
+        streamController.close();
+      });
+
+      test('should handle multiple settings changes', () async {
+        final streamController = StreamController<void>();
+        when(mockSettingsRepository.getAiTagTargetLanguage()).thenReturn('中文');
+        when(mockSettingsRepository.settingsChanged)
+            .thenAnswer((_) => streamController.stream);
+
+        viewModel = AiTagSettingsViewModel(mockSettingsRepository);
+
+        var listenerCallCount = 0;
+        viewModel.addListener(() => listenerCallCount++);
+
+        // Trigger multiple settings changes
+        streamController.add(null);
+        streamController.add(null);
+        streamController.add(null);
+
+        // Wait for async processing
+        await Future.delayed(const Duration(milliseconds: 10));
+
+        // Verify that listeners were notified multiple times
+        expect(listenerCallCount, greaterThanOrEqualTo(3));
+
         streamController.close();
       });
     });
@@ -271,6 +300,70 @@ void main() {
       });
     });
 
+    group('模型属性边界条件', () {
+      test('should handle empty aiTagModel', () {
+        when(mockSettingsRepository.getAiTagTargetLanguage()).thenReturn('中文');
+        when(mockSettingsRepository.getAiTagModel()).thenReturn('');
+
+        viewModel = AiTagSettingsViewModel(mockSettingsRepository);
+
+        expect(viewModel.aiTagModel, equals(''));
+        verify(mockSettingsRepository.getAiTagModel()).called(1);
+      });
+
+      test('should handle default aiTagModel when not set', () {
+        when(mockSettingsRepository.getAiTagTargetLanguage()).thenReturn('中文');
+        when(mockSettingsRepository.getAiTagModel()).thenReturn('');
+
+        viewModel = AiTagSettingsViewModel(mockSettingsRepository);
+
+        expect(viewModel.aiTagModel, equals(''));
+        verify(mockSettingsRepository.getAiTagModel()).called(1);
+      });
+
+      test('should handle empty aiTagModelName', () {
+        when(mockSettingsRepository.getAiTagTargetLanguage()).thenReturn('中文');
+        when(mockSettingsRepository.getAiTagModelName()).thenReturn('');
+
+        viewModel = AiTagSettingsViewModel(mockSettingsRepository);
+
+        expect(viewModel.aiTagModelName, equals(''));
+        verify(mockSettingsRepository.getAiTagModelName()).called(1);
+      });
+
+      test('should handle default aiTagModelName when not set', () {
+        when(mockSettingsRepository.getAiTagTargetLanguage()).thenReturn('中文');
+        when(mockSettingsRepository.getAiTagModelName()).thenReturn('');
+
+        viewModel = AiTagSettingsViewModel(mockSettingsRepository);
+
+        expect(viewModel.aiTagModelName, equals(''));
+        verify(mockSettingsRepository.getAiTagModelName()).called(1);
+      });
+
+      test('should handle repository exceptions for aiTagModel', () {
+        when(mockSettingsRepository.getAiTagTargetLanguage()).thenReturn('中文');
+        when(mockSettingsRepository.getAiTagModel())
+            .thenThrow(Exception('Database error'));
+
+        viewModel = AiTagSettingsViewModel(mockSettingsRepository);
+
+        expect(() => viewModel.aiTagModel, throwsA(isA<Exception>()));
+        verify(mockSettingsRepository.getAiTagModel()).called(1);
+      });
+
+      test('should handle repository exceptions for aiTagModelName', () {
+        when(mockSettingsRepository.getAiTagTargetLanguage()).thenReturn('中文');
+        when(mockSettingsRepository.getAiTagModelName())
+            .thenThrow(Exception('Database error'));
+
+        viewModel = AiTagSettingsViewModel(mockSettingsRepository);
+
+        expect(() => viewModel.aiTagModelName, throwsA(isA<Exception>()));
+        verify(mockSettingsRepository.getAiTagModelName()).called(1);
+      });
+    });
+
     group('边界条件', () {
       test('should handle empty string language', () async {
         const emptyLanguage = '';
@@ -311,6 +404,91 @@ void main() {
         expect(viewModel.aiTagTargetLanguage, equals(longLanguage));
         verify(mockSettingsRepository.saveAiTagTargetLanguage(longLanguage))
             .called(1);
+      });
+    });
+
+    group('配置变更监听详细测试', () {
+      test('should properly setup and cancel settings subscription', () {
+        final streamController = StreamController<void>();
+        when(mockSettingsRepository.getAiTagTargetLanguage()).thenReturn('中文');
+        when(mockSettingsRepository.settingsChanged)
+            .thenAnswer((_) => streamController.stream);
+
+        viewModel = AiTagSettingsViewModel(mockSettingsRepository);
+
+        // Verify subscription was created
+        verify(mockSettingsRepository.settingsChanged).called(1);
+
+        // Dispose should cancel subscription without errors
+        expect(() => viewModel.dispose(), returnsNormally);
+
+        streamController.close();
+      });
+
+      test('should handle stream subscription lifecycle correctly', () async {
+        final streamController = StreamController<void>();
+        when(mockSettingsRepository.getAiTagTargetLanguage()).thenReturn('中文');
+        when(mockSettingsRepository.settingsChanged)
+            .thenAnswer((_) => streamController.stream);
+
+        viewModel = AiTagSettingsViewModel(mockSettingsRepository);
+
+        var listenerCallCount = 0;
+        viewModel.addListener(() => listenerCallCount++);
+
+        // Verify the subscription is working
+        streamController.add(null);
+        await Future.delayed(const Duration(milliseconds: 10));
+        expect(listenerCallCount, equals(1));
+
+        // ViewModel should remain functional throughout
+        expect(viewModel.aiTagTargetLanguage, equals('中文'));
+
+        streamController.close();
+      });
+
+      test('should continue working after settings stream closes', () async {
+        final streamController = StreamController<void>();
+        when(mockSettingsRepository.getAiTagTargetLanguage()).thenReturn('中文');
+        when(mockSettingsRepository.settingsChanged)
+            .thenAnswer((_) => streamController.stream);
+
+        viewModel = AiTagSettingsViewModel(mockSettingsRepository);
+
+        var listenerCallCount = 0;
+        viewModel.addListener(() => listenerCallCount++);
+
+        // Close the stream
+        streamController.close();
+
+        // ViewModel should still work normally
+        expect(viewModel.aiTagTargetLanguage, equals('中文'));
+        expect(() => viewModel.dispose(), returnsNormally);
+      });
+
+      test('should handle rapid successive settings changes', () async {
+        final streamController = StreamController<void>();
+        when(mockSettingsRepository.getAiTagTargetLanguage()).thenReturn('中文');
+        when(mockSettingsRepository.settingsChanged)
+            .thenAnswer((_) => streamController.stream);
+
+        viewModel = AiTagSettingsViewModel(mockSettingsRepository);
+
+        var listenerCallCount = 0;
+        viewModel.addListener(() => listenerCallCount++);
+
+        // Trigger rapid successive changes
+        for (int i = 0; i < 10; i++) {
+          streamController.add(null);
+        }
+
+        // Wait for all async operations to complete
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        // All changes should be processed
+        expect(listenerCallCount, equals(10));
+
+        streamController.close();
       });
     });
   });

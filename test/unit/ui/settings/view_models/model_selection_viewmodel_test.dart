@@ -23,7 +23,9 @@ void main() {
     setUpAll(() {
       // Setup global exception handler for flutter_command
       Command.globalExceptionHandler = (error, stackTrace) {
-        // Handle errors in tests
+        // Silently handle errors in tests - this prevents async save failures
+        // from causing test failures when testing error scenarios
+        // In real app, these would be handled by proper error handling mechanisms
       };
 
       appLogger = Logger(
@@ -81,6 +83,14 @@ void main() {
           .thenAnswer((_) async => const Success(()));
       when(mockSettingsRepository.saveAiTagModel(any))
           .thenAnswer((_) async => const Success(()));
+      when(mockSettingsRepository.saveSelectedOpenRouterModel(any, any))
+          .thenAnswer((_) async => const Success(()));
+      when(mockSettingsRepository.saveTranslationModel(any, any))
+          .thenAnswer((_) async => const Success(()));
+      when(mockSettingsRepository.saveAiTagModel(any, any))
+          .thenAnswer((_) async => const Success(()));
+      when(mockSettingsRepository.getSelectedOpenRouterModelName())
+          .thenReturn('Global Model');
 
       viewModel = ModelSelectionViewModel(
           mockSettingsRepository, mockOpenRouterRepository);
@@ -177,7 +187,8 @@ void main() {
         // Allow time for async save operation
         await Future.delayed(const Duration(milliseconds: 50));
 
-        verify(mockSettingsRepository.saveSelectedOpenRouterModel('model2'))
+        verify(mockSettingsRepository.saveSelectedOpenRouterModel(
+                'model2', 'Model 2'))
             .called(1);
       });
 
@@ -307,7 +318,7 @@ void main() {
 
         await Future.delayed(const Duration(milliseconds: 100));
 
-        verify(mockOpenRouterRepository.getModels(category: 'ai_tag'))
+        verify(mockOpenRouterRepository.getModels(category: 'trivia'))
             .called(1);
 
         aiTagViewModel.dispose();
@@ -358,7 +369,8 @@ void main() {
         translationViewModel.selectModel(testModels[1]);
         await Future.delayed(const Duration(milliseconds: 50));
 
-        verify(mockSettingsRepository.saveTranslationModel('model2')).called(1);
+        verify(mockSettingsRepository.saveTranslationModel('model2', 'Model 2'))
+            .called(1);
 
         translationViewModel.dispose();
 
@@ -372,7 +384,273 @@ void main() {
         aiTagViewModel.selectModel(testModels[2]);
         await Future.delayed(const Duration(milliseconds: 50));
 
-        verify(mockSettingsRepository.saveAiTagModel('model3')).called(1);
+        verify(mockSettingsRepository.saveAiTagModel('model3', 'Model 3'))
+            .called(1);
+
+        aiTagViewModel.dispose();
+      });
+    });
+
+    group('全局模型选择功能测试', () {
+      test(
+          'should return true for isUsingGlobalModel when selectedModelId is null',
+          () async {
+        // Wait for initialization
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        expect(viewModel.isUsingGlobalModel, true);
+      });
+
+      test(
+          'should return true for isUsingGlobalModel when selectedModelId is empty',
+          () async {
+        // Wait for initialization
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        viewModel.selectGlobalModel();
+        expect(viewModel.isUsingGlobalModel, true);
+      });
+
+      test('should return false for isUsingGlobalModel when model is selected',
+          () async {
+        // Wait for initialization
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        viewModel.selectModel(testModels[0]);
+        expect(viewModel.isUsingGlobalModel, false);
+      });
+
+      test('should return global model name from repository', () async {
+        // Wait for initialization
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        expect(viewModel.globalModelName, 'Global Model');
+        verify(mockSettingsRepository.getSelectedOpenRouterModelName())
+            .called(1);
+      });
+
+      test('should return global model id from repository', () async {
+        // Wait for initialization
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        expect(viewModel.globalModelId, '');
+        verify(mockSettingsRepository.getSelectedOpenRouterModel())
+            .called(greaterThan(0));
+      });
+
+      test('should save empty string when selectGlobalModel is called',
+          () async {
+        // Wait for initialization
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        viewModel.selectGlobalModel();
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        verify(mockSettingsRepository.saveSelectedOpenRouterModel('', ''))
+            .called(1);
+      });
+
+      test('should notify listeners when selectGlobalModel is called',
+          () async {
+        // Wait for initialization
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        bool notified = false;
+        viewModel.addListener(() {
+          notified = true;
+        });
+
+        viewModel.selectGlobalModel();
+        expect(notified, true);
+      });
+    });
+
+    group('模型名称传递功能测试', () {
+      test('should save model with name when using saveSelectedOpenRouterModel',
+          () async {
+        // Wait for initialization
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        final modelToSelect = testModels[1];
+        viewModel.selectModel(modelToSelect);
+
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        verify(mockSettingsRepository.saveSelectedOpenRouterModel(
+                'model2', 'Model 2'))
+            .called(1);
+      });
+
+      test('should save translation model with name for translation scenario',
+          () async {
+        final translationViewModel = ModelSelectionViewModel(
+            mockSettingsRepository, mockOpenRouterRepository,
+            scenario: 'translation');
+
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        final modelToSelect = testModels[0];
+        translationViewModel.selectModel(modelToSelect);
+
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        verify(mockSettingsRepository.saveTranslationModel('model1', 'Model 1'))
+            .called(1);
+
+        translationViewModel.dispose();
+      });
+
+      test('should save ai_tag model with name for ai_tag scenario', () async {
+        final aiTagViewModel = ModelSelectionViewModel(
+            mockSettingsRepository, mockOpenRouterRepository,
+            scenario: 'ai_tag');
+
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        final modelToSelect = testModels[2];
+        aiTagViewModel.selectModel(modelToSelect);
+
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        verify(mockSettingsRepository.saveAiTagModel('model3', 'Model 3'))
+            .called(1);
+
+        aiTagViewModel.dispose();
+      });
+
+      test(
+          'should save empty name when selectGlobalModel called for translation scenario',
+          () async {
+        final translationViewModel = ModelSelectionViewModel(
+            mockSettingsRepository, mockOpenRouterRepository,
+            scenario: 'translation');
+
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        translationViewModel.selectGlobalModel();
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        verify(mockSettingsRepository.saveTranslationModel('', '')).called(1);
+
+        translationViewModel.dispose();
+      });
+
+      test(
+          'should save empty name when selectGlobalModel called for ai_tag scenario',
+          () async {
+        final aiTagViewModel = ModelSelectionViewModel(
+            mockSettingsRepository, mockOpenRouterRepository,
+            scenario: 'ai_tag');
+
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        aiTagViewModel.selectGlobalModel();
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        verify(mockSettingsRepository.saveAiTagModel('', '')).called(1);
+
+        aiTagViewModel.dispose();
+      });
+    });
+
+    group('AI tag场景分类修正测试', () {
+      test('should use trivia category for ai_tag scenario', () async {
+        final aiTagViewModel = ModelSelectionViewModel(
+            mockSettingsRepository, mockOpenRouterRepository,
+            scenario: 'ai_tag');
+
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        verify(mockOpenRouterRepository.getModels(category: 'trivia'))
+            .called(1);
+
+        aiTagViewModel.dispose();
+      });
+    });
+
+    group('边界情况测试', () {
+      test('should handle empty model name gracefully', () async {
+        // Use one of the existing test models but modify the name to be empty for testing save behavior
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        // Create a modified model with empty name but same ID as existing model
+        final modelWithEmptyName = testModels[0].copyWith(name: '');
+
+        viewModel.selectModel(modelWithEmptyName);
+        expect(viewModel.selectedModel?.id, 'model1');
+
+        await Future.delayed(const Duration(milliseconds: 50));
+        verify(mockSettingsRepository.saveSelectedOpenRouterModel('model1', ''))
+            .called(1);
+      });
+
+      test(
+          'should maintain state consistency during global/specific model transitions',
+          () async {
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        // Initially using global model
+        expect(viewModel.isUsingGlobalModel, true);
+
+        // Select specific model
+        viewModel.selectModel(testModels[0]);
+        expect(viewModel.isUsingGlobalModel, false);
+        expect(viewModel.selectedModel?.id, 'model1');
+
+        // Switch back to global model
+        viewModel.selectGlobalModel();
+        expect(viewModel.isUsingGlobalModel, true);
+        expect(viewModel.selectedModel, isNull);
+      });
+
+      test('should successfully save models when repository operations succeed',
+          () async {
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        // Test successful save of specific model
+        viewModel.selectModel(testModels[1]);
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        verify(mockSettingsRepository.saveSelectedOpenRouterModel(
+                'model2', 'Model 2'))
+            .called(1);
+
+        // Test successful save of global model
+        viewModel.selectGlobalModel();
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        verify(mockSettingsRepository.saveSelectedOpenRouterModel('', ''))
+            .called(1);
+      });
+
+      test('should save scenario-specific models successfully', () async {
+        // Test translation scenario
+        final translationViewModel = ModelSelectionViewModel(
+            mockSettingsRepository, mockOpenRouterRepository,
+            scenario: 'translation');
+
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        translationViewModel.selectModel(testModels[0]);
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        verify(mockSettingsRepository.saveTranslationModel('model1', 'Model 1'))
+            .called(1);
+
+        translationViewModel.dispose();
+
+        // Test ai_tag scenario
+        final aiTagViewModel = ModelSelectionViewModel(
+            mockSettingsRepository, mockOpenRouterRepository,
+            scenario: 'ai_tag');
+
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        aiTagViewModel.selectModel(testModels[2]);
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        verify(mockSettingsRepository.saveAiTagModel('model3', 'Model 3'))
+            .called(1);
 
         aiTagViewModel.dispose();
       });
