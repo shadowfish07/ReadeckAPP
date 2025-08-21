@@ -34,10 +34,17 @@ const testModels = [
 void main() {
   late MockModelSelectionViewModel mockViewModel;
   late int popCallCount;
+  late Command<void, List<OpenRouterModel>> defaultLoadCommand;
 
   setUp(() {
     mockViewModel = MockModelSelectionViewModel();
     popCallCount = 0;
+
+    // Create a default working command
+    defaultLoadCommand = Command.createAsyncNoParam<List<OpenRouterModel>>(
+      () async => [],
+      initialValue: [],
+    );
 
     // Setup default mock behaviors
     when(mockViewModel.availableModels).thenReturn([]);
@@ -46,14 +53,14 @@ void main() {
     when(mockViewModel.globalModelName).thenReturn('');
     when(mockViewModel.isUsingGlobalModel).thenReturn(false);
 
-    // Setup commands
-    final mockLoadModelsCommand =
-        Command.createAsyncNoParam<List<OpenRouterModel>>(
-      () async => [],
-      initialValue: [],
-    );
+    // Mock the loadModels getter
+    when(mockViewModel.loadModels).thenReturn(defaultLoadCommand);
 
-    when(mockViewModel.loadModels).thenReturn(mockLoadModelsCommand);
+    // Mock selectModel method
+    when(mockViewModel.selectModel(any)).thenAnswer((_) async {});
+
+    // Mock selectGlobalModel method
+    when(mockViewModel.selectGlobalModel()).thenAnswer((_) async {});
   });
 
   Widget createWidgetUnderTest({String? initialRoute = '/'}) {
@@ -406,6 +413,17 @@ void main() {
         // Arrange
         when(mockViewModel.availableModels).thenReturn(testModels);
 
+        bool commandExecuted = false;
+        final testCommand = Command.createAsyncNoParam<List<OpenRouterModel>>(
+          () async {
+            commandExecuted = true;
+            return testModels;
+          },
+          initialValue: [],
+        );
+
+        when(mockViewModel.loadModels).thenReturn(testCommand);
+
         // Act
         await tester.pumpWidget(createWidgetUnderTest());
         await tester.pumpAndSettle();
@@ -415,8 +433,8 @@ void main() {
             find.byType(RefreshIndicator), const Offset(0.0, 300.0), 1000.0);
         await tester.pumpAndSettle();
 
-        // Assert - check that the command was called (Note: RefreshIndicator calls the onRefresh callback)
-        verify(mockViewModel.loadModels.executeWithFuture(null));
+        // Assert - check that the command was executed
+        expect(commandExecuted, isTrue);
       });
 
       testWidgets('should execute load command when retry button is tapped',
