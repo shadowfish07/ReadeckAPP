@@ -447,6 +447,7 @@ class _AboutPageState extends State<AboutPage>
     ];
 
     return Card(
+      elevation: 1,
       child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -458,31 +459,35 @@ class _AboutPageState extends State<AboutPage>
                     fontWeight: FontWeight.bold,
                   ),
             ),
-            const SizedBox(height: 16),
-            ...features.map((feature) => _buildFeatureItem(feature)),
+            const SizedBox(height: 20),
+            ...features.asMap().entries.map((entry) {
+              final isLast = entry.key == features.length - 1;
+              return _buildFeatureItem(entry.value, isLast);
+            }),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildFeatureItem(_FeatureItem feature) {
+  Widget _buildFeatureItem(_FeatureItem feature, bool isLast) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
+      padding: EdgeInsets.only(bottom: isLast ? 0 : 20.0),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
               color: colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
               feature.icon,
-              size: 20,
+              size: 22,
               color: colorScheme.onPrimaryContainer,
             ),
           ),
@@ -494,9 +499,10 @@ class _AboutPageState extends State<AboutPage>
                 Text(
                   feature.title,
                   style: textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
+                const SizedBox(height: 2),
                 Text(
                   feature.description,
                   style: textTheme.bodyMedium?.copyWith(
