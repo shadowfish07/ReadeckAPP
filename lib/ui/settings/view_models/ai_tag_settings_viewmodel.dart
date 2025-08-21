@@ -66,6 +66,7 @@ class AiTagSettingsViewModel extends ChangeNotifier {
   @override
   void dispose() {
     _settingsSubscription?.cancel();
+    saveAiTagTargetLanguage.dispose();
     super.dispose();
   }
 }

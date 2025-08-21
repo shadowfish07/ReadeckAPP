@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:readeck_app/data/service/download_service.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   group('DownloadService', () {
     late DownloadService service;
 

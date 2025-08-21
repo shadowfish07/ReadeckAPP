@@ -5,6 +5,7 @@ import 'package:readeck_app/domain/models/update/update_info.dart';
 import 'package:readeck_app/domain/use_cases/app_update_use_case.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   group('AppUpdateUseCase', () {
     late AppUpdateUseCase useCase;
     late UpdateInfo testUpdateInfo;
