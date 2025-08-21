@@ -22,10 +22,15 @@ class SettingsRepository {
   String? _readeckApiToken;
   String? _openRouterApiKey;
   String? _selectedOpenRouterModel;
+  String? _selectedOpenRouterModelName;
   String? _translationProvider;
   String? _translationTargetLanguage;
   bool? _translationCacheEnabled;
   String? _aiTagTargetLanguage;
+  String? _translationModel;
+  String? _translationModelName;
+  String? _aiTagModel;
+  String? _aiTagModelName;
 
   bool _isLoaded = false;
 
@@ -84,6 +89,17 @@ class SettingsRepository {
       }
       _selectedOpenRouterModel = selectedModelResult.getOrThrow();
 
+      // 加载选中的 OpenRouter 模型名称
+      final selectedModelNameResult =
+          await _prefsService.getSelectedOpenRouterModelName();
+      if (selectedModelNameResult.isError()) {
+        appLogger.e('加载选中的OpenRouter模型名称失败',
+            error: selectedModelNameResult.exceptionOrNull());
+        return Failure(Exception(
+            '加载选中的OpenRouter模型名称失败: ${selectedModelNameResult.exceptionOrNull()}'));
+      }
+      _selectedOpenRouterModelName = selectedModelNameResult.getOrThrow();
+
       // 加载翻译服务提供方
       final translationProviderResult =
           await _prefsService.getTranslationProvider();
@@ -126,6 +142,46 @@ class SettingsRepository {
             '加载AI标签目标语言失败: ${aiTagLanguageResult.exceptionOrNull()}'));
       }
       _aiTagTargetLanguage = aiTagLanguageResult.getOrThrow();
+
+      // 加载翻译场景专用模型
+      final translationModelResult = await _prefsService.getTranslationModel();
+      if (translationModelResult.isError()) {
+        appLogger.e('加载翻译场景模型失败',
+            error: translationModelResult.exceptionOrNull());
+        return Failure(Exception(
+            '加载翻译场景模型失败: ${translationModelResult.exceptionOrNull()}'));
+      }
+      _translationModel = translationModelResult.getOrThrow();
+
+      // 加载翻译场景专用模型名称
+      final translationModelNameResult =
+          await _prefsService.getTranslationModelName();
+      if (translationModelNameResult.isError()) {
+        appLogger.e('加载翻译场景模型名称失败',
+            error: translationModelNameResult.exceptionOrNull());
+        return Failure(Exception(
+            '加载翻译场景模型名称失败: ${translationModelNameResult.exceptionOrNull()}'));
+      }
+      _translationModelName = translationModelNameResult.getOrThrow();
+
+      // 加载AI标签场景专用模型
+      final aiTagModelResult = await _prefsService.getAiTagModel();
+      if (aiTagModelResult.isError()) {
+        appLogger.e('加载AI标签场景模型失败', error: aiTagModelResult.exceptionOrNull());
+        return Failure(
+            Exception('加载AI标签场景模型失败: ${aiTagModelResult.exceptionOrNull()}'));
+      }
+      _aiTagModel = aiTagModelResult.getOrThrow();
+
+      // 加载AI标签场景专用模型名称
+      final aiTagModelNameResult = await _prefsService.getAiTagModelName();
+      if (aiTagModelNameResult.isError()) {
+        appLogger.e('加载AI标签场景模型名称失败',
+            error: aiTagModelNameResult.exceptionOrNull());
+        return Failure(Exception(
+            '加载AI标签场景模型名称失败: ${aiTagModelNameResult.exceptionOrNull()}'));
+      }
+      _aiTagModelName = aiTagModelNameResult.getOrThrow();
 
       _isLoaded = true;
       appLogger.i('应用配置加载完成');
@@ -172,6 +228,9 @@ class SettingsRepository {
     // 更新 API 客户端配置
     _apiClient.updateConfig(host, token);
 
+    // 通知监听者配置已变更
+    _settingsChangedController.add(null);
+
     return const Success(unit);
   }
 
@@ -216,6 +275,8 @@ class SettingsRepository {
 
     // 更新缓存
     _openRouterApiKey = apiKey;
+    // 通知监听者配置已变更
+    _settingsChangedController.add(null);
     return const Success(unit);
   }
 
@@ -237,6 +298,8 @@ class SettingsRepository {
 
     // 更新缓存
     _translationProvider = provider;
+    // 通知监听者配置已变更
+    _settingsChangedController.add(null);
     return const Success(unit);
   }
 
@@ -258,6 +321,8 @@ class SettingsRepository {
 
     // 更新缓存
     _translationTargetLanguage = language;
+    // 通知监听者配置已变更
+    _settingsChangedController.add(null);
     return const Success(unit);
   }
 
@@ -279,6 +344,8 @@ class SettingsRepository {
 
     // 更新缓存
     _translationCacheEnabled = enabled;
+    // 通知监听者配置已变更
+    _settingsChangedController.add(null);
     return const Success(unit);
   }
 
@@ -289,7 +356,8 @@ class SettingsRepository {
   }
 
   /// 保存选中的 OpenRouter 模型
-  AsyncResult<void> saveSelectedOpenRouterModel(String modelId) async {
+  AsyncResult<void> saveSelectedOpenRouterModel(String modelId,
+      [String? modelName]) async {
     _ensureLoaded();
 
     final result = await _prefsService.setSelectedOpenRouterModel(modelId);
@@ -298,8 +366,23 @@ class SettingsRepository {
       return result;
     }
 
+    // 如果提供了模型名称，同时保存模型名称
+    if (modelName != null) {
+      final nameResult =
+          await _prefsService.setSelectedOpenRouterModelName(modelName);
+      if (nameResult.isError()) {
+        appLogger.e("保存选中的OpenRouter模型名称失败",
+            error: nameResult.exceptionOrNull());
+        return nameResult;
+      }
+      // 更新缓存
+      _selectedOpenRouterModelName = modelName;
+    }
+
     // 更新缓存
     _selectedOpenRouterModel = modelId;
+    // 通知监听者配置已变更
+    _settingsChangedController.add(null);
     return const Success(unit);
   }
 
@@ -307,6 +390,12 @@ class SettingsRepository {
   String getSelectedOpenRouterModel() {
     _ensureLoaded();
     return _selectedOpenRouterModel!;
+  }
+
+  /// 同步获取选中的 OpenRouter 模型名称
+  String getSelectedOpenRouterModelName() {
+    _ensureLoaded();
+    return _selectedOpenRouterModelName ?? '';
   }
 
   /// 保存AI标签目标语言
@@ -321,6 +410,8 @@ class SettingsRepository {
 
     // 更新缓存
     _aiTagTargetLanguage = language;
+    // 通知监听者配置已变更
+    _settingsChangedController.add(null);
     return const Success(unit);
   }
 
@@ -328,6 +419,87 @@ class SettingsRepository {
   String getAiTagTargetLanguage() {
     _ensureLoaded();
     return _aiTagTargetLanguage!;
+  }
+
+  /// 保存翻译场景专用模型
+  AsyncResult<void> saveTranslationModel(String modelId,
+      [String? modelName]) async {
+    _ensureLoaded();
+
+    final result = await _prefsService.setTranslationModel(modelId);
+    if (result.isError()) {
+      appLogger.e("保存翻译场景模型失败", error: result.exceptionOrNull());
+      return result;
+    }
+
+    // 如果提供了模型名称，同时保存模型名称
+    if (modelName != null) {
+      final nameResult = await _prefsService.setTranslationModelName(modelName);
+      if (nameResult.isError()) {
+        appLogger.e("保存翻译场景模型名称失败", error: nameResult.exceptionOrNull());
+        return nameResult;
+      }
+      // 更新缓存
+      _translationModelName = modelName;
+    }
+
+    // 更新缓存
+    _translationModel = modelId;
+    // 通知监听者配置已变更
+    _settingsChangedController.add(null);
+    return const Success(unit);
+  }
+
+  /// 同步获取翻译场景专用模型
+  String getTranslationModel() {
+    _ensureLoaded();
+    return _translationModel!;
+  }
+
+  /// 同步获取翻译场景专用模型名称
+  String getTranslationModelName() {
+    _ensureLoaded();
+    return _translationModelName ?? '';
+  }
+
+  /// 保存AI标签场景专用模型
+  AsyncResult<void> saveAiTagModel(String modelId, [String? modelName]) async {
+    _ensureLoaded();
+
+    final result = await _prefsService.setAiTagModel(modelId);
+    if (result.isError()) {
+      appLogger.e("保存AI标签场景模型失败", error: result.exceptionOrNull());
+      return result;
+    }
+
+    // 如果提供了模型名称，同时保存模型名称
+    if (modelName != null) {
+      final nameResult = await _prefsService.setAiTagModelName(modelName);
+      if (nameResult.isError()) {
+        appLogger.e("保存AI标签场景模型名称失败", error: nameResult.exceptionOrNull());
+        return nameResult;
+      }
+      // 更新缓存
+      _aiTagModelName = modelName;
+    }
+
+    // 更新缓存
+    _aiTagModel = modelId;
+    // 通知监听者配置已变更
+    _settingsChangedController.add(null);
+    return const Success(unit);
+  }
+
+  /// 同步获取AI标签场景专用模型
+  String getAiTagModel() {
+    _ensureLoaded();
+    return _aiTagModel!;
+  }
+
+  /// 同步获取AI标签场景专用模型名称
+  String getAiTagModelName() {
+    _ensureLoaded();
+    return _aiTagModelName ?? '';
   }
 
   /// 释放资源

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_command/flutter_command.dart';
 import 'package:readeck_app/data/repository/settings/settings_repository.dart';
@@ -7,11 +8,12 @@ class AiTagSettingsViewModel extends ChangeNotifier {
   AiTagSettingsViewModel(this._settingsRepository) {
     _loadSettings();
     _initializeCommands();
+    _listenToSettingsChanges();
   }
 
   final SettingsRepository _settingsRepository;
 
-  String _aiTagTargetLanguage = '中文';
+  StreamSubscription<void>? _settingsSubscription;
 
   late final Command<String, void> saveAiTagTargetLanguage;
 
@@ -26,10 +28,13 @@ class AiTagSettingsViewModel extends ChangeNotifier {
     '한국어',
   ];
 
-  String get aiTagTargetLanguage => _aiTagTargetLanguage;
+  String get aiTagTargetLanguage =>
+      _settingsRepository.getAiTagTargetLanguage();
+  String get aiTagModel => _settingsRepository.getAiTagModel();
+  String get aiTagModelName => _settingsRepository.getAiTagModelName();
 
   void _loadSettings() {
-    _aiTagTargetLanguage = _settingsRepository.getAiTagTargetLanguage();
+    // 不需要在ViewModel中缓存数据，直接通过getter访问Repository即可
   }
 
   void _initializeCommands() {
@@ -41,7 +46,6 @@ class AiTagSettingsViewModel extends ChangeNotifier {
           await _settingsRepository.saveAiTagTargetLanguage(language);
 
       if (result.isSuccess()) {
-        _aiTagTargetLanguage = language;
         notifyListeners();
         appLogger.i('AI标签目标语言保存成功: $language');
       } else {
@@ -50,5 +54,19 @@ class AiTagSettingsViewModel extends ChangeNotifier {
         throw error;
       }
     });
+  }
+
+  void _listenToSettingsChanges() {
+    _settingsSubscription = _settingsRepository.settingsChanged.listen((_) {
+      appLogger.d('AI标签设置页面收到配置变更通知，刷新页面');
+      notifyListeners();
+    });
+  }
+
+  @override
+  void dispose() {
+    _settingsSubscription?.cancel();
+    saveAiTagTargetLanguage.dispose();
+    super.dispose();
   }
 }

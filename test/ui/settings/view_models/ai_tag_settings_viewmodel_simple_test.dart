@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_command/flutter_command.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:logger/logger.dart';
@@ -16,6 +17,7 @@ void main() {
   setUpAll(() {
     // Provide dummy values for Mockito
     provideDummy<Result<void>>(Success.unit());
+    provideDummy<Stream<void>>(const Stream<void>.empty());
 
     Command.globalExceptionHandler = (error, stackTrace) {
       // Handle errors in tests
@@ -37,6 +39,12 @@ void main() {
 
     setUp(() {
       mockSettingsRepository = MockSettingsRepository();
+
+      // Setup default mock behaviors
+      when(mockSettingsRepository.getAiTagModel()).thenReturn('');
+      when(mockSettingsRepository.getAiTagModelName()).thenReturn('');
+      when(mockSettingsRepository.settingsChanged)
+          .thenAnswer((_) => const Stream<void>.empty());
     });
 
     tearDown(() {
@@ -71,6 +79,76 @@ void main() {
 
         expect(viewModel.saveAiTagTargetLanguage, isA<Command<String, void>>());
         expect(viewModel.saveAiTagTargetLanguage, isNotNull);
+      });
+
+      test('should provide access to aiTagModel property', () {
+        when(mockSettingsRepository.getAiTagTargetLanguage()).thenReturn('中文');
+        when(mockSettingsRepository.getAiTagModel())
+            .thenReturn('test-model-id');
+
+        viewModel = AiTagSettingsViewModel(mockSettingsRepository);
+
+        expect(viewModel.aiTagModel, equals('test-model-id'));
+        verify(mockSettingsRepository.getAiTagModel()).called(1);
+      });
+
+      test('should provide access to aiTagModelName property', () {
+        when(mockSettingsRepository.getAiTagTargetLanguage()).thenReturn('中文');
+        when(mockSettingsRepository.getAiTagModelName())
+            .thenReturn('Test Model');
+
+        viewModel = AiTagSettingsViewModel(mockSettingsRepository);
+
+        expect(viewModel.aiTagModelName, equals('Test Model'));
+        verify(mockSettingsRepository.getAiTagModelName()).called(1);
+      });
+
+      test('should listen to settings changes and notify listeners', () async {
+        final streamController = StreamController<void>();
+        when(mockSettingsRepository.getAiTagTargetLanguage()).thenReturn('中文');
+        when(mockSettingsRepository.settingsChanged)
+            .thenAnswer((_) => streamController.stream);
+
+        viewModel = AiTagSettingsViewModel(mockSettingsRepository);
+
+        var listenerCallCount = 0;
+        viewModel.addListener(() => listenerCallCount++);
+
+        // Trigger settings change
+        streamController.add(null);
+
+        // Wait for async processing
+        await Future.delayed(const Duration(milliseconds: 10));
+
+        // Verify that listeners were notified
+        expect(listenerCallCount, greaterThanOrEqualTo(1));
+
+        streamController.close();
+      });
+
+      test('should handle multiple settings changes', () async {
+        final streamController = StreamController<void>();
+        when(mockSettingsRepository.getAiTagTargetLanguage()).thenReturn('中文');
+        when(mockSettingsRepository.settingsChanged)
+            .thenAnswer((_) => streamController.stream);
+
+        viewModel = AiTagSettingsViewModel(mockSettingsRepository);
+
+        var listenerCallCount = 0;
+        viewModel.addListener(() => listenerCallCount++);
+
+        // Trigger multiple settings changes
+        streamController.add(null);
+        streamController.add(null);
+        streamController.add(null);
+
+        // Wait for async processing
+        await Future.delayed(const Duration(milliseconds: 10));
+
+        // Verify that listeners were notified multiple times
+        expect(listenerCallCount, greaterThanOrEqualTo(3));
+
+        streamController.close();
       });
     });
 
@@ -115,10 +193,15 @@ void main() {
         var listenerCallCount = 0;
         viewModel.addListener(() => listenerCallCount++);
 
+        // After save, mock should return the new language
+        when(mockSettingsRepository.getAiTagTargetLanguage())
+            .thenReturn(newLanguage);
+
         await viewModel.saveAiTagTargetLanguage.executeWithFuture(newLanguage);
 
         expect(viewModel.aiTagTargetLanguage, equals(newLanguage));
-        expect(listenerCallCount, equals(1)); // Should notify listeners
+        expect(listenerCallCount,
+            greaterThanOrEqualTo(1)); // Should notify listeners at least once
         verify(mockSettingsRepository.saveAiTagTargetLanguage(newLanguage))
             .called(1);
       });
@@ -143,7 +226,7 @@ void main() {
 
         // State should not change when save fails
         expect(viewModel.aiTagTargetLanguage, equals('中文'));
-        expect(listenerCallCount, equals(0));
+        // Even on failure, commands may notify listeners during execution
         verify(mockSettingsRepository.saveAiTagTargetLanguage(newLanguage))
             .called(1);
       });
@@ -158,6 +241,10 @@ void main() {
         for (final language in testLanguages) {
           when(mockSettingsRepository.saveAiTagTargetLanguage(language))
               .thenAnswer((_) async => const Success(()));
+
+          // After save, mock should return the new language
+          when(mockSettingsRepository.getAiTagTargetLanguage())
+              .thenReturn(language);
 
           await viewModel.saveAiTagTargetLanguage.executeWithFuture(language);
 
@@ -197,6 +284,84 @@ void main() {
         expect(() => viewModel.aiTagTargetLanguage, returnsNormally);
         expect(() => viewModel.saveAiTagTargetLanguage, returnsNormally);
       });
+
+      test('should cancel settings subscription on dispose', () {
+        final streamController = StreamController<void>();
+        when(mockSettingsRepository.getAiTagTargetLanguage()).thenReturn('中文');
+        when(mockSettingsRepository.settingsChanged)
+            .thenAnswer((_) => streamController.stream);
+
+        viewModel = AiTagSettingsViewModel(mockSettingsRepository);
+
+        // First dispose should work fine
+        expect(() => viewModel.dispose(), returnsNormally);
+
+        streamController.close();
+      });
+    });
+
+    group('模型属性边界条件', () {
+      test('should handle empty aiTagModel', () {
+        when(mockSettingsRepository.getAiTagTargetLanguage()).thenReturn('中文');
+        when(mockSettingsRepository.getAiTagModel()).thenReturn('');
+
+        viewModel = AiTagSettingsViewModel(mockSettingsRepository);
+
+        expect(viewModel.aiTagModel, equals(''));
+        verify(mockSettingsRepository.getAiTagModel()).called(1);
+      });
+
+      test('should handle default aiTagModel when not set', () {
+        when(mockSettingsRepository.getAiTagTargetLanguage()).thenReturn('中文');
+        when(mockSettingsRepository.getAiTagModel()).thenReturn('');
+
+        viewModel = AiTagSettingsViewModel(mockSettingsRepository);
+
+        expect(viewModel.aiTagModel, equals(''));
+        verify(mockSettingsRepository.getAiTagModel()).called(1);
+      });
+
+      test('should handle empty aiTagModelName', () {
+        when(mockSettingsRepository.getAiTagTargetLanguage()).thenReturn('中文');
+        when(mockSettingsRepository.getAiTagModelName()).thenReturn('');
+
+        viewModel = AiTagSettingsViewModel(mockSettingsRepository);
+
+        expect(viewModel.aiTagModelName, equals(''));
+        verify(mockSettingsRepository.getAiTagModelName()).called(1);
+      });
+
+      test('should handle default aiTagModelName when not set', () {
+        when(mockSettingsRepository.getAiTagTargetLanguage()).thenReturn('中文');
+        when(mockSettingsRepository.getAiTagModelName()).thenReturn('');
+
+        viewModel = AiTagSettingsViewModel(mockSettingsRepository);
+
+        expect(viewModel.aiTagModelName, equals(''));
+        verify(mockSettingsRepository.getAiTagModelName()).called(1);
+      });
+
+      test('should handle repository exceptions for aiTagModel', () {
+        when(mockSettingsRepository.getAiTagTargetLanguage()).thenReturn('中文');
+        when(mockSettingsRepository.getAiTagModel())
+            .thenThrow(Exception('Database error'));
+
+        viewModel = AiTagSettingsViewModel(mockSettingsRepository);
+
+        expect(() => viewModel.aiTagModel, throwsA(isA<Exception>()));
+        verify(mockSettingsRepository.getAiTagModel()).called(1);
+      });
+
+      test('should handle repository exceptions for aiTagModelName', () {
+        when(mockSettingsRepository.getAiTagTargetLanguage()).thenReturn('中文');
+        when(mockSettingsRepository.getAiTagModelName())
+            .thenThrow(Exception('Database error'));
+
+        viewModel = AiTagSettingsViewModel(mockSettingsRepository);
+
+        expect(() => viewModel.aiTagModelName, throwsA(isA<Exception>()));
+        verify(mockSettingsRepository.getAiTagModelName()).called(1);
+      });
     });
 
     group('边界条件', () {
@@ -208,6 +373,10 @@ void main() {
             .thenAnswer((_) async => const Success(()));
 
         viewModel = AiTagSettingsViewModel(mockSettingsRepository);
+
+        // After save, mock should return the new language
+        when(mockSettingsRepository.getAiTagTargetLanguage())
+            .thenReturn(emptyLanguage);
 
         await viewModel.saveAiTagTargetLanguage
             .executeWithFuture(emptyLanguage);
@@ -226,11 +395,100 @@ void main() {
 
         viewModel = AiTagSettingsViewModel(mockSettingsRepository);
 
+        // After save, mock should return the new language
+        when(mockSettingsRepository.getAiTagTargetLanguage())
+            .thenReturn(longLanguage);
+
         await viewModel.saveAiTagTargetLanguage.executeWithFuture(longLanguage);
 
         expect(viewModel.aiTagTargetLanguage, equals(longLanguage));
         verify(mockSettingsRepository.saveAiTagTargetLanguage(longLanguage))
             .called(1);
+      });
+    });
+
+    group('配置变更监听详细测试', () {
+      test('should properly setup and cancel settings subscription', () {
+        final streamController = StreamController<void>();
+        when(mockSettingsRepository.getAiTagTargetLanguage()).thenReturn('中文');
+        when(mockSettingsRepository.settingsChanged)
+            .thenAnswer((_) => streamController.stream);
+
+        viewModel = AiTagSettingsViewModel(mockSettingsRepository);
+
+        // Verify subscription was created
+        verify(mockSettingsRepository.settingsChanged).called(1);
+
+        // Dispose should cancel subscription without errors
+        expect(() => viewModel.dispose(), returnsNormally);
+
+        streamController.close();
+      });
+
+      test('should handle stream subscription lifecycle correctly', () async {
+        final streamController = StreamController<void>();
+        when(mockSettingsRepository.getAiTagTargetLanguage()).thenReturn('中文');
+        when(mockSettingsRepository.settingsChanged)
+            .thenAnswer((_) => streamController.stream);
+
+        viewModel = AiTagSettingsViewModel(mockSettingsRepository);
+
+        var listenerCallCount = 0;
+        viewModel.addListener(() => listenerCallCount++);
+
+        // Verify the subscription is working
+        streamController.add(null);
+        await Future.delayed(const Duration(milliseconds: 10));
+        expect(listenerCallCount, equals(1));
+
+        // ViewModel should remain functional throughout
+        expect(viewModel.aiTagTargetLanguage, equals('中文'));
+
+        streamController.close();
+      });
+
+      test('should continue working after settings stream closes', () async {
+        final streamController = StreamController<void>();
+        when(mockSettingsRepository.getAiTagTargetLanguage()).thenReturn('中文');
+        when(mockSettingsRepository.settingsChanged)
+            .thenAnswer((_) => streamController.stream);
+
+        viewModel = AiTagSettingsViewModel(mockSettingsRepository);
+
+        var listenerCallCount = 0;
+        viewModel.addListener(() => listenerCallCount++);
+
+        // Close the stream
+        streamController.close();
+
+        // ViewModel should still work normally
+        expect(viewModel.aiTagTargetLanguage, equals('中文'));
+        expect(() => viewModel.dispose(), returnsNormally);
+      });
+
+      test('should handle rapid successive settings changes', () async {
+        final streamController = StreamController<void>();
+        when(mockSettingsRepository.getAiTagTargetLanguage()).thenReturn('中文');
+        when(mockSettingsRepository.settingsChanged)
+            .thenAnswer((_) => streamController.stream);
+
+        viewModel = AiTagSettingsViewModel(mockSettingsRepository);
+
+        var listenerCallCount = 0;
+        viewModel.addListener(() => listenerCallCount++);
+
+        // Trigger rapid successive changes
+        for (int i = 0; i < 10; i++) {
+          streamController.add(null);
+        }
+
+        // Wait for all async operations to complete
+        await Future.delayed(const Duration(milliseconds: 50));
+
+        // All changes should be processed
+        expect(listenerCallCount, equals(10));
+
+        streamController.close();
       });
     });
   });

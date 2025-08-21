@@ -740,18 +740,26 @@ class MockSettingsRepository extends _i1.Mock
 
   @override
   _i4.Future<_i5.ResultDart<void, Exception>> saveSelectedOpenRouterModel(
-          String? modelId) =>
+    String? modelId, [
+    String? modelName,
+  ]) =>
       (super.noSuchMethod(
         Invocation.method(
           #saveSelectedOpenRouterModel,
-          [modelId],
+          [
+            modelId,
+            modelName,
+          ],
         ),
         returnValue: _i4.Future<_i5.ResultDart<void, Exception>>.value(
             _i6.dummyValue<_i5.ResultDart<void, Exception>>(
           this,
           Invocation.method(
             #saveSelectedOpenRouterModel,
-            [modelId],
+            [
+              modelId,
+              modelName,
+            ],
           ),
         )),
       ) as _i4.Future<_i5.ResultDart<void, Exception>>);
@@ -766,6 +774,21 @@ class MockSettingsRepository extends _i1.Mock
           this,
           Invocation.method(
             #getSelectedOpenRouterModel,
+            [],
+          ),
+        ),
+      ) as String);
+
+  @override
+  String getSelectedOpenRouterModelName() => (super.noSuchMethod(
+        Invocation.method(
+          #getSelectedOpenRouterModelName,
+          [],
+        ),
+        returnValue: _i6.dummyValue<String>(
+          this,
+          Invocation.method(
+            #getSelectedOpenRouterModelName,
             [],
           ),
         ),
@@ -799,6 +822,118 @@ class MockSettingsRepository extends _i1.Mock
           this,
           Invocation.method(
             #getAiTagTargetLanguage,
+            [],
+          ),
+        ),
+      ) as String);
+
+  @override
+  _i4.Future<_i5.ResultDart<void, Exception>> saveTranslationModel(
+    String? modelId, [
+    String? modelName,
+  ]) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #saveTranslationModel,
+          [
+            modelId,
+            modelName,
+          ],
+        ),
+        returnValue: _i4.Future<_i5.ResultDart<void, Exception>>.value(
+            _i6.dummyValue<_i5.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #saveTranslationModel,
+            [
+              modelId,
+              modelName,
+            ],
+          ),
+        )),
+      ) as _i4.Future<_i5.ResultDart<void, Exception>>);
+
+  @override
+  String getTranslationModel() => (super.noSuchMethod(
+        Invocation.method(
+          #getTranslationModel,
+          [],
+        ),
+        returnValue: _i6.dummyValue<String>(
+          this,
+          Invocation.method(
+            #getTranslationModel,
+            [],
+          ),
+        ),
+      ) as String);
+
+  @override
+  String getTranslationModelName() => (super.noSuchMethod(
+        Invocation.method(
+          #getTranslationModelName,
+          [],
+        ),
+        returnValue: _i6.dummyValue<String>(
+          this,
+          Invocation.method(
+            #getTranslationModelName,
+            [],
+          ),
+        ),
+      ) as String);
+
+  @override
+  _i4.Future<_i5.ResultDart<void, Exception>> saveAiTagModel(
+    String? modelId, [
+    String? modelName,
+  ]) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #saveAiTagModel,
+          [
+            modelId,
+            modelName,
+          ],
+        ),
+        returnValue: _i4.Future<_i5.ResultDart<void, Exception>>.value(
+            _i6.dummyValue<_i5.ResultDart<void, Exception>>(
+          this,
+          Invocation.method(
+            #saveAiTagModel,
+            [
+              modelId,
+              modelName,
+            ],
+          ),
+        )),
+      ) as _i4.Future<_i5.ResultDart<void, Exception>>);
+
+  @override
+  String getAiTagModel() => (super.noSuchMethod(
+        Invocation.method(
+          #getAiTagModel,
+          [],
+        ),
+        returnValue: _i6.dummyValue<String>(
+          this,
+          Invocation.method(
+            #getAiTagModel,
+            [],
+          ),
+        ),
+      ) as String);
+
+  @override
+  String getAiTagModelName() => (super.noSuchMethod(
+        Invocation.method(
+          #getAiTagModelName,
+          [],
+        ),
+        returnValue: _i6.dummyValue<String>(
+          this,
+          Invocation.method(
+            #getAiTagModelName,
             [],
           ),
         ),

@@ -1,30 +1,53 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_command/flutter_command.dart';
 import 'package:readeck_app/data/repository/article/article_repository.dart';
+import 'package:readeck_app/data/repository/openrouter/openrouter_repository.dart';
 import 'package:readeck_app/data/repository/settings/settings_repository.dart';
+import 'package:readeck_app/domain/models/openrouter_model/openrouter_model.dart';
 import 'package:readeck_app/main.dart';
 
 class TranslationSettingsViewModel extends ChangeNotifier {
-  TranslationSettingsViewModel(
-      this._settingsRepository, this._articleRepository) {
+  TranslationSettingsViewModel(this._settingsRepository,
+      this._articleRepository, this._openRouterRepository) {
     _initCommands();
+    _listenToSettingsChanges();
   }
 
   final SettingsRepository _settingsRepository;
   final ArticleRepository _articleRepository;
+  final OpenRouterRepository _openRouterRepository;
 
-  String _translationProvider = 'AI';
-  String _translationTargetLanguage = '中文';
-  bool _translationCacheEnabled = true;
+  StreamSubscription<void>? _settingsSubscription;
 
-  String get translationProvider => _translationProvider;
-  String get translationTargetLanguage => _translationTargetLanguage;
-  bool get translationCacheEnabled => _translationCacheEnabled;
+  List<OpenRouterModel> _availableModels = [];
+
+  String get translationProvider =>
+      _settingsRepository.getTranslationProvider();
+  String get translationTargetLanguage =>
+      _settingsRepository.getTranslationTargetLanguage();
+  bool get translationCacheEnabled =>
+      _settingsRepository.getTranslationCacheEnabled();
+  String get translationModel => _settingsRepository.getTranslationModel();
+  String get translationModelName =>
+      _settingsRepository.getTranslationModelName();
+  List<OpenRouterModel> get availableModels => _availableModels;
+
+  OpenRouterModel? get selectedTranslationModel {
+    final translationModel = _settingsRepository.getTranslationModel();
+    if (translationModel.isEmpty || _availableModels.isEmpty) {
+      return null;
+    }
+    return _availableModels
+        .where((model) => model.id == translationModel)
+        .firstOrNull;
+  }
 
   late Command<String, void> saveTranslationProvider;
   late Command<String, void> saveTranslationTargetLanguage;
   late Command<bool, void> saveTranslationCacheEnabled;
   late Command<void, void> loadTranslationSettings;
+  late Command<void, List<OpenRouterModel>> loadModels;
   late Command<void, void> clearTranslationCache;
 
   // 支持的语言列表
@@ -59,6 +82,10 @@ class TranslationSettingsViewModel extends ChangeNotifier {
       initialValue: null,
     )..execute();
 
+    loadModels = Command.createAsyncNoParam(_loadModelsAsync,
+        initialValue: [], includeLastResultInCommandResults: true)
+      ..execute();
+
     clearTranslationCache = Command.createAsyncNoParam(
       _clearTranslationCacheAsync,
       initialValue: null,
@@ -68,7 +95,6 @@ class TranslationSettingsViewModel extends ChangeNotifier {
   Future<void> _saveTranslationProvider(String provider) async {
     final result = await _settingsRepository.saveTranslationProvider(provider);
     if (result.isSuccess()) {
-      _translationProvider = provider;
       notifyListeners();
     } else {
       appLogger.e('保存翻译服务提供方失败', error: result.exceptionOrNull()!);
@@ -80,7 +106,6 @@ class TranslationSettingsViewModel extends ChangeNotifier {
     final result =
         await _settingsRepository.saveTranslationTargetLanguage(language);
     if (result.isSuccess()) {
-      _translationTargetLanguage = language;
       notifyListeners();
 
       // 切换目标语种时清空翻译缓存
@@ -101,7 +126,6 @@ class TranslationSettingsViewModel extends ChangeNotifier {
     final result =
         await _settingsRepository.saveTranslationCacheEnabled(enabled);
     if (result.isSuccess()) {
-      _translationCacheEnabled = enabled;
       notifyListeners();
     } else {
       appLogger.e('保存翻译缓存启用状态失败', error: result.exceptionOrNull()!);
@@ -111,12 +135,24 @@ class TranslationSettingsViewModel extends ChangeNotifier {
 
   void _loadTranslationSettings() {
     // 由于SettingsRepository已经预加载，直接同步获取翻译设置
-    _translationProvider = _settingsRepository.getTranslationProvider();
-    _translationTargetLanguage =
-        _settingsRepository.getTranslationTargetLanguage();
-    _translationCacheEnabled = _settingsRepository.getTranslationCacheEnabled();
-
+    // 不需要在ViewModel中缓存数据，直接通过getter访问Repository即可
     notifyListeners();
+  }
+
+  Future<List<OpenRouterModel>> _loadModelsAsync() async {
+    final result =
+        await _openRouterRepository.getModels(category: 'translation');
+    if (result.isSuccess()) {
+      _availableModels = result.getOrNull() ?? [];
+      appLogger.d('成功加载 ${_availableModels.length} 个OpenRouter翻译模型');
+      notifyListeners();
+      return _availableModels;
+    } else {
+      appLogger.e('获取OpenRouter翻译模型列表失败', error: result.exceptionOrNull()!);
+      _availableModels = [];
+      notifyListeners();
+      throw result.exceptionOrNull()!;
+    }
   }
 
   Future<void> _clearTranslationCacheAsync() async {
@@ -130,12 +166,21 @@ class TranslationSettingsViewModel extends ChangeNotifier {
     }
   }
 
+  void _listenToSettingsChanges() {
+    _settingsSubscription = _settingsRepository.settingsChanged.listen((_) {
+      appLogger.d('翻译设置页面收到配置变更通知，刷新页面');
+      notifyListeners();
+    });
+  }
+
   @override
   void dispose() {
+    _settingsSubscription?.cancel();
     saveTranslationProvider.dispose();
     saveTranslationTargetLanguage.dispose();
     saveTranslationCacheEnabled.dispose();
     loadTranslationSettings.dispose();
+    loadModels.dispose();
     clearTranslationCache.dispose();
     super.dispose();
   }

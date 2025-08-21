@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_command/flutter_command.dart';
 import 'package:readeck_app/data/repository/openrouter/openrouter_repository.dart';
@@ -8,16 +9,22 @@ import 'package:readeck_app/main.dart';
 class AiSettingsViewModel extends ChangeNotifier {
   AiSettingsViewModel(this._settingsRepository, this._openRouterRepository) {
     _initCommands();
+    _listenToSettingsChanges();
   }
 
   final SettingsRepository _settingsRepository;
   final OpenRouterRepository _openRouterRepository;
 
-  String _openRouterApiKey = '';
-  String get openRouterApiKey => _openRouterApiKey;
+  StreamSubscription<void>? _settingsSubscription;
 
+  String get openRouterApiKey => _settingsRepository.getOpenRouterApiKey();
+
+  // 缓存从API获取的模型详情，用于selectedModel getter
   OpenRouterModel? _selectedModel;
   OpenRouterModel? get selectedModel => _selectedModel;
+
+  String get selectedModelName =>
+      _settingsRepository.getSelectedOpenRouterModelName();
 
   late Command<String, void> saveApiKey;
   late Command<void, void> loadApiKey;
@@ -45,7 +52,7 @@ class AiSettingsViewModel extends ChangeNotifier {
     // 设置防抖，500ms 后执行保存
     textChangedCommand.debounce(const Duration(milliseconds: 500)).listen(
       (filterText, _) {
-        if (filterText.trim() != _openRouterApiKey) {
+        if (filterText.trim() != _settingsRepository.getOpenRouterApiKey()) {
           saveApiKey.execute(filterText.trim());
         }
       },
@@ -55,7 +62,6 @@ class AiSettingsViewModel extends ChangeNotifier {
   Future<void> _saveApiKey(String apiKey) async {
     final result = await _settingsRepository.saveOpenRouterApiKey(apiKey);
     if (result.isSuccess()) {
-      _openRouterApiKey = apiKey;
       notifyListeners();
     } else {
       appLogger.e('保存 OpenRouter API 密钥失败', error: result.exceptionOrNull()!);
@@ -64,13 +70,22 @@ class AiSettingsViewModel extends ChangeNotifier {
   }
 
   Future<void> _loadApiKeyAsync() async {
-    _openRouterApiKey = _settingsRepository.getOpenRouterApiKey();
+    // 不需要在ViewModel中缓存数据，直接通过getter访问Repository即可
     notifyListeners();
   }
 
   Future<void> _loadSelectedModelAsync() async {
     try {
       final selectedModelId = _settingsRepository.getSelectedOpenRouterModel();
+
+      // 优先显示缓存的模型名称，避免闪动
+      final cachedModelName =
+          _settingsRepository.getSelectedOpenRouterModelName();
+      if (cachedModelName.isNotEmpty) {
+        appLogger.d('成功加载缓存的模型名称: $cachedModelName');
+        notifyListeners();
+      }
+
       if (selectedModelId.isNotEmpty) {
         // 需要从 Repository 获取模型详情
         final modelsResult = await _openRouterRepository.getModels();
@@ -81,7 +96,11 @@ class AiSettingsViewModel extends ChangeNotifier {
               .firstOrNull;
           if (matchedModel != null) {
             _selectedModel = matchedModel;
-            appLogger.d('成功加载选中的模型: $selectedModelId');
+            // 如果API返回的模型名称与缓存不一致，更新缓存
+            if (cachedModelName != matchedModel.name) {
+              appLogger.d('更新模型名称缓存: ${matchedModel.name}');
+            }
+            appLogger.d('成功加载选中的模型: $selectedModelId (${matchedModel.name})');
             notifyListeners();
           }
         } else {
@@ -93,8 +112,16 @@ class AiSettingsViewModel extends ChangeNotifier {
     }
   }
 
+  void _listenToSettingsChanges() {
+    _settingsSubscription = _settingsRepository.settingsChanged.listen((_) {
+      appLogger.d('AI设置页面收到配置变更通知，刷新页面');
+      notifyListeners();
+    });
+  }
+
   @override
   void dispose() {
+    _settingsSubscription?.cancel();
     saveApiKey.dispose();
     loadApiKey.dispose();
     loadSelectedModel.dispose();
