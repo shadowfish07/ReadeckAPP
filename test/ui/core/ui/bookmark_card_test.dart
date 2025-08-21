@@ -42,6 +42,7 @@ void main() {
   Widget createWidgetUnderTest({
     Function(BookmarkDisplayModel, List<String>)? onUpdateLabels,
     Future<List<String>> Function()? onLoadLabels,
+    Function(BookmarkDisplayModel)? onDeleteBookmark,
   }) {
     return MaterialApp(
       home: Scaffold(
@@ -54,6 +55,7 @@ void main() {
               },
           availableLabels: availableLabels,
           onLoadLabels: onLoadLabels,
+          onDeleteBookmark: onDeleteBookmark,
         ),
       ),
     );
@@ -287,6 +289,202 @@ void main() {
       await tester.pumpAndSettle();
 
       // Test passes if no exception is thrown
+    });
+  });
+
+  group('BookmarkCard Long Press Context Menu Tests', () {
+    testWidgets('should show context menu on long press',
+        (WidgetTester tester) async {
+      // Arrange
+
+      // Act
+      await tester.pumpWidget(createWidgetUnderTest(
+        onDeleteBookmark: (bookmark) {
+          // Callback for delete
+        },
+      ));
+      await tester.pumpAndSettle();
+
+      // Long press on the card
+      await tester.longPress(find.byType(BookmarkCard));
+      await tester.pumpAndSettle();
+
+      // Assert
+      expect(find.byType(PopupMenuButton).hitTestable(), findsOneWidget);
+      expect(find.text('删除书签'), findsOneWidget);
+    });
+
+    testWidgets('should not show context menu when onDeleteBookmark is null',
+        (WidgetTester tester) async {
+      // Act
+      await tester.pumpWidget(createWidgetUnderTest(
+        onDeleteBookmark: null,
+      ));
+      await tester.pumpAndSettle();
+
+      // Long press on the card
+      await tester.longPress(find.byType(BookmarkCard));
+      await tester.pumpAndSettle();
+
+      // Assert - context menu should not appear
+      expect(find.text('删除书签'), findsNothing);
+    });
+
+    testWidgets(
+        'should show delete confirmation dialog when delete menu item is tapped',
+        (WidgetTester tester) async {
+      // Arrange
+      bool deleteCallbackCalled = false;
+
+      // Act
+      await tester.pumpWidget(createWidgetUnderTest(
+        onDeleteBookmark: (bookmark) {
+          deleteCallbackCalled = true;
+        },
+      ));
+      await tester.pumpAndSettle();
+
+      // Long press to show context menu
+      await tester.longPress(find.byType(BookmarkCard));
+      await tester.pumpAndSettle();
+
+      // Tap delete menu item
+      await tester.tap(find.text('删除书签'));
+      await tester.pumpAndSettle();
+
+      // Assert - confirmation dialog should appear
+      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(find.text('确认删除'), findsOneWidget);
+      expect(find.text('确定要删除这个书签吗？此操作无法撤销。'), findsOneWidget);
+      expect(find.text('取消'), findsOneWidget);
+      expect(find.text('删除'), findsOneWidget);
+
+      // Delete callback should not be called yet
+      expect(deleteCallbackCalled, isFalse);
+    });
+
+    testWidgets('should call onDeleteBookmark when delete is confirmed',
+        (WidgetTester tester) async {
+      // Arrange
+      bool deleteCallbackCalled = false;
+      BookmarkDisplayModel? deletedBookmark;
+
+      // Act
+      await tester.pumpWidget(createWidgetUnderTest(
+        onDeleteBookmark: (bookmark) {
+          deleteCallbackCalled = true;
+          deletedBookmark = bookmark;
+        },
+      ));
+      await tester.pumpAndSettle();
+
+      // Long press to show context menu
+      await tester.longPress(find.byType(BookmarkCard));
+      await tester.pumpAndSettle();
+
+      // Tap delete menu item
+      await tester.tap(find.text('删除书签'));
+      await tester.pumpAndSettle();
+
+      // Confirm deletion
+      await tester.tap(find.text('删除').last);
+      await tester.pumpAndSettle();
+
+      // Assert
+      expect(deleteCallbackCalled, isTrue);
+      expect(deletedBookmark, equals(testBookmarkDisplayModel));
+    });
+
+    testWidgets('should not call onDeleteBookmark when deletion is cancelled',
+        (WidgetTester tester) async {
+      // Arrange
+      bool deleteCallbackCalled = false;
+
+      // Act
+      await tester.pumpWidget(createWidgetUnderTest(
+        onDeleteBookmark: (bookmark) {
+          deleteCallbackCalled = true;
+        },
+      ));
+      await tester.pumpAndSettle();
+
+      // Long press to show context menu
+      await tester.longPress(find.byType(BookmarkCard));
+      await tester.pumpAndSettle();
+
+      // Tap delete menu item
+      await tester.tap(find.text('删除书签'));
+      await tester.pumpAndSettle();
+
+      // Cancel deletion
+      await tester.tap(find.text('取消'));
+      await tester.pumpAndSettle();
+
+      // Assert
+      expect(deleteCallbackCalled, isFalse);
+    });
+
+    testWidgets('should show success message when delete operation succeeds',
+        (WidgetTester tester) async {
+      // Arrange - this will test the UI feedback after successful deletion
+      await tester.pumpWidget(createWidgetUnderTest(
+        onDeleteBookmark: (bookmark) {
+          // Simulate successful deletion
+        },
+      ));
+      await tester.pumpAndSettle();
+
+      // Long press to show context menu
+      await tester.longPress(find.byType(BookmarkCard));
+      await tester.pumpAndSettle();
+
+      // Tap delete menu item
+      await tester.tap(find.text('删除书签'));
+      await tester.pumpAndSettle();
+
+      // Confirm deletion
+      await tester.tap(find.text('删除').last);
+      await tester.pumpAndSettle();
+
+      // Assert - success message should appear
+      expect(find.text('书签已删除'), findsOneWidget);
+      expect(find.byType(SnackBar), findsOneWidget);
+    });
+
+    testWidgets(
+        'should maintain existing tap behavior when long press is not triggered',
+        (WidgetTester tester) async {
+      // Arrange
+      bool cardTapCalled = false;
+      bool deleteCallbackCalled = false;
+
+      // Act
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: BookmarkCard(
+              bookmarkDisplayModel: testBookmarkDisplayModel,
+              onOpenUrl: mockOpenUrlCommand,
+              onCardTap: (bookmark) {
+                cardTapCalled = true;
+              },
+              onDeleteBookmark: (bookmark) {
+                deleteCallbackCalled = true;
+              },
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Normal tap (not long press)
+      await tester.tap(find.byType(BookmarkCard));
+      await tester.pumpAndSettle();
+
+      // Assert
+      expect(cardTapCalled, isTrue);
+      expect(deleteCallbackCalled, isFalse);
+      expect(find.text('删除书签'), findsNothing);
     });
   });
 }

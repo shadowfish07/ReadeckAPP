@@ -249,6 +249,9 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
           onToggleArchive: (bookmark) {
             widget.viewModel.toggleBookmarkArchived(bookmarkModel);
           },
+          onDeleteBookmark: (bookmark) {
+            widget.viewModel.deleteBookmark(bookmarkModel);
+          },
         );
       },
     );

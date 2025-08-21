@@ -104,6 +104,21 @@ class MockDailyReadViewModel extends _i1.Mock
       ) as _i2.Command<_i4.BookmarkDisplayModel, void>);
 
   @override
+  _i2.Command<_i4.BookmarkDisplayModel, void> get deleteBookmark =>
+      (super.noSuchMethod(
+        Invocation.getter(#deleteBookmark),
+        returnValue: _FakeCommand_0<_i4.BookmarkDisplayModel, void>(
+          this,
+          Invocation.getter(#deleteBookmark),
+        ),
+        returnValueForMissingStub:
+            _FakeCommand_0<_i4.BookmarkDisplayModel, void>(
+          this,
+          Invocation.getter(#deleteBookmark),
+        ),
+      ) as _i2.Command<_i4.BookmarkDisplayModel, void>);
+
+  @override
   _i2.Command<void, List<String>> get loadLabels => (super.noSuchMethod(
         Invocation.getter(#loadLabels),
         returnValue: _FakeCommand_0<void, List<String>>(
@@ -182,6 +197,17 @@ class MockDailyReadViewModel extends _i1.Mock
         Invocation.setter(
           #toggleBookmarkMarked,
           _toggleBookmarkMarked,
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  set deleteBookmark(
+          _i2.Command<_i4.BookmarkDisplayModel, void>? _deleteBookmark) =>
+      super.noSuchMethod(
+        Invocation.setter(
+          #deleteBookmark,
+          _deleteBookmark,
         ),
         returnValueForMissingStub: null,
       );

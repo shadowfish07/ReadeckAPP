@@ -58,6 +58,8 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
         _toggleBookmarkMarked);
     toggleBookmarkArchived = Command.createAsyncNoResult<BookmarkDisplayModel>(
         _toggleBookmarkArchived);
+    deleteBookmark =
+        Command.createAsyncNoResult<BookmarkDisplayModel>(_deleteBookmark);
     loadLabels = Command.createAsyncNoParam(_loadLabels, initialValue: []);
 
     // 注册书签数据变化监听器
@@ -78,6 +80,7 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
   late Command<String, void> openUrl;
   late Command<BookmarkDisplayModel, void> toggleBookmarkMarked;
   late Command<BookmarkDisplayModel, void> toggleBookmarkArchived;
+  late Command<BookmarkDisplayModel, void> deleteBookmark;
   late Command<void, List<String>> loadLabels;
 
   List<BookmarkDisplayModel> get bookmarks => _bookmarkIds
@@ -182,6 +185,20 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
           error: result.exceptionOrNull()!);
       throw result.exceptionOrNull()!;
     }
+  }
+
+  Future<void> _deleteBookmark(BookmarkDisplayModel bookmark) async {
+    appLogger.i('开始删除书签: ${bookmark.bookmark.id} - ${bookmark.bookmark.title}');
+    final result =
+        await _bookmarkRepository.deleteBookmark(bookmark.bookmark.id);
+
+    if (result.isError()) {
+      appLogger.e("Failed to delete bookmark",
+          error: result.exceptionOrNull()!);
+      throw result.exceptionOrNull()!;
+    }
+
+    appLogger.i('书签删除成功: ${bookmark.bookmark.id}');
   }
 
   Future<List<String>> _loadLabels() async {

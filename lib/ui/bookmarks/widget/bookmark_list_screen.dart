@@ -287,6 +287,9 @@ class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
             onToggleArchive: (bookmark) {
               widget.viewModel.toggleBookmarkArchived(bookmarkModel);
             },
+            onDeleteBookmark: (bookmark) {
+              widget.viewModel.deleteBookmark(bookmarkModel);
+            },
           );
         },
       ),
