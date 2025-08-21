@@ -398,8 +398,7 @@ class _BookmarkCardState extends State<BookmarkCard> {
       ),
     );
 
-    if (selectedValue == 'delete' && mounted) {
-      // ignore: use_build_context_synchronously
+    if (selectedValue == 'delete' && mounted && context.mounted) {
       _showDeleteConfirmationDialog(context);
     }
   }
