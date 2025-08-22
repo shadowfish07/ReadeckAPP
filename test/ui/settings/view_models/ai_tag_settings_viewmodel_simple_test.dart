@@ -220,7 +220,8 @@ void main() {
         viewModel.addListener(() => listenerCallCount++);
 
         await expectLater(
-          viewModel.saveAiTagTargetLanguage.executeWithFuture(newLanguage),
+          () =>
+              viewModel.saveAiTagTargetLanguage.executeWithFuture(newLanguage),
           throwsA(isA<Exception>()),
         );
 

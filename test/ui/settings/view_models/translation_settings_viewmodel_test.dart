@@ -211,7 +211,8 @@ void main() {
         viewModel.addListener(() => listenerCallCount++);
 
         await expectLater(
-          viewModel.saveTranslationProvider.executeWithFuture(newProvider),
+          () =>
+              viewModel.saveTranslationProvider.executeWithFuture(newProvider),
           throwsA(isA<Exception>()),
         );
 
@@ -273,7 +274,7 @@ void main() {
         viewModel.addListener(() => listenerCallCount++);
 
         await expectLater(
-          viewModel.saveTranslationTargetLanguage
+          () => viewModel.saveTranslationTargetLanguage
               .executeWithFuture(newLanguage),
           throwsA(isA<Exception>()),
         );
@@ -405,7 +406,7 @@ void main() {
             mockArticleRepository, mockOpenRouterRepository);
 
         await expectLater(
-          viewModel.clearTranslationCache.executeWithFuture(),
+          () => viewModel.clearTranslationCache.executeWithFuture(),
           throwsA(isA<Exception>()),
         );
 

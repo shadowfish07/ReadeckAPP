@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_command/flutter_command.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
@@ -31,6 +32,11 @@ void main() {
 
   setUpAll(() {
     appLogger = Logger();
+
+    // Setup global exception handler for Commands
+    Command.globalExceptionHandler = (error, stackTrace) {
+      // Handle errors in tests
+    };
 
     // Provide dummy values for Mockito
     provideDummy<Result<List<BookmarkDisplayModel>>>(
@@ -330,6 +336,14 @@ void main() {
   });
 
   group('Delete Bookmark Command Tests', () {
+    setUp(() {
+      viewModel = UnarchivedViewmodel(
+        mockBookmarkRepository,
+        mockBookmarkOperationUseCases,
+        mockLabelRepository,
+      );
+    });
+
     test('should successfully delete bookmark and trigger UI update', () async {
       // Arrange
       when(mockBookmarkRepository.deleteBookmark(testBookmarkWithStats.id))
@@ -351,7 +365,7 @@ void main() {
           .thenAnswer((_) async => Failure(exception));
 
       // Act & Assert
-      expect(
+      await expectLater(
         () =>
             viewModel.deleteBookmark.executeWithFuture(bookmarkModelWithStats),
         throwsA(isA<Exception>()),
