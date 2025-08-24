@@ -2,27 +2,19 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
-import 'package:logger/logger.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:readeck_app/data/service/web_content_service.dart';
-import 'package:readeck_app/main.dart';
 import 'package:readeck_app/utils/network_error_exception.dart';
 
+import '../../../helpers/test_logger_helper.dart';
 import 'web_content_service_simple_test.mocks.dart';
 
 // Generate Mock classes
 @GenerateMocks([http.Client])
 void main() {
   setUpAll(() {
-    // Initialize appLogger for tests
-    appLogger = Logger(
-      printer: PrettyPrinter(
-        methodCount: 0,
-        dateTimeFormat: DateTimeFormat.none,
-      ),
-      level: Level.off, // Reduce log noise in tests
-    );
+    setupTestLogger();
   });
 
   group('WebContentService', () {

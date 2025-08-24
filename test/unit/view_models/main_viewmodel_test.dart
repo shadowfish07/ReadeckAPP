@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:logger/logger.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:readeck_app/data/repository/settings/settings_repository.dart';
 import 'package:readeck_app/main_viewmodel.dart';
-import 'package:readeck_app/main.dart';
 
+import '../../helpers/test_logger_helper.dart';
 import 'main_viewmodel_test.mocks.dart';
 
 @GenerateMocks([SettingsRepository])
 void main() {
   setUpAll(() {
     TestWidgetsFlutterBinding.ensureInitialized();
-    appLogger = Logger(level: Level.off);
+    setupTestLogger();
   });
 
   late MockSettingsRepository mockSettingsRepository;

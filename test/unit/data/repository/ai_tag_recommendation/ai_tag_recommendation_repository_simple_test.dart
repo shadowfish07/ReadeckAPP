@@ -1,14 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:logger/logger.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:readeck_app/data/repository/ai_tag_recommendation/ai_tag_recommendation_repository.dart';
 import 'package:readeck_app/data/repository/settings/settings_repository.dart';
 import 'package:readeck_app/data/service/openrouter_api_client.dart'; // cspell:disable-line
 import 'package:readeck_app/data/service/web_content_service.dart';
-import 'package:readeck_app/main.dart';
 import 'package:result_dart/result_dart.dart';
 
+import '../../../../helpers/test_logger_helper.dart';
 import 'ai_tag_recommendation_repository_simple_test.mocks.dart';
 
 // Generate Mock classes
@@ -18,14 +17,7 @@ void main() {
     // Provide dummy values for Mockito
     provideDummy<Result<String>>(const Success('dummy'));
 
-    // Initialize appLogger for tests
-    appLogger = Logger(
-      printer: PrettyPrinter(
-        methodCount: 0,
-        dateTimeFormat: DateTimeFormat.none,
-      ),
-      level: Level.off, // Reduce log noise in tests
-    );
+    setupTestLogger();
   });
 
   group('AiTagRecommendationRepository', () {

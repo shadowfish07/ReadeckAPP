@@ -9,11 +9,10 @@ import 'package:readeck_app/domain/models/bookmark/label_info.dart';
 import 'package:readeck_app/domain/models/bookmark_display_model/bookmark_display_model.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_operation_use_cases.dart';
 import 'package:readeck_app/ui/bookmarks/view_models/bookmarks_viewmodel.dart';
-import 'package:logger/logger.dart';
-import 'package:readeck_app/main.dart';
 import 'package:readeck_app/utils/reading_stats_calculator.dart';
 import 'package:result_dart/result_dart.dart';
 
+import '../../../helpers/test_logger_helper.dart';
 import 'bookmarks_viewmodel_test.mocks.dart';
 
 @GenerateMocks([BookmarkRepository, BookmarkOperationUseCases, LabelRepository])
@@ -31,7 +30,7 @@ void main() {
   late ReadingStatsForView mockReadingStats;
 
   setUpAll(() {
-    appLogger = Logger();
+    setupTestLogger();
 
     // Setup global exception handler for Commands
     Command.globalExceptionHandler = (error, stackTrace) {

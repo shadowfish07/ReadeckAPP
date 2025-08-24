@@ -1,11 +1,14 @@
+import 'dart:async';
 import 'dart:convert';
-import 'package:logger/logger.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:readeck_app/data/service/database_service.dart';
-import 'package:readeck_app/main.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:readeck_app/domain/models/daily_read_history/daily_read_history.dart';
 import 'package:readeck_app/domain/models/bookmark_article/bookmark_article.dart';
+import 'test_logger_helper.dart';
+
+/// 静态标志，确保只初始化一次数据库工厂
+bool _isTestDatabaseInitialized = false;
 
 /// 测试用的数据库服务，使用内存数据库
 class TestDatabaseService extends DatabaseService {
@@ -18,9 +21,24 @@ class TestDatabaseService extends DatabaseService {
 
   @override
   Future<void> open() async {
-    // 初始化 FFI
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
+    // 只初始化一次数据库工厂，避免重复警告
+    if (!_isTestDatabaseInitialized) {
+      // 使用 Zone 来抑制 sqflite 警告输出
+      await runZoned(() async {
+        sqfliteFfiInit();
+        databaseFactory = databaseFactoryFfi;
+        _isTestDatabaseInitialized = true;
+      }, zoneSpecification: ZoneSpecification(
+        print: (Zone self, ZoneDelegate parent, Zone zone, String line) {
+          // 过滤掉 sqflite 警告信息
+          if (!line.contains('*** sqflite warning ***') &&
+              !line.contains('You are changing sqflite default factory') &&
+              !line.contains('Be aware of the potential side effects')) {
+            parent.print(zone, line);
+          }
+        },
+      ));
+    }
 
     // 使用内存数据库进行测试
     _testDatabase = await openDatabase(
@@ -278,14 +296,6 @@ class TestDatabaseService extends DatabaseService {
 
 /// 设置测试环境
 void setupTestEnvironment() {
-  // 设置测试用的 logger
-  appLogger = Logger(
-    printer: PrettyPrinter(
-      methodCount: 0,
-      errorMethodCount: 5,
-      lineLength: 50,
-      colors: false,
-      printEmojis: false,
-    ),
-  );
+  // 使用新的测试日志管理器
+  setupTestLogger();
 }

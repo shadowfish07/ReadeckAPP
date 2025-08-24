@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:logger/logger.dart';
+import '../../main.dart';
 
 class DownloadService {
   final Dio _dio;
@@ -10,7 +11,7 @@ class DownloadService {
 
   DownloadService({Dio? dio, Logger? logger})
       : _dio = dio ?? Dio(),
-        _logger = logger ?? Logger();
+        _logger = logger ?? appLogger;
 
   /// 下载文件到应用程序目录
   /// [url] 下载链接

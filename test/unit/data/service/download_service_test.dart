@@ -2,11 +2,16 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:readeck_app/data/service/download_service.dart';
+import '../../../helpers/test_logger_helper.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   group('DownloadService', () {
     late DownloadService service;
+
+    setUpAll(() {
+      setupTestLogger();
+    });
 
     setUp(() {
       service = DownloadService();

@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_command/flutter_command.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:logger/logger.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 import 'package:readeck_app/domain/models/bookmark_display_model/bookmark_display_model.dart';
-import 'package:readeck_app/main.dart';
 import 'package:readeck_app/ui/core/ui/bookmark_card.dart';
+import '../../../helpers/test_logger_helper.dart';
 import 'package:readeck_app/ui/core/ui/label_edit_dialog.dart';
 
 void main() {
   setUpAll(() {
-    // 初始化 logger
-    appLogger = Logger();
+    setupTestLogger();
   });
   late Command mockOpenUrlCommand;
   late BookmarkDisplayModel testBookmarkDisplayModel;
