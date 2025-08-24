@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:logger/logger.dart';
 import 'package:readeck_app/data/service/app_installer_service.dart';
 import 'package:readeck_app/data/service/download_service.dart';
 import 'package:readeck_app/domain/models/update/update_info.dart';
@@ -11,12 +12,19 @@ void main() {
     late UpdateInfo testUpdateInfo;
 
     setUp(() {
-      final downloadService = DownloadService();
-      final installerService = AppInstallerService();
+      // Create a mock logger for testing to avoid appLogger dependency
+      final mockLogger = Logger(
+        printer: PrettyPrinter(),
+        output: null, // Don't output during tests
+      );
+
+      final downloadService = DownloadService(logger: mockLogger);
+      final installerService = AppInstallerService(logger: mockLogger);
 
       useCase = AppUpdateUseCase(
         downloadService: downloadService,
         installerService: installerService,
+        logger: mockLogger,
       );
 
       testUpdateInfo = UpdateInfo(
@@ -210,14 +218,26 @@ void main() {
 
     group('Integration Tests', () {
       test('multiple use case instances should work independently', () {
+        // Create mock loggers for this test
+        final mockLogger1 = Logger(
+          printer: PrettyPrinter(),
+          output: null, // Don't output during tests
+        );
+        final mockLogger2 = Logger(
+          printer: PrettyPrinter(),
+          output: null, // Don't output during tests
+        );
+
         final useCase1 = AppUpdateUseCase(
-          downloadService: DownloadService(),
-          installerService: AppInstallerService(),
+          downloadService: DownloadService(logger: mockLogger1),
+          installerService: AppInstallerService(logger: mockLogger1),
+          logger: mockLogger1,
         );
 
         final useCase2 = AppUpdateUseCase(
-          downloadService: DownloadService(),
-          installerService: AppInstallerService(),
+          downloadService: DownloadService(logger: mockLogger2),
+          installerService: AppInstallerService(logger: mockLogger2),
+          logger: mockLogger2,
         );
 
         expect(useCase1, isNotNull);

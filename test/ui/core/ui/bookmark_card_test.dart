@@ -308,7 +308,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Assert
-      expect(find.byType(PopupMenuButton).hitTestable(), findsOneWidget);
+      // Check for the popup menu items created by showMenu()
       expect(find.text('删除书签'), findsOneWidget);
     });
 
