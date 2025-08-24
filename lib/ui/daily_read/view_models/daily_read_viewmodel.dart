@@ -189,7 +189,7 @@ class DailyReadViewModel extends ChangeNotifier {
   }
 
   Future<void> _deleteBookmark(BookmarkDisplayModel bookmark) async {
-    appLogger.i('开始删除书签: ${bookmark.bookmark.id} - ${bookmark.bookmark.title}');
+    appLogger.i('开始删除书签: ${bookmark.bookmark.id}');
     final result =
         await _bookmarkRepository.deleteBookmark(bookmark.bookmark.id);
 
@@ -199,6 +199,11 @@ class DailyReadViewModel extends ChangeNotifier {
       throw result.exceptionOrNull()!;
     }
 
+    // 即时从今日列表移除并通知 UI（监听器随后会再次刷新）
+    _todayBookmarks.removeWhere(
+      (e) => e.bookmark.id == bookmark.bookmark.id,
+    );
+    notifyListeners();
     appLogger.i('书签删除成功: ${bookmark.bookmark.id}');
   }
 

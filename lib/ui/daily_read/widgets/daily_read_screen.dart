@@ -28,6 +28,7 @@ class DailyReadScreen extends StatefulWidget {
 class _DailyReadScreenState extends State<DailyReadScreen> {
   late ConfettiController _confettiController;
   ScrollController? _scrollController;
+  late final ListenableSubscription _deleteSuccessSubscription;
 
   @override
   void initState() {
@@ -44,6 +45,18 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
         context.push(
           Routes.bookmarkDetailWithId(bookmark.id),
           extra: {'bookmark': bookmark},
+        );
+      }
+    });
+
+    // 监听删除成功事件
+    _deleteSuccessSubscription =
+        widget.viewModel.deleteBookmark.listen((_, __) {
+      if (mounted) {
+        SnackBarHelper.showSuccess(
+          context,
+          '书签已删除',
+          duration: const Duration(seconds: 2),
         );
       }
     });
@@ -134,6 +147,8 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
     _confettiController.dispose();
     // 释放滚动控制器
     _scrollController?.dispose();
+    // 取消删除成功监听
+    _deleteSuccessSubscription.cancel();
     // 清除回调
     widget.viewModel.setOnBookmarkArchivedCallback(null);
     widget.viewModel.setNavigateToDetailCallback((_) {});
@@ -249,9 +264,7 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
           onToggleArchive: (bookmark) {
             widget.viewModel.toggleBookmarkArchived(bookmarkModel);
           },
-          onDeleteBookmark: (bookmark) {
-            widget.viewModel.deleteBookmark(bookmarkModel);
-          },
+          deleteBookmark: widget.viewModel.deleteBookmark,
         );
       },
     );

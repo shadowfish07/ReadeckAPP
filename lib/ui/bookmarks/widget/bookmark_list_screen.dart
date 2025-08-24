@@ -57,6 +57,7 @@ class BookmarkListScreen<T extends BaseBookmarksViewmodel>
 class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
     extends State<BookmarkListScreen<T>> {
   ScrollController? _scrollController;
+  late final ListenableSubscription _deleteSuccessSubscription;
 
   @override
   void initState() {
@@ -70,6 +71,18 @@ class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
           extra: {
             'bookmark': bookmark,
           },
+        );
+      }
+    });
+
+    // 监听删除成功事件
+    _deleteSuccessSubscription =
+        widget.viewModel.deleteBookmark.listen((_, __) {
+      if (mounted) {
+        SnackBarHelper.showSuccess(
+          context,
+          '书签已删除',
+          duration: const Duration(seconds: 2),
         );
       }
     });
@@ -110,6 +123,7 @@ class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
 
     _scrollController?.removeListener(_onScroll);
     _scrollController?.dispose();
+    _deleteSuccessSubscription.cancel();
     super.dispose();
   }
 
@@ -287,9 +301,7 @@ class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
             onToggleArchive: (bookmark) {
               widget.viewModel.toggleBookmarkArchived(bookmarkModel);
             },
-            onDeleteBookmark: (bookmark) {
-              widget.viewModel.deleteBookmark(bookmarkModel);
-            },
+            deleteBookmark: widget.viewModel.deleteBookmark,
           );
         },
       ),

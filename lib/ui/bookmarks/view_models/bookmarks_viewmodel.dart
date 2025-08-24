@@ -188,7 +188,7 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
   }
 
   Future<void> _deleteBookmark(BookmarkDisplayModel bookmark) async {
-    appLogger.i('开始删除书签: ${bookmark.bookmark.id} - ${bookmark.bookmark.title}');
+    appLogger.i('开始删除书签: ${bookmark.bookmark.id}');
     final result =
         await _bookmarkRepository.deleteBookmark(bookmark.bookmark.id);
 
@@ -198,6 +198,9 @@ abstract class BaseBookmarksViewmodel extends ChangeNotifier {
       throw result.exceptionOrNull()!;
     }
 
+    // 同步更新本地索引并通知 UI
+    _bookmarkIds.remove(bookmark.bookmark.id);
+    notifyListeners();
     appLogger.i('书签删除成功: ${bookmark.bookmark.id}');
   }
 

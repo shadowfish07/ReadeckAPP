@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_command/flutter_command.dart';
@@ -18,7 +19,7 @@ class BookmarkCard extends StatefulWidget {
       onUpdateLabels;
   final List<String>? availableLabels;
   final Future<List<String>> Function()? onLoadLabels;
-  final Function(BookmarkDisplayModel bookmark)? onDeleteBookmark;
+  final Command<BookmarkDisplayModel, void>? deleteBookmark;
 
   const BookmarkCard({
     super.key,
@@ -30,7 +31,7 @@ class BookmarkCard extends StatefulWidget {
     this.onUpdateLabels,
     this.availableLabels,
     this.onLoadLabels,
-    this.onDeleteBookmark,
+    this.deleteBookmark,
   });
 
   @override
@@ -38,9 +39,16 @@ class BookmarkCard extends StatefulWidget {
 }
 
 class _BookmarkCardState extends State<BookmarkCard> {
+  ListenableSubscription? _openUrlErrorsSub;
+  ListenableSubscription? _deleteBookmarkErrorsSub;
+
   @override
-  didChangeDependencies() {
-    widget.onOpenUrl.errors.where((x) => x != null).listen((error, _) {
+  void initState() {
+    super.initState();
+    // 订阅 URL 打开错误
+    _openUrlErrorsSub =
+        widget.onOpenUrl.errors.where((e) => e != null).listen((error, _) {
+      if (!mounted) return;
       SnackBarHelper.showError(
         context,
         error.toString(),
@@ -56,6 +64,30 @@ class _BookmarkCardState extends State<BookmarkCard> {
         ),
       );
     });
+
+    // 订阅删除命令的错误
+    if (widget.deleteBookmark != null) {
+      _deleteBookmarkErrorsSub = widget.deleteBookmark!.errors
+          .where((e) => e != null)
+          .listen((error, _) {
+        if (!mounted) return;
+        SnackBarHelper.showError(
+          context,
+          '删除失败，请稍后重试',
+        );
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _openUrlErrorsSub?.cancel();
+    _deleteBookmarkErrorsSub?.cancel();
+    super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
     super.didChangeDependencies();
   }
 
@@ -64,8 +96,8 @@ class _BookmarkCardState extends State<BookmarkCard> {
     final isArchived = widget.bookmarkDisplayModel.bookmark.isArchived;
 
     return GestureDetector(
-      onLongPress: widget.onDeleteBookmark != null
-          ? () => _handleLongPress(rootContext)
+      onLongPressStart: widget.deleteBookmark != null
+          ? (details) => _handleLongPress(rootContext, details.globalPosition)
           : null,
       child: Card(
         margin: const EdgeInsets.only(bottom: 16),
@@ -353,24 +385,22 @@ class _BookmarkCardState extends State<BookmarkCard> {
   }
 
   /// 处理卡片长按事件，显示上下文菜单
-  void _handleLongPress(BuildContext context) async {
-    appLogger.i('处理书签卡片长按: ${widget.bookmarkDisplayModel.bookmark.title}');
-
-    // 计算点击位置，用于弹出菜单的位置
-    final RenderBox renderBox = context.findRenderObject() as RenderBox;
-    final size = renderBox.size;
-    final offset = renderBox.localToGlobal(Offset.zero);
+  void _handleLongPress(BuildContext context, Offset globalPosition) async {
+    appLogger.i('处理书签卡片长按: ${widget.bookmarkDisplayModel.bookmark.id}');
 
     if (!mounted) return;
 
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final position = RelativeRect.fromLTRB(
+      globalPosition.dx,
+      globalPosition.dy,
+      overlay.size.width - globalPosition.dx,
+      overlay.size.height - globalPosition.dy,
+    );
+
     final selectedValue = await showMenu<String>(
       context: context,
-      position: RelativeRect.fromLTRB(
-        offset.dx,
-        offset.dy + size.height / 2,
-        offset.dx + size.width,
-        offset.dy + size.height,
-      ),
+      position: position,
       items: [
         PopupMenuItem<String>(
           value: 'delete',
@@ -435,25 +465,8 @@ class _BookmarkCardState extends State<BookmarkCard> {
 
   /// 处理确认删除操作
   void _handleDeleteConfirmed(BuildContext context) {
-    try {
-      widget.onDeleteBookmark?.call(widget.bookmarkDisplayModel);
-
-      if (mounted) {
-        SnackBarHelper.showSuccess(
-          context,
-          '书签已删除',
-          duration: const Duration(seconds: 2),
-        );
-      }
-    } catch (e) {
-      appLogger.e('删除书签失败', error: e);
-      if (mounted) {
-        SnackBarHelper.showError(
-          context,
-          '删除失败: ${e.toString()}',
-        );
-      }
-    }
+    // 执行删除命令，成功和失败的处理都在 ViewModel 层
+    widget.deleteBookmark?.execute(widget.bookmarkDisplayModel);
   }
 
   String _formatDate(DateTime date) {

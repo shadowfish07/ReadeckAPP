@@ -32,6 +32,8 @@ void main() {
     final mockLoadLabelsCommand = Command.createAsyncNoParam<List<String>>(
         () async => [],
         initialValue: []);
+    final mockDeleteBookmarkCommand =
+        Command.createAsyncNoResult<BookmarkDisplayModel>((_) async {});
 
     when(mockDailyReadViewModel.openUrl).thenReturn(mockOpenUrlCommand);
     when(mockDailyReadViewModel.toggleBookmarkArchived)
@@ -39,6 +41,8 @@ void main() {
     when(mockDailyReadViewModel.toggleBookmarkMarked)
         .thenReturn(mockToggleMarkedCommand);
     when(mockDailyReadViewModel.loadLabels).thenReturn(mockLoadLabelsCommand);
+    when(mockDailyReadViewModel.deleteBookmark)
+        .thenReturn(mockDeleteBookmarkCommand);
     when(mockDailyReadViewModel.setOnBookmarkArchivedCallback(any))
         .thenReturn(null);
     when(mockDailyReadViewModel.setNavigateToDetailCallback(any))
