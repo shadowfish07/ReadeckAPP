@@ -66,22 +66,8 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    // 只有在没有外部提供ScrollController时才创建自己的
-    if (_scrollController == null) {
-      _scrollController = ScrollController();
-
-      // 延迟到下一帧更新Provider，避免在build过程中触发rebuild
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          try {
-            final provider = context.read<ScrollControllerProvider?>();
-            provider?.setScrollController(_scrollController);
-          } catch (e) {
-            // 在测试环境中可能会失败，忽略
-          }
-        }
-      });
-    }
+    // 创建ScrollController
+    _scrollController ??= ScrollController();
     widget.viewModel.load.errors.where((x) => x != null).listen((error, _) {
       appLogger.e(
         '加载书签失败',
@@ -135,14 +121,6 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
 
   @override
   void dispose() {
-    // 清除Provider中的ScrollController引用
-    try {
-      final provider = context.read<ScrollControllerProvider?>();
-      provider?.setScrollController(null);
-    } catch (e) {
-      // 在测试或context已失效时忽略错误
-    }
-
     // 释放动画控制器
     _confettiController.dispose();
     // 释放滚动控制器
@@ -272,33 +250,38 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
 
   @override
   Widget build(BuildContext rootContext) {
-    return Consumer<DailyReadViewModel>(
-      builder: (context, viewModel, child) {
-        return CommandBuilder(
-          command: viewModel.load,
-          whileExecuting: (context, lastValue, param) {
-            if (lastValue != null && lastValue.isEmpty) {
-              return const Loading(text: '正在加载今日推荐');
-            }
+    return MainLayout(
+      title: '每日阅读',
+      scrollController: _scrollController,
+      showFab: true,
+      child: Consumer<DailyReadViewModel>(
+        builder: (context, viewModel, child) {
+          return CommandBuilder(
+            command: viewModel.load,
+            whileExecuting: (context, lastValue, param) {
+              if (lastValue != null && lastValue.isEmpty) {
+                return const Loading(text: '正在加载今日推荐');
+              }
 
-            return render();
-          },
-          onError: (context, error, lastValue, param) {
-            switch (error) {
-              case NetworkErrorException _:
-                return ErrorPage.networkError(
-                  error: error,
-                  onBack: () => viewModel.load.execute(false),
-                );
-              default:
-                return ErrorPage.unknownError(error: Exception(error));
-            }
-          },
-          onData: (context, data, param) {
-            return render();
-          },
-        );
-      },
+              return render();
+            },
+            onError: (context, error, lastValue, param) {
+              switch (error) {
+                case NetworkErrorException _:
+                  return ErrorPage.networkError(
+                    error: error,
+                    onBack: () => viewModel.load.execute(false),
+                  );
+                default:
+                  return ErrorPage.unknownError(error: Exception(error));
+              }
+            },
+            onData: (context, data, param) {
+              return render();
+            },
+          );
+        },
+      ),
     );
   }
 }

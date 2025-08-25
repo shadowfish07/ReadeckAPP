@@ -70,15 +70,6 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
               final title =
                   _getTitleForRoute(state.fullPath ?? state.matchedLocation);
 
-              // 检查是否为书签列表页面，需要显示FAB
-              final isBookmarkListRoute = [
-                Routes.dailyRead,
-                Routes.unarchived,
-                Routes.reading,
-                Routes.archived,
-                Routes.marked,
-              ].contains(state.fullPath ?? state.matchedLocation);
-
               // 从设置页返回，跳转首页
               if ((state.fullPath ?? state.matchedLocation) ==
                   Routes.settings) {
@@ -95,9 +86,22 @@ GoRouter router(SettingsRepository settingsRepository) => GoRouter(
                 );
               }
 
+              // 书签列表页面不被 MainLayout 包装，它们自己管理 UI
+              final selfManagedRoutes = [
+                Routes.dailyRead,
+                Routes.unarchived,
+                Routes.reading,
+                Routes.archived,
+                Routes.marked,
+              ];
+
+              if (selfManagedRoutes
+                  .contains(state.fullPath ?? state.matchedLocation)) {
+                return child;
+              }
+
               return MainLayout(
                 title: title,
-                showFab: isBookmarkListRoute,
                 child: child,
               );
             },

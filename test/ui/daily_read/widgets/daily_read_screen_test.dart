@@ -9,18 +9,15 @@ import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 import 'package:readeck_app/domain/models/bookmark_display_model/bookmark_display_model.dart';
 import 'package:readeck_app/ui/daily_read/view_models/daily_read_viewmodel.dart';
 import 'package:readeck_app/ui/daily_read/widgets/daily_read_screen.dart';
-import 'package:readeck_app/ui/core/main_layout.dart';
 
 import 'daily_read_screen_test.mocks.dart';
 
 @GenerateNiceMocks([MockSpec<DailyReadViewModel>()])
 void main() {
   late MockDailyReadViewModel mockDailyReadViewModel;
-  late ScrollControllerProvider scrollControllerProvider;
 
   setUp(() {
     mockDailyReadViewModel = MockDailyReadViewModel();
-    scrollControllerProvider = ScrollControllerProvider();
 
     // Stub all other commands that might be accessed during build
     final mockOpenUrlCommand =
@@ -49,21 +46,10 @@ void main() {
         .thenReturn(null);
   });
 
-  tearDown(() {
-    scrollControllerProvider.dispose();
-  });
-
   Widget createWidgetUnderTest() {
     return MaterialApp(
-      home: MultiProvider(
-        providers: [
-          ChangeNotifierProvider<DailyReadViewModel>.value(
-            value: mockDailyReadViewModel,
-          ),
-          ChangeNotifierProvider<ScrollControllerProvider>.value(
-            value: scrollControllerProvider,
-          ),
-        ],
+      home: ChangeNotifierProvider<DailyReadViewModel>.value(
+        value: mockDailyReadViewModel,
         child: DailyReadScreen(viewModel: mockDailyReadViewModel),
       ),
     );

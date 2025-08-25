@@ -44,33 +44,25 @@ class _BookmarkListFabState extends State<BookmarkListFab>
 
     // 初始状态显示FAB
     _animationController.forward();
-
-    // 监听滚动事件
-    _attachScrollListener();
   }
 
   @override
   void didUpdateWidget(BookmarkListFab oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.scrollController != widget.scrollController) {
-      _detachScrollListener(oldWidget.scrollController);
-      _attachScrollListener();
+      // ScrollController 变化时重置状态
+      _lastScrollPosition = 0;
+      setState(() {
+        _isVisible = true;
+      });
+      _animationController.forward();
     }
   }
 
   @override
   void dispose() {
-    _detachScrollListener(widget.scrollController);
     _animationController.dispose();
     super.dispose();
-  }
-
-  void _attachScrollListener() {
-    widget.scrollController?.addListener(_onScroll);
-  }
-
-  void _detachScrollListener(ScrollController? controller) {
-    controller?.removeListener(_onScroll);
   }
 
   void _onScroll() {
@@ -83,10 +75,11 @@ class _BookmarkListFabState extends State<BookmarkListFab>
     final scrollDelta = currentScrollPosition - _lastScrollPosition;
 
     // 滚动阈值，避免微小滚动导致频繁切换
-    const scrollThreshold = 3.0;
+    const scrollThreshold = 5.0;
 
     // 如果滚动距离太小，忽略
     if (scrollDelta.abs() < scrollThreshold) {
+      _lastScrollPosition = currentScrollPosition;
       return;
     }
 
@@ -127,6 +120,12 @@ class _BookmarkListFabState extends State<BookmarkListFab>
 
   @override
   Widget build(BuildContext context) {
+    // 简单直接地绑定监听器
+    if (widget.scrollController != null) {
+      widget.scrollController!.removeListener(_onScroll);
+      widget.scrollController!.addListener(_onScroll);
+    }
+
     return ScaleTransition(
       scale: _animation,
       child: FloatingActionButton(
