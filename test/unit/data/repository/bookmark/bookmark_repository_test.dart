@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:logger/logger.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:readeck_app/data/repository/article/article_repository.dart';
@@ -7,10 +6,10 @@ import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
 import 'package:readeck_app/data/repository/reading_stats/reading_stats_repository.dart';
 import 'package:readeck_app/data/service/readeck_api_client.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
-import 'package:readeck_app/main.dart';
 import 'package:readeck_app/utils/reading_stats_calculator.dart';
 import 'package:result_dart/result_dart.dart';
 
+import '../../../../helpers/test_logger_helper.dart';
 import 'bookmark_repository_test.mocks.dart';
 
 @GenerateMocks([
@@ -26,8 +25,7 @@ void main() {
     late MockArticleRepository mockArticleRepository;
 
     setUpAll(() {
-      // 初始化全局logger，避免LateInitializationError
-      appLogger = Logger(level: Level.off);
+      setupTestLogger();
 
       // 为Mockito提供dummy值
       provideDummy<Result<List<Bookmark>>>(const Success(<Bookmark>[]));

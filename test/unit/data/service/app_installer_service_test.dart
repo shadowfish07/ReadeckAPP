@@ -1,15 +1,19 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:logger/logger.dart';
 import 'package:readeck_app/data/service/app_installer_service.dart';
+import '../../../helpers/test_logger_helper.dart';
 
 void main() {
   group('AppInstallerService', () {
     late AppInstallerService service;
 
+    setUpAll(() {
+      setupTestLogger();
+    });
+
     setUp(() {
-      service = AppInstallerService(logger: Logger());
+      service = AppInstallerService(logger: appLogger);
     });
 
     group('Platform Support Tests', () {

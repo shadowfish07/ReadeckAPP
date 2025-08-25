@@ -1,11 +1,10 @@
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:logger/logger.dart';
+import '../../../helpers/test_logger_helper.dart';
 // import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:readeck_app/data/service/share_intent_service.dart';
-import 'package:readeck_app/main.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
 // Mock classes for testing
@@ -34,14 +33,7 @@ void main() {
       },
     );
 
-    // Initialize appLogger for tests
-    appLogger = Logger(
-      printer: PrettyPrinter(
-        methodCount: 0,
-        dateTimeFormat: DateTimeFormat.none,
-      ),
-      level: Level.warning, // Reduce log noise in tests
-    );
+    setupTestLogger();
   });
 
   group('ShareIntentService', () {

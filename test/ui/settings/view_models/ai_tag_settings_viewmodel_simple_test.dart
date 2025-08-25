@@ -1,14 +1,13 @@
 import 'dart:async';
 import 'package:flutter_command/flutter_command.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:logger/logger.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:readeck_app/data/repository/settings/settings_repository.dart';
-import 'package:readeck_app/main.dart';
 import 'package:readeck_app/ui/settings/view_models/ai_tag_settings_viewmodel.dart';
 import 'package:result_dart/result_dart.dart';
 
+import '../../../helpers/test_logger_helper.dart';
 import 'ai_tag_settings_viewmodel_simple_test.mocks.dart';
 
 // Generate mock classes
@@ -23,14 +22,7 @@ void main() {
       // Handle errors in tests
     };
 
-    // Initialize appLogger for tests
-    appLogger = Logger(
-      printer: PrettyPrinter(
-        methodCount: 0,
-        dateTimeFormat: DateTimeFormat.none,
-      ),
-      level: Level.warning, // Reduce log noise in tests
-    );
+    setupTestLogger();
   });
 
   group('AiTagSettingsViewModel', () {
@@ -219,10 +211,17 @@ void main() {
         var listenerCallCount = 0;
         viewModel.addListener(() => listenerCallCount++);
 
-        await expectLater(
-          viewModel.saveAiTagTargetLanguage.executeWithFuture(newLanguage),
-          throwsA(isA<Exception>()),
-        );
+        try {
+          await expectLater(
+            () => viewModel.saveAiTagTargetLanguage
+                .executeWithFuture(newLanguage),
+            throwsA(isA<Exception>()),
+          );
+          clearTestLogs();
+        } catch (e) {
+          flushTestLogsOnFailure();
+          rethrow;
+        }
 
         // State should not change when save fails
         expect(viewModel.aiTagTargetLanguage, equals('中文'));
@@ -348,7 +347,14 @@ void main() {
 
         viewModel = AiTagSettingsViewModel(mockSettingsRepository);
 
-        expect(() => viewModel.aiTagModel, throwsA(isA<Exception>()));
+        try {
+          expect(() => viewModel.aiTagModel, throwsA(isA<Exception>()));
+          clearTestLogs();
+        } catch (e) {
+          flushTestLogsOnFailure();
+          rethrow;
+        }
+
         verify(mockSettingsRepository.getAiTagModel()).called(1);
       });
 
@@ -359,7 +365,14 @@ void main() {
 
         viewModel = AiTagSettingsViewModel(mockSettingsRepository);
 
-        expect(() => viewModel.aiTagModelName, throwsA(isA<Exception>()));
+        try {
+          expect(() => viewModel.aiTagModelName, throwsA(isA<Exception>()));
+          clearTestLogs();
+        } catch (e) {
+          flushTestLogsOnFailure();
+          rethrow;
+        }
+
         verify(mockSettingsRepository.getAiTagModelName()).called(1);
       });
     });

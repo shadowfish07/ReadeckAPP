@@ -7,11 +7,10 @@ import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 import 'package:readeck_app/domain/models/bookmark_display_model/bookmark_display_model.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_operation_use_cases.dart';
 import 'package:readeck_app/ui/bookmarks/view_models/bookmarks_viewmodel.dart';
-import 'package:logger/logger.dart';
-import 'package:readeck_app/main.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:flutter_command/flutter_command.dart';
 
+import '../../../helpers/test_logger_helper.dart';
 import 'reading_viewmodel_test.mocks.dart';
 
 @GenerateMocks([BookmarkRepository, BookmarkOperationUseCases, LabelRepository])
@@ -22,7 +21,7 @@ void main() {
   late ReadingViewmodel readingViewmodel;
 
   setUpAll(() {
-    appLogger = Logger();
+    setupTestLogger();
     // 设置 flutter_command 全局异常处理器
     Command.globalExceptionHandler = (_, exception) {
       // 在测试中忽略异常，只为了满足 flutter_command 的要求

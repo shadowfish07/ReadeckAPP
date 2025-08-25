@@ -1,18 +1,17 @@
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
-import 'package:logger/logger.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:readeck_app/data/service/readeck_api_client.dart';
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 
-import 'package:readeck_app/main.dart';
 import 'package:readeck_app/utils/api_not_configured_exception.dart';
 import 'package:readeck_app/utils/article_empty_exception.dart';
 import 'package:readeck_app/utils/network_error_exception.dart';
 import 'package:readeck_app/utils/resource_not_found_exception.dart';
 
+import '../../../helpers/test_logger_helper.dart';
 import 'readeck_api_client_test.mocks.dart';
 
 // 生成 Mock 类
@@ -26,7 +25,7 @@ void main() {
 
     setUp(() {
       // 初始化全局 appLogger
-      appLogger = Logger();
+      setupTestLogger();
 
       mockHttpClient = MockClient();
       apiClient =

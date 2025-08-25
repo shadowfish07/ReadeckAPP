@@ -2,16 +2,15 @@ import 'dart:async';
 
 import 'package:flutter_command/flutter_command.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:logger/logger.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:readeck_app/data/repository/openrouter/openrouter_repository.dart';
 import 'package:readeck_app/data/repository/settings/settings_repository.dart';
 import 'package:readeck_app/domain/models/openrouter_model/openrouter_model.dart';
-import 'package:readeck_app/main.dart';
 import 'package:readeck_app/ui/settings/view_models/ai_settings_viewmodel.dart';
 import 'package:result_dart/result_dart.dart';
 
+import '../../../helpers/test_logger_helper.dart';
 import 'ai_settings_viewmodel_test.mocks.dart';
 
 // Generate mock classes
@@ -29,14 +28,7 @@ void main() {
       // Handle errors in tests
     };
 
-    // Initialize appLogger for tests
-    appLogger = Logger(
-      printer: PrettyPrinter(
-        methodCount: 0,
-        dateTimeFormat: DateTimeFormat.none,
-      ),
-      level: Level.warning, // Reduce log noise in tests
-    );
+    setupTestLogger();
   });
 
   group('AiSettingsViewModel', () {

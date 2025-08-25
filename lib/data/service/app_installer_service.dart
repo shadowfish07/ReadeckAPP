@@ -3,11 +3,12 @@ import 'package:open_filex/open_filex.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:result_dart/result_dart.dart';
 import 'package:logger/logger.dart';
+import '../../main.dart';
 
 class AppInstallerService {
   final Logger _logger;
 
-  AppInstallerService({Logger? logger}) : _logger = logger ?? Logger();
+  AppInstallerService({Logger? logger}) : _logger = logger ?? appLogger;
 
   /// 安装APK文件
   /// [filePath] APK文件路径

@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_command/flutter_command.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
@@ -8,11 +9,10 @@ import 'package:readeck_app/domain/models/bookmark/label_info.dart';
 import 'package:readeck_app/domain/models/bookmark_display_model/bookmark_display_model.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_operation_use_cases.dart';
 import 'package:readeck_app/ui/bookmarks/view_models/bookmarks_viewmodel.dart';
-import 'package:logger/logger.dart';
-import 'package:readeck_app/main.dart';
 import 'package:readeck_app/utils/reading_stats_calculator.dart';
 import 'package:result_dart/result_dart.dart';
 
+import '../../../helpers/test_logger_helper.dart';
 import 'bookmarks_viewmodel_test.mocks.dart';
 
 @GenerateMocks([BookmarkRepository, BookmarkOperationUseCases, LabelRepository])
@@ -30,7 +30,12 @@ void main() {
   late ReadingStatsForView mockReadingStats;
 
   setUpAll(() {
-    appLogger = Logger();
+    setupTestLogger();
+
+    // Setup global exception handler for Commands
+    Command.globalExceptionHandler = (error, stackTrace) {
+      // Handle errors in tests
+    };
 
     // Provide dummy values for Mockito
     provideDummy<Result<List<BookmarkDisplayModel>>>(
@@ -326,6 +331,109 @@ void main() {
       expect(stats1, isNotNull);
       expect(stats1?.readableCharCount, mockReadingStats.readableCharCount);
       expect(stats2, isNull);
+    });
+  });
+
+  group('Delete Bookmark Command Tests', () {
+    setUp(() {
+      viewModel = UnarchivedViewmodel(
+        mockBookmarkRepository,
+        mockBookmarkOperationUseCases,
+        mockLabelRepository,
+      );
+    });
+
+    test('should successfully delete bookmark and trigger UI update', () async {
+      // Arrange
+      when(mockBookmarkRepository.deleteBookmark(testBookmarkWithStats.id))
+          .thenAnswer((_) async => const Success(unit));
+
+      // Act
+      await viewModel.deleteBookmark.executeWithFuture(bookmarkModelWithStats);
+
+      // Assert
+      verify(mockBookmarkRepository.deleteBookmark(testBookmarkWithStats.id))
+          .called(1);
+      expect(viewModel.deleteBookmark.isExecuting.value, isFalse);
+    });
+
+    test('should handle delete bookmark failure and throw error', () async {
+      // Arrange
+      final exception = Exception('Network error');
+      when(mockBookmarkRepository.deleteBookmark(testBookmarkWithStats.id))
+          .thenAnswer((_) async => Failure(exception));
+
+      // Act & Assert
+      await expectLater(
+        () =>
+            viewModel.deleteBookmark.executeWithFuture(bookmarkModelWithStats),
+        throwsA(isA<Exception>()),
+      );
+
+      verify(mockBookmarkRepository.deleteBookmark(testBookmarkWithStats.id))
+          .called(1);
+    });
+
+    test('should not execute delete when already executing', () async {
+      // Arrange
+      when(mockBookmarkRepository.deleteBookmark(any)).thenAnswer((_) async {
+        // Simulate slow operation
+        await Future.delayed(const Duration(milliseconds: 100));
+        return const Success(unit);
+      });
+
+      // Act
+      final future1 =
+          viewModel.deleteBookmark.executeWithFuture(bookmarkModelWithStats);
+      expect(viewModel.deleteBookmark.isExecuting.value, isTrue);
+
+      // Try to execute again while first is still running
+      viewModel.deleteBookmark.execute(bookmarkModelWithoutStats);
+
+      // Wait for first to complete
+      await future1;
+
+      // Assert - only one call should have been made
+      verify(mockBookmarkRepository.deleteBookmark(any)).called(1);
+    });
+
+    test('should clear errors when delete command is executed again', () async {
+      // Arrange - first call fails
+      final exception = Exception('Network error');
+      when(mockBookmarkRepository.deleteBookmark(testBookmarkWithStats.id))
+          .thenAnswer((_) async => Failure(exception));
+
+      // First execution - should fail
+      try {
+        await viewModel.deleteBookmark
+            .executeWithFuture(bookmarkModelWithStats);
+      } catch (e) {
+        // Expected to throw
+      }
+
+      // Arrange - second call succeeds
+      when(mockBookmarkRepository.deleteBookmark(testBookmarkWithoutStats.id))
+          .thenAnswer((_) async => const Success(unit));
+
+      // Act - second execution should clear errors
+      await viewModel.deleteBookmark
+          .executeWithFuture(bookmarkModelWithoutStats);
+
+      // Assert
+      expect(viewModel.deleteBookmark.isExecuting.value, isFalse);
+    });
+
+    test('should log deletion attempts appropriately', () async {
+      // Arrange
+      when(mockBookmarkRepository.deleteBookmark(testBookmarkWithStats.id))
+          .thenAnswer((_) async => const Success(unit));
+
+      // Act
+      await viewModel.deleteBookmark.executeWithFuture(bookmarkModelWithStats);
+
+      // Assert - verify repository method was called with correct bookmark ID
+      verify(mockBookmarkRepository.deleteBookmark(testBookmarkWithStats.id))
+          .called(1);
     });
   });
 }

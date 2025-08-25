@@ -4,6 +4,7 @@ import 'package:logger/logger.dart';
 import '../../data/service/download_service.dart';
 import '../../data/service/app_installer_service.dart';
 import '../models/update/update_info.dart';
+import '../../main.dart';
 
 class AppUpdateUseCase {
   final DownloadService _downloadService;
@@ -16,7 +17,7 @@ class AppUpdateUseCase {
     Logger? logger,
   })  : _downloadService = downloadService,
         _installerService = installerService,
-        _logger = logger ?? Logger();
+        _logger = logger ?? appLogger;
 
   /// 下载并安装应用更新
   /// [updateInfo] 更新信息

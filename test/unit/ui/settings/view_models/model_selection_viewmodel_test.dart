@@ -1,15 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
-import 'package:logger/logger.dart';
 import 'package:flutter_command/flutter_command.dart';
 import 'package:readeck_app/data/repository/openrouter/openrouter_repository.dart';
 import 'package:readeck_app/data/repository/settings/settings_repository.dart';
 import 'package:readeck_app/domain/models/openrouter_model/openrouter_model.dart';
 import 'package:readeck_app/ui/settings/view_models/model_selection_viewmodel.dart';
-import 'package:readeck_app/main.dart';
 import 'package:result_dart/result_dart.dart';
 
+import '../../../../helpers/test_logger_helper.dart';
 import 'model_selection_viewmodel_test.mocks.dart';
 
 @GenerateMocks([SettingsRepository, OpenRouterRepository])
@@ -28,13 +27,7 @@ void main() {
         // In real app, these would be handled by proper error handling mechanisms
       };
 
-      appLogger = Logger(
-        printer: PrettyPrinter(
-          methodCount: 0,
-          dateTimeFormat: DateTimeFormat.none,
-        ),
-        level: Level.warning, // Reduce log noise in tests
-      );
+      setupTestLogger();
 
       // Provide dummy values for Mockito
       provideDummy<Result<List<OpenRouterModel>>>(

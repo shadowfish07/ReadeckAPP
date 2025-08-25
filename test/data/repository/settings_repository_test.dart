@@ -1,27 +1,19 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:logger/logger.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:readeck_app/data/repository/settings/settings_repository.dart';
 import 'package:readeck_app/data/service/shared_preference_service.dart';
 import 'package:readeck_app/data/service/readeck_api_client.dart';
-import 'package:readeck_app/main.dart';
 import 'package:result_dart/result_dart.dart';
 
+import '../../helpers/test_logger_helper.dart';
 import 'settings_repository_test.mocks.dart';
 
 // Generate mock classes
 @GenerateMocks([SharedPreferencesService, ReadeckApiClient])
 void main() {
   setUpAll(() {
-    // Initialize appLogger for tests
-    appLogger = Logger(
-      printer: PrettyPrinter(
-        methodCount: 0,
-        dateTimeFormat: DateTimeFormat.none,
-      ),
-      level: Level.warning, // Reduce log noise in tests
-    );
+    setupTestLogger();
 
     // Provide dummy values for Mockito
     provideDummy<Result<void>>(Success.unit());

@@ -1,6 +1,5 @@
 import 'package:flutter_command/flutter_command.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:logger/logger.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:readeck_app/data/repository/bookmark/bookmark_repository.dart';
@@ -10,10 +9,10 @@ import 'package:readeck_app/data/service/web_content_service.dart';
 import 'package:readeck_app/data/repository/web_content/web_content_repository.dart';
 import 'package:readeck_app/data/repository/ai_tag_recommendation/ai_tag_recommendation_repository.dart';
 import 'package:readeck_app/domain/models/bookmark/label_info.dart';
-import 'package:readeck_app/main.dart';
 import 'package:readeck_app/ui/bookmarks/view_models/add_bookmark_viewmodel.dart';
 import 'package:result_dart/result_dart.dart';
 
+import '../../../helpers/test_logger_helper.dart';
 import 'add_bookmark_viewmodel_basic_test.mocks.dart';
 
 @GenerateMocks([
@@ -30,14 +29,7 @@ void main() {
       // Handle errors in tests
     };
 
-    // Initialize appLogger for tests
-    appLogger = Logger(
-      printer: PrettyPrinter(
-        methodCount: 0,
-        dateTimeFormat: DateTimeFormat.none,
-      ),
-      level: Level.warning, // Reduce log noise in tests
-    );
+    setupTestLogger();
   });
 
   // Provide dummy values for Result types that Mockito can't generate

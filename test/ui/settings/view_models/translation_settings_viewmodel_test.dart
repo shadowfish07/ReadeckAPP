@@ -2,17 +2,16 @@ import 'dart:async';
 
 import 'package:flutter_command/flutter_command.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:logger/logger.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:readeck_app/data/repository/article/article_repository.dart';
 import 'package:readeck_app/data/repository/openrouter/openrouter_repository.dart';
 import 'package:readeck_app/data/repository/settings/settings_repository.dart';
 import 'package:readeck_app/domain/models/openrouter_model/openrouter_model.dart';
-import 'package:readeck_app/main.dart';
 import 'package:readeck_app/ui/settings/view_models/translation_settings_viewmodel.dart';
 import 'package:result_dart/result_dart.dart';
 
+import '../../../helpers/test_logger_helper.dart';
 import 'translation_settings_viewmodel_test.mocks.dart';
 
 // Generate mock classes
@@ -30,14 +29,7 @@ void main() {
       // Handle errors in tests
     };
 
-    // Initialize appLogger for tests
-    appLogger = Logger(
-      printer: PrettyPrinter(
-        methodCount: 0,
-        dateTimeFormat: DateTimeFormat.none,
-      ),
-      level: Level.warning, // Reduce log noise in tests
-    );
+    setupTestLogger();
   });
 
   group('TranslationSettingsViewModel', () {
@@ -210,10 +202,17 @@ void main() {
         var listenerCallCount = 0;
         viewModel.addListener(() => listenerCallCount++);
 
-        await expectLater(
-          viewModel.saveTranslationProvider.executeWithFuture(newProvider),
-          throwsA(isA<Exception>()),
-        );
+        try {
+          await expectLater(
+            () => viewModel.saveTranslationProvider
+                .executeWithFuture(newProvider),
+            throwsA(isA<Exception>()),
+          );
+          clearTestLogs();
+        } catch (e) {
+          flushTestLogsOnFailure();
+          rethrow;
+        }
 
         // State should not change when save fails
         expect(viewModel.translationProvider, equals('AI'));
@@ -272,11 +271,17 @@ void main() {
         var listenerCallCount = 0;
         viewModel.addListener(() => listenerCallCount++);
 
-        await expectLater(
-          viewModel.saveTranslationTargetLanguage
-              .executeWithFuture(newLanguage),
-          throwsA(isA<Exception>()),
-        );
+        try {
+          await expectLater(
+            () => viewModel.saveTranslationTargetLanguage
+                .executeWithFuture(newLanguage),
+            throwsA(isA<Exception>()),
+          );
+          clearTestLogs();
+        } catch (e) {
+          flushTestLogsOnFailure();
+          rethrow;
+        }
 
         // State should not change when save fails
         expect(viewModel.translationTargetLanguage, equals('中文'));
@@ -404,10 +409,16 @@ void main() {
         viewModel = TranslationSettingsViewModel(mockSettingsRepository,
             mockArticleRepository, mockOpenRouterRepository);
 
-        await expectLater(
-          viewModel.clearTranslationCache.executeWithFuture(),
-          throwsA(isA<Exception>()),
-        );
+        try {
+          await expectLater(
+            () => viewModel.clearTranslationCache.executeWithFuture(),
+            throwsA(isA<Exception>()),
+          );
+          clearTestLogs();
+        } catch (e) {
+          flushTestLogsOnFailure();
+          rethrow;
+        }
 
         verify(mockArticleRepository.clearTranslationCache()).called(1);
       });

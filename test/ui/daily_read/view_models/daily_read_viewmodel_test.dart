@@ -10,12 +10,11 @@ import 'package:readeck_app/domain/models/bookmark_display_model/bookmark_displa
 import 'package:readeck_app/domain/models/daily_read_history/daily_read_history.dart';
 import 'package:readeck_app/domain/use_cases/bookmark_operation_use_cases.dart';
 import 'package:readeck_app/ui/daily_read/view_models/daily_read_viewmodel.dart';
-import 'package:logger/logger.dart';
-import 'package:readeck_app/main.dart';
 import 'package:readeck_app/utils/option_data.dart';
 import 'package:readeck_app/utils/reading_stats_calculator.dart';
 import 'package:result_dart/result_dart.dart';
 
+import '../../../helpers/test_logger_helper.dart';
 import 'daily_read_viewmodel_test.mocks.dart';
 
 @GenerateNiceMocks([
@@ -32,7 +31,7 @@ void main() {
   late DailyReadViewModel dailyReadViewModel;
 
   setUpAll(() {
-    appLogger = Logger();
+    setupTestLogger();
     provideDummy<ResultDart<OptionData<DailyReadHistory>, Exception>>(
       const Success(None()),
     );
