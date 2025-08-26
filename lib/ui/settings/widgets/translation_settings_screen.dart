@@ -150,27 +150,11 @@ class _TranslationSettingsScreenState extends State<TranslationSettingsScreen> {
                     children: [
                       Text(
                         '选择翻译目标语种',
-                        style:
-                            Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                      ),
-                      const Spacer(),
-                      IconButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        icon: const Icon(Icons.close),
-                        style: IconButton.styleFrom(
-                          backgroundColor: Theme.of(context)
-                              .colorScheme
-                              .surfaceContainerHighest,
-                          foregroundColor:
-                              Theme.of(context).colorScheme.onSurface,
-                        ),
+                        style: Theme.of(context).textTheme.headlineSmall,
                       ),
                     ],
                   ),
                 ),
-                const Divider(),
                 // 语种列表
                 Expanded(
                   child: RadioGroup<String>(
@@ -197,50 +181,53 @@ class _TranslationSettingsScreenState extends State<TranslationSettingsScreen> {
 
                         return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 2),
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 4),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            tileColor: isSelected
+                          child: Material(
+                            color: isSelected
                                 ? Theme.of(context).colorScheme.primaryContainer
-                                : null,
-                            leading: Radio<String>(
-                              value: language,
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(12),
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 4),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              leading: Radio<String>(
+                                value: language,
+                              ),
+                              title: Text(
+                                language,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyLarge
+                                    ?.copyWith(
+                                      color: isSelected
+                                          ? Theme.of(context)
+                                              .colorScheme
+                                              .onPrimaryContainer
+                                          : Theme.of(context)
+                                              .colorScheme
+                                              .onSurface,
+                                      fontWeight: isSelected
+                                          ? FontWeight.w600
+                                          : FontWeight.w400,
+                                    ),
+                              ),
+                              trailing: isSelected
+                                  ? Icon(
+                                      Icons.check,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimaryContainer,
+                                      size: 20,
+                                    )
+                                  : null,
+                              onTap: () {
+                                widget.viewModel.saveTranslationTargetLanguage
+                                    .execute(language);
+                                Navigator.of(context).pop();
+                              },
                             ),
-                            title: Text(
-                              language,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyLarge
-                                  ?.copyWith(
-                                    color: isSelected
-                                        ? Theme.of(context)
-                                            .colorScheme
-                                            .onPrimaryContainer
-                                        : Theme.of(context)
-                                            .colorScheme
-                                            .onSurface,
-                                    fontWeight: isSelected
-                                        ? FontWeight.w600
-                                        : FontWeight.w400,
-                                  ),
-                            ),
-                            trailing: isSelected
-                                ? Icon(
-                                    Icons.check,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onPrimaryContainer,
-                                    size: 20,
-                                  )
-                                : null,
-                            onTap: () {
-                              widget.viewModel.saveTranslationTargetLanguage
-                                  .execute(language);
-                              Navigator.of(context).pop();
-                            },
                           ),
                         );
                       },
