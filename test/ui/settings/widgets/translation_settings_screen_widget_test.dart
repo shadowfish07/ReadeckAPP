@@ -114,7 +114,6 @@ void main() {
       expect(find.text('翻译服务提供方'), findsOneWidget);
       expect(find.text('OpenAI'), findsOneWidget);
       expect(find.byIcon(Icons.translate), findsOneWidget);
-      expect(find.byIcon(Icons.chevron_right), findsWidgets);
     });
 
     testWidgets(

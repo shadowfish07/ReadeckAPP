@@ -74,56 +74,61 @@ class _AiTagSettingsScreenState extends State<AiTagSettingsScreen> {
                   Navigator.of(context).pop();
                 }
               },
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children:
-                    AiTagSettingsViewModel.supportedLanguages.map((language) {
-                  final isSelected =
-                      widget.viewModel.aiTagTargetLanguage == language;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 4),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children:
+                      AiTagSettingsViewModel.supportedLanguages.map((language) {
+                    final isSelected =
+                        widget.viewModel.aiTagTargetLanguage == language;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 4),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        tileColor: isSelected
+                            ? Theme.of(context).colorScheme.primaryContainer
+                            : null,
+                        leading: Radio<String>(
+                          value: language,
+                        ),
+                        title: Text(
+                          language,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyLarge
+                              ?.copyWith(
+                                color: isSelected
+                                    ? Theme.of(context)
+                                        .colorScheme
+                                        .onPrimaryContainer
+                                    : Theme.of(context).colorScheme.onSurface,
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.w400,
+                              ),
+                        ),
+                        trailing: isSelected
+                            ? Icon(
+                                Icons.check,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onPrimaryContainer,
+                                size: 20,
+                              )
+                            : null,
+                        onTap: () {
+                          widget.viewModel.saveAiTagTargetLanguage
+                              .execute(language);
+                          Navigator.of(context).pop();
+                        },
                       ),
-                      tileColor: isSelected
-                          ? Theme.of(context).colorScheme.primaryContainer
-                          : null,
-                      leading: Radio<String>(
-                        value: language,
-                      ),
-                      title: Text(
-                        language,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: isSelected
-                                  ? Theme.of(context)
-                                      .colorScheme
-                                      .onPrimaryContainer
-                                  : Theme.of(context).colorScheme.onSurface,
-                              fontWeight: isSelected
-                                  ? FontWeight.w600
-                                  : FontWeight.w400,
-                            ),
-                      ),
-                      trailing: isSelected
-                          ? Icon(
-                              Icons.check,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onPrimaryContainer,
-                              size: 20,
-                            )
-                          : null,
-                      onTap: () {
-                        widget.viewModel.saveAiTagTargetLanguage
-                            .execute(language);
-                        Navigator.of(context).pop();
-                      },
-                    ),
-                  );
-                }).toList(),
+                    );
+                  }).toList(),
+                ),
               ),
             ),
           ),

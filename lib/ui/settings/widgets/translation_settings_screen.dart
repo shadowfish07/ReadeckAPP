@@ -113,87 +113,143 @@ class _TranslationSettingsScreenState extends State<TranslationSettingsScreen> {
     super.dispose();
   }
 
-  void _showLanguageSelectionDialog() {
-    showDialog(
+  void _showLanguageSelectionBottomSheet() {
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(
-            '选择翻译目标语种',
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: RadioGroup<String>(
-              groupValue: widget.viewModel.translationTargetLanguage,
-              onChanged: (String? value) {
-                if (value != null) {
-                  widget.viewModel.saveTranslationTargetLanguage.execute(value);
-                  Navigator.of(context).pop();
-                }
-              },
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: TranslationSettingsViewModel.supportedLanguages
-                    .map((language) {
-                  final isSelected =
-                      widget.viewModel.translationTargetLanguage == language;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 4),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+        return DraggableScrollableSheet(
+          initialChildSize: 0.6,
+          minChildSize: 0.4,
+          maxChildSize: 0.8,
+          expand: false,
+          builder: (BuildContext context, ScrollController scrollController) {
+            return Column(
+              children: [
+                // 拖拽指示器
+                Container(
+                  width: 32,
+                  height: 4,
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurfaceVariant
+                        .withValues(alpha: 0.4),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                // 标题
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  child: Row(
+                    children: [
+                      Text(
+                        '选择翻译目标语种',
+                        style:
+                            Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
                       ),
-                      tileColor: isSelected
-                          ? Theme.of(context).colorScheme.primaryContainer
-                          : null,
-                      leading: Radio<String>(
-                        value: language,
+                      const Spacer(),
+                      IconButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(Icons.close),
+                        style: IconButton.styleFrom(
+                          backgroundColor: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHighest,
+                          foregroundColor:
+                              Theme.of(context).colorScheme.onSurface,
+                        ),
                       ),
-                      title: Text(
-                        language,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: isSelected
-                                  ? Theme.of(context)
-                                      .colorScheme
-                                      .onPrimaryContainer
-                                  : Theme.of(context).colorScheme.onSurface,
-                              fontWeight: isSelected
-                                  ? FontWeight.w600
-                                  : FontWeight.w400,
-                            ),
-                      ),
-                      trailing: isSelected
-                          ? Icon(
-                              Icons.check,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onPrimaryContainer,
-                              size: 20,
-                            )
-                          : null,
-                      onTap: () {
+                    ],
+                  ),
+                ),
+                const Divider(),
+                // 语种列表
+                Expanded(
+                  child: RadioGroup<String>(
+                    groupValue: widget.viewModel.translationTargetLanguage,
+                    onChanged: (String? value) {
+                      if (value != null) {
                         widget.viewModel.saveTranslationTargetLanguage
-                            .execute(language);
+                            .execute(value);
                         Navigator.of(context).pop();
+                      }
+                    },
+                    child: ListView.builder(
+                      controller: scrollController,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      itemCount: TranslationSettingsViewModel
+                          .supportedLanguages.length,
+                      itemBuilder: (context, index) {
+                        final language = TranslationSettingsViewModel
+                            .supportedLanguages[index];
+                        final isSelected =
+                            widget.viewModel.translationTargetLanguage ==
+                                language;
+
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 2),
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 4),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            tileColor: isSelected
+                                ? Theme.of(context).colorScheme.primaryContainer
+                                : null,
+                            leading: Radio<String>(
+                              value: language,
+                            ),
+                            title: Text(
+                              language,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyLarge
+                                  ?.copyWith(
+                                    color: isSelected
+                                        ? Theme.of(context)
+                                            .colorScheme
+                                            .onPrimaryContainer
+                                        : Theme.of(context)
+                                            .colorScheme
+                                            .onSurface,
+                                    fontWeight: isSelected
+                                        ? FontWeight.w600
+                                        : FontWeight.w400,
+                                  ),
+                            ),
+                            trailing: isSelected
+                                ? Icon(
+                                    Icons.check,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimaryContainer,
+                                    size: 20,
+                                  )
+                                : null,
+                            onTap: () {
+                              widget.viewModel.saveTranslationTargetLanguage
+                                  .execute(language);
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                        );
                       },
                     ),
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              style: TextButton.styleFrom(
-                foregroundColor: Theme.of(context).colorScheme.primary,
-              ),
-              child: const Text('取消'),
-            ),
-          ],
+                  ),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -230,7 +286,7 @@ class _TranslationSettingsScreenState extends State<TranslationSettingsScreen> {
                     icon: Icons.language,
                     title: '翻译目标语种',
                     subtitle: widget.viewModel.translationTargetLanguage,
-                    onTap: _showLanguageSelectionDialog,
+                    onTap: _showLanguageSelectionBottomSheet,
                   ),
                 ],
               ),

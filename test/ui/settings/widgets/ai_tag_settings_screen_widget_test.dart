@@ -94,7 +94,6 @@ void main() {
       expect(find.text('标签推荐语言'), findsOneWidget);
       expect(find.text('English'), findsOneWidget);
       expect(find.byIcon(Icons.translate), findsOneWidget);
-      expect(find.byIcon(Icons.chevron_right), findsWidgets);
     });
 
     testWidgets(
