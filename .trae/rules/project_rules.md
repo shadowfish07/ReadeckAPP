@@ -619,3 +619,81 @@ This project follows a Test-Driven Development (TDD) approach. All new features 
 ### 注意事项
 
 - 遇到 Mockito null safety 错误时，首先运行 flutter pub run build_runner build
+
+## Material Design 3 设置页面实现规范
+
+基于 `lib/ui/settings/widgets/settings_screen.dart` 的标准实现以及抽取的基础组件
+
+### 核心架构模式
+
+**分组设置架构**：使用分组标题 + 卡片容器 + 列表项的三层结构
+- 标题：`titleSmall` + `primary` 颜色 + `fontWeight.w600` + `letterSpacing: 0.1`
+- 容器：`surfaceContainerLow` 背景 + `elevation: 0` 扁平化设计
+- 列表项：标准 `ListTile` + 自定义内容边距
+
+### 样式实现要点
+
+1. **主题一致性**：所有样式基于 `Theme.of(context)` 获取，禁止硬编码颜色、字号
+2. **边距规范**：
+   - 分组标题：左侧 16px，底部 8px
+   - 列表项内容：水平 16px，垂直 4px
+   - 分组间距：24px
+3. **图标规范**：24px 大小，使用 `onSurfaceVariant` 颜色
+4. **分割线系统**：1px 厚度，`surface` 颜色，动态插入列表项间
+
+### Command 集成模式
+
+使用 `CommandBuilder` 处理异步操作的三种状态：
+- **执行中**：显示 `CircularProgressIndicator`
+- **成功**：显示 `check_circle` 图标
+- **错误**：显示 `error` 图标 + `error` 颜色
+
+### 特殊组件实现
+
+1. **主题选择器**：`FilterChip` 实现多选一
+   - 选中状态：`secondaryContainer` + `onSecondaryContainer` 配色
+   - 字体：12px + `fontWeight.w500`
+
+2. **导航设置项**：图标 + 标题 + 副标题的标准布局
+   - 支持可选的 `trailing` 组件（如更新提示标签）
+
+### 基础组件库
+
+项目中已抽取以下可复用组件，位于 `lib/ui/core/ui/`：
+
+1. **SettingsSection**：标准化设置分组组件
+   ```dart
+   SettingsSection(
+     title: '连接设置',
+     children: [/* 子组件列表 */],
+   )
+   ```
+
+2. **SettingsNavigationTile**：导航设置项组件
+   ```dart
+   SettingsNavigationTile(
+     icon: Icons.api,
+     title: 'API 配置',
+     subtitle: '配置 Readeck 服务器连接',
+     onTap: () => context.push(Routes.apiConfigSetting),
+   )
+   ```
+
+3. **FilterChipSelector**：多选一选择器组件
+   ```dart
+   FilterChipSelector<ThemeMode>(
+     options: ThemeMode.values,
+     selectedValue: viewModel.themeMode,
+     onSelectionChanged: (mode) => viewModel.setThemeMode.execute(mode),
+     labelBuilder: _getThemeModeText,
+   )
+   ```
+
+> **注意**：分割线逻辑已内置在 `SettingsSection` 组件中，无需额外处理。
+
+### 使用规范
+
+1. **优先使用基础组件**：新的设置页面应优先使用已抽取的基础组件
+2. **保持一致性**：所有设置页面都应遵循相同的视觉规范和交互模式
+3. **主题兼容**：确保所有组件在不同主题模式下正常显示
+4. **可访问性**：保持足够的触摸目标大小和对比度

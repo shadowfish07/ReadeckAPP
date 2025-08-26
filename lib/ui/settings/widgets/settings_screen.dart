@@ -5,6 +5,9 @@ import 'package:go_router/go_router.dart';
 import 'package:readeck_app/routing/routes.dart';
 import 'package:readeck_app/ui/settings/view_models/settings_viewmodel.dart';
 import 'package:readeck_app/ui/settings/view_models/about_viewmodel.dart';
+import 'package:readeck_app/ui/core/ui/settings_section.dart';
+import 'package:readeck_app/ui/core/ui/settings_navigation_tile.dart';
+import 'package:readeck_app/ui/core/ui/filter_chip_selector.dart';
 import 'package:flutter_command/flutter_command.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -21,88 +24,6 @@ class SettingsScreen extends StatelessWidget {
       case ThemeMode.system:
         return '跟随系统';
     }
-  }
-
-  /// 在子组件之间添加分割线
-  List<Widget> _addDividersBetweenChildren(
-      List<Widget> children, BuildContext context) {
-    if (children.length <= 1) return children;
-
-    final List<Widget> result = [];
-    for (int i = 0; i < children.length; i++) {
-      result.add(children[i]);
-      if (i < children.length - 1) {
-        result.add(Divider(
-          height: 1,
-          thickness: 1,
-          color: Theme.of(context).colorScheme.surface,
-        ));
-      }
-    }
-    return result;
-  }
-
-  /// 构建设置分组
-  Widget _buildSettingsSection(
-      BuildContext context, String title, List<Widget> children) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 16, bottom: 8),
-          child: Text(
-            title,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.1,
-                ),
-          ),
-        ),
-        Card(
-          margin: EdgeInsets.zero,
-          elevation: 0,
-          color: Theme.of(context).colorScheme.surfaceContainerLow,
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            children: _addDividersBetweenChildren(children, context),
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// 构建导航项
-  Widget _buildNavigationTile(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-    Widget? trailing,
-  }) {
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      leading: Icon(
-        icon,
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
-        size: 24,
-      ),
-      title: Text(
-        title,
-        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              fontWeight: FontWeight.w500,
-            ),
-      ),
-      subtitle: Text(
-        subtitle,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-      ),
-      trailing: trailing,
-      onTap: onTap,
-    );
   }
 
   /// 构建主题模式设置项
@@ -130,33 +51,11 @@ class SettingsScreen extends StatelessWidget {
                 ),
           ),
           const SizedBox(height: 12),
-          Row(
-            children: ThemeMode.values.map((mode) {
-              final isSelected = viewModel.themeMode == mode;
-              return Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: FilterChip(
-                  selected: isSelected,
-                  label: Text(_getThemeModeText(mode)),
-                  onSelected: (selected) {
-                    if (selected) {
-                      viewModel.setThemeMode.execute(mode);
-                    }
-                  },
-                  selectedColor:
-                      Theme.of(context).colorScheme.secondaryContainer,
-                  checkmarkColor:
-                      Theme.of(context).colorScheme.onSecondaryContainer,
-                  labelStyle: TextStyle(
-                    fontSize: 12,
-                    color: isSelected
-                        ? Theme.of(context).colorScheme.onSecondaryContainer
-                        : Theme.of(context).colorScheme.onSurface,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              );
-            }).toList(),
+          FilterChipSelector<ThemeMode>(
+            options: ThemeMode.values,
+            selectedValue: viewModel.themeMode,
+            onSelectionChanged: (mode) => viewModel.setThemeMode.execute(mode),
+            labelBuilder: _getThemeModeText,
           ),
         ],
       ),
@@ -247,12 +146,10 @@ class SettingsScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         children: [
           // 连接设置分组
-          _buildSettingsSection(
-            context,
-            '连接设置',
-            [
-              _buildNavigationTile(
-                context,
+          SettingsSection(
+            title: '连接设置',
+            children: [
+              SettingsNavigationTile(
                 icon: Icons.api,
                 title: 'API 配置',
                 subtitle: '配置 Readeck 服务器连接',
@@ -263,12 +160,10 @@ class SettingsScreen extends StatelessWidget {
           const SizedBox(height: 24),
 
           // AI 功能分组
-          _buildSettingsSection(
-            context,
-            'AI 功能',
-            [
-              _buildNavigationTile(
-                context,
+          SettingsSection(
+            title: 'AI 功能',
+            children: [
+              SettingsNavigationTile(
                 icon: Icons.smart_toy,
                 title: 'AI 设置',
                 subtitle: '配置 AI 服务、翻译和标签功能',
@@ -279,20 +174,18 @@ class SettingsScreen extends StatelessWidget {
           const SizedBox(height: 24),
 
           // 界面设置分组
-          _buildSettingsSection(
-            context,
-            '界面设置',
-            [
+          SettingsSection(
+            title: '界面设置',
+            children: [
               _buildThemeModeTile(context),
             ],
           ),
           const SizedBox(height: 24),
 
           // 数据管理分组
-          _buildSettingsSection(
-            context,
-            '数据管理',
-            [
+          SettingsSection(
+            title: '数据管理',
+            children: [
               _buildExportLogsTile(context),
               if (kDebugMode) _buildDebugTile(context),
             ],
@@ -300,15 +193,13 @@ class SettingsScreen extends StatelessWidget {
           const SizedBox(height: 24),
 
           // 应用信息分组
-          _buildSettingsSection(
-            context,
-            '应用信息',
-            [
+          SettingsSection(
+            title: '应用信息',
+            children: [
               Consumer<AboutViewModel>(
                 builder: (context, aboutViewModel, child) {
                   final hasUpdate = aboutViewModel.updateInfo != null;
-                  return _buildNavigationTile(
-                    context,
+                  return SettingsNavigationTile(
                     icon: Icons.info_outline,
                     title: '关于',
                     subtitle: hasUpdate
