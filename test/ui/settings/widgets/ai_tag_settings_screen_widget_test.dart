@@ -168,12 +168,11 @@ void main() {
       await tester.tap(languageTile);
       await tester.pumpAndSettle();
 
-      // Assert
-      expect(find.byType(AlertDialog), findsOneWidget);
+      // Assert - Should show modal bottom sheet instead of dialog
+      expect(find.byType(BottomSheet), findsOneWidget);
       expect(find.text('选择AI标签目标语言'), findsOneWidget);
-      expect(find.text('取消'), findsOneWidget);
 
-      // Should display some supported languages
+      // Should display some supported languages in the bottom sheet
       expect(find.text('中文'), findsOneWidget);
       expect(find.text('日本語'), findsOneWidget);
     });
@@ -192,8 +191,8 @@ void main() {
       await tester.tap(languageTile);
       await tester.pumpAndSettle();
 
-      // Assert - dialog should be displayed
-      expect(find.byType(AlertDialog), findsOneWidget);
+      // Assert - bottom sheet should be displayed
+      expect(find.byType(BottomSheet), findsOneWidget);
       expect(find.text('选择AI标签目标语言'), findsOneWidget);
       expect(find.text('English'), findsAtLeastNWidgets(1));
       expect(find.text('中文'), findsAtLeastNWidgets(1));
@@ -294,12 +293,12 @@ void main() {
       await tester.tap(languageTile);
       await tester.pumpAndSettle();
 
-      // Cancel dialog
-      await tester.tap(find.text('取消'));
+      // Dismiss bottom sheet by tapping outside
+      await tester.tapAt(const Offset(50, 50));
       await tester.pumpAndSettle();
 
-      // Assert - should not call save command and dialog should be closed
-      expect(find.byType(AlertDialog), findsNothing);
+      // Assert - should not call save command and bottom sheet should be closed
+      expect(find.byType(BottomSheet), findsNothing);
     });
 
     group('Command Listeners Integration', () {
@@ -392,8 +391,8 @@ void main() {
         await tester.tap(languageTile);
         await tester.pumpAndSettle();
 
-        // Assert - dialog should open without errors even if no specific test for empty list
-        expect(find.byType(AlertDialog), findsOneWidget);
+        // Assert - bottom sheet should open without errors even if no specific test for empty list
+        expect(find.byType(BottomSheet), findsOneWidget);
         expect(find.text('选择AI标签目标语言'), findsOneWidget);
       });
     });

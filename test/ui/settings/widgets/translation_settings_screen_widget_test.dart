@@ -223,12 +223,11 @@ void main() {
       await tester.tap(languageTile);
       await tester.pumpAndSettle();
 
-      // Assert
-      expect(find.byType(AlertDialog), findsOneWidget);
+      // Assert - Should show modal bottom sheet instead of dialog
+      expect(find.byType(BottomSheet), findsOneWidget);
       expect(find.text('选择翻译目标语种'), findsOneWidget);
-      expect(find.text('取消'), findsOneWidget);
 
-      // Should display some supported languages in the dialog
+      // Should display some supported languages in the bottom sheet
       expect(find.text('中文'), findsOneWidget);
       expect(find.text('日本語'), findsOneWidget);
     });
@@ -247,8 +246,8 @@ void main() {
       await tester.tap(languageTile);
       await tester.pumpAndSettle();
 
-      // Assert - dialog should be displayed
-      expect(find.byType(AlertDialog), findsOneWidget);
+      // Assert - bottom sheet should be displayed
+      expect(find.byType(BottomSheet), findsOneWidget);
       expect(find.text('选择翻译目标语种'), findsOneWidget);
       expect(find.text('English'), findsAtLeastNWidgets(1));
       expect(find.text('中文'), findsAtLeastNWidgets(1));
