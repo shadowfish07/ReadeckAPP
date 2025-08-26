@@ -23,36 +23,219 @@ class SettingsScreen extends StatelessWidget {
     }
   }
 
-  void _showThemeModeDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return ListenableBuilder(
-            listenable: viewModel,
-            builder: (context, _) {
-              return ChooseThemeDialog(
-                  currentThemeMode: viewModel.themeMode,
-                  onThemeChanged: (ThemeMode mode) {
-                    viewModel.setThemeMode.execute(mode);
-                    context.pop();
-                  });
-            });
+  /// 在子组件之间添加分割线
+  List<Widget> _addDividersBetweenChildren(
+      List<Widget> children, BuildContext context) {
+    if (children.length <= 1) return children;
+
+    final List<Widget> result = [];
+    for (int i = 0; i < children.length; i++) {
+      result.add(children[i]);
+      if (i < children.length - 1) {
+        result.add(Divider(
+          height: 1,
+          thickness: 1,
+          color: Theme.of(context).colorScheme.surface,
+        ));
+      }
+    }
+    return result;
+  }
+
+  /// 构建设置分组
+  Widget _buildSettingsSection(
+      BuildContext context, String title, List<Widget> children) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 16, bottom: 8),
+          child: Text(
+            title,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.1,
+                ),
+          ),
+        ),
+        Card(
+          margin: EdgeInsets.zero,
+          elevation: 0,
+          color: Theme.of(context).colorScheme.surfaceContainerLow,
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            children: _addDividersBetweenChildren(children, context),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 构建导航项
+  Widget _buildNavigationTile(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+    Widget? trailing,
+  }) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      leading: Icon(
+        icon,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+        size: 24,
+      ),
+      title: Text(
+        title,
+        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.w500,
+            ),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+      ),
+      trailing: trailing,
+      onTap: onTap,
+    );
+  }
+
+  /// 构建主题模式设置项
+  Widget _buildThemeModeTile(BuildContext context) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      leading: Icon(
+        Icons.palette_outlined,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+        size: 24,
+      ),
+      title: Text(
+        '主题模式',
+        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.w500,
+            ),
+      ),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '选择应用的显示主题',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: ThemeMode.values.map((mode) {
+              final isSelected = viewModel.themeMode == mode;
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: FilterChip(
+                  selected: isSelected,
+                  label: Text(_getThemeModeText(mode)),
+                  onSelected: (selected) {
+                    if (selected) {
+                      viewModel.setThemeMode.execute(mode);
+                    }
+                  },
+                  selectedColor:
+                      Theme.of(context).colorScheme.secondaryContainer,
+                  checkmarkColor:
+                      Theme.of(context).colorScheme.onSecondaryContainer,
+                  labelStyle: TextStyle(
+                    fontSize: 12,
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.onSecondaryContainer
+                        : Theme.of(context).colorScheme.onSurface,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 构建导出日志项
+  Widget _buildExportLogsTile(BuildContext context) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      leading: Icon(
+        Icons.file_download_outlined,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+        size: 24,
+      ),
+      title: Text(
+        '导出日志',
+        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.w500,
+            ),
+      ),
+      subtitle: Text(
+        '导出应用日志文件',
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+      ),
+      trailing: CommandBuilder<void, void>(
+        command: viewModel.exportLogs,
+        whileExecuting: (context, _, __) => SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        ),
+        onData: (context, _, __) => Icon(
+          Icons.check_circle,
+          color: Theme.of(context).colorScheme.primary,
+          size: 20,
+        ),
+        onError: (context, error, _, __) => Icon(
+          Icons.error,
+          color: Theme.of(context).colorScheme.error,
+          size: 20,
+        ),
+      ),
+      onTap: () {
+        viewModel.exportLogs.execute();
       },
     );
   }
 
-  /// 构建分组标题
-  Widget _buildSectionHeader(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 32, 16, 8),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.1,
+  /// 构建调试项
+  Widget _buildDebugTile(BuildContext context) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      leading: Icon(
+        Icons.warning_amber_outlined,
+        color: Theme.of(context).colorScheme.error,
+        size: 24,
+      ),
+      title: Text(
+        '清空数据库',
+        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.w500,
+              color: Theme.of(context).colorScheme.error,
             ),
       ),
+      subtitle: Text(
+        '仅开发模式可用',
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+      ),
+      onTap: () {
+        viewModel.clearAllDataForDebug();
+      },
     );
   }
 
@@ -61,188 +244,103 @@ class SettingsScreen extends StatelessWidget {
     return ListenableBuilder(
       listenable: viewModel,
       builder: (context, _) => ListView(
+        padding: const EdgeInsets.all(16),
         children: [
           // 连接设置分组
-          _buildSectionHeader(context, '连接设置'),
-          ListTile(
-            leading: Icon(
-              Icons.api,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-            title: const Text('API 配置'),
-            subtitle: const Text('配置 Readeck 服务器连接'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () async {
-              context.push(Routes.apiConfigSetting);
-            },
+          _buildSettingsSection(
+            context,
+            '连接设置',
+            [
+              _buildNavigationTile(
+                context,
+                icon: Icons.api,
+                title: 'API 配置',
+                subtitle: '配置 Readeck 服务器连接',
+                onTap: () => context.push(Routes.apiConfigSetting),
+              ),
+            ],
           ),
+          const SizedBox(height: 24),
 
           // AI 功能分组
-          _buildSectionHeader(context, 'AI 功能'),
-          ListTile(
-            leading: Icon(
-              Icons.smart_toy,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-            title: const Text('AI 设置'),
-            subtitle: const Text('配置 AI 服务、翻译和标签功能'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              context.push(Routes.aiSetting);
-            },
+          _buildSettingsSection(
+            context,
+            'AI 功能',
+            [
+              _buildNavigationTile(
+                context,
+                icon: Icons.smart_toy,
+                title: 'AI 设置',
+                subtitle: '配置 AI 服务、翻译和标签功能',
+                onTap: () => context.push(Routes.aiSetting),
+              ),
+            ],
           ),
+          const SizedBox(height: 24),
 
           // 界面设置分组
-          _buildSectionHeader(context, '界面设置'),
-          ListTile(
-            leading: Icon(
-              Icons.palette,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-            title: const Text('主题模式'),
-            subtitle: const Text('选择应用的显示主题'),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    _getThemeModeText(viewModel.themeMode),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                const Icon(Icons.chevron_right),
-              ],
-            ),
-            onTap: () {
-              _showThemeModeDialog(context);
-            },
+          _buildSettingsSection(
+            context,
+            '界面设置',
+            [
+              _buildThemeModeTile(context),
+            ],
           ),
+          const SizedBox(height: 24),
 
           // 数据管理分组
-          _buildSectionHeader(context, '数据管理'),
-          ListTile(
-            leading: Icon(
-              Icons.file_download,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-            title: const Text('导出日志'),
-            subtitle: const Text('导出应用日志文件'),
-            trailing: CommandBuilder<void, void>(
-              command: viewModel.exportLogs,
-              whileExecuting: (context, _, __) => const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                  SizedBox(width: 8),
-                  Icon(Icons.chevron_right),
-                ],
-              ),
-              onNullData: (context, _) => const Icon(Icons.chevron_right),
-              onData: (context, _, __) => Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.check_circle,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 16,
-                  ),
-                  const SizedBox(width: 8),
-                  const Icon(Icons.chevron_right),
-                ],
-              ),
-              onError: (context, error, _, __) => Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.error,
-                    color: Theme.of(context).colorScheme.error,
-                    size: 16,
-                  ),
-                  const SizedBox(width: 8),
-                  const Icon(Icons.chevron_right),
-                ],
-              ),
-            ),
-            onTap: () {
-              viewModel.exportLogs.execute();
-            },
+          _buildSettingsSection(
+            context,
+            '数据管理',
+            [
+              _buildExportLogsTile(context),
+              if (kDebugMode) _buildDebugTile(context),
+            ],
           ),
-          if (kDebugMode)
-            ListTile(
-              leading: Icon(
-                Icons.dangerous,
-                color: Theme.of(context).colorScheme.error,
-              ),
-              title: const Text('清空数据库'),
-              subtitle: const Text('仅开发模式可用'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                viewModel.clearAllDataForDebug();
-              },
-            ),
+          const SizedBox(height: 24),
 
           // 应用信息分组
-          _buildSectionHeader(context, '应用信息'),
-          Consumer<AboutViewModel>(
-            builder: (context, aboutViewModel, child) {
-              final hasUpdate = aboutViewModel.updateInfo != null;
-              return ListTile(
-                leading: Icon(
-                  Icons.info,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-                title: const Text('关于'),
-                subtitle: hasUpdate
-                    ? Text('发现新版本 ${aboutViewModel.updateInfo!.version}')
-                    : const Text('应用信息和版本'),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (hasUpdate) ...[
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.error,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          '更新',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Theme.of(context).colorScheme.onError,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                    ],
-                    const Icon(Icons.chevron_right),
-                  ],
-                ),
-                onTap: () {
-                  context.push(Routes.about);
+          _buildSettingsSection(
+            context,
+            '应用信息',
+            [
+              Consumer<AboutViewModel>(
+                builder: (context, aboutViewModel, child) {
+                  final hasUpdate = aboutViewModel.updateInfo != null;
+                  return _buildNavigationTile(
+                    context,
+                    icon: Icons.info_outline,
+                    title: '关于',
+                    subtitle: hasUpdate
+                        ? '发现新版本 ${aboutViewModel.updateInfo!.version}'
+                        : '应用信息和版本',
+                    trailing: hasUpdate
+                        ? Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color:
+                                  Theme.of(context).colorScheme.errorContainer,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '更新',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onErrorContainer,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          )
+                        : null,
+                    onTap: () => context.push(Routes.about),
+                  );
                 },
-              );
-            },
+              ),
+            ],
           ),
-
-          // 底部间距
           const SizedBox(height: 16),
         ],
       ),
@@ -260,40 +358,85 @@ class ChooseThemeDialog extends StatelessWidget {
   final ThemeMode currentThemeMode;
   final ValueChanged<ThemeMode> onThemeChanged;
 
+  String _getThemeModeText(ThemeMode mode) {
+    switch (mode) {
+      case ThemeMode.light:
+        return '浅色模式';
+      case ThemeMode.dark:
+        return '深色模式';
+      case ThemeMode.system:
+        return '跟随系统';
+    }
+  }
+
+  IconData _getThemeModeIcon(ThemeMode mode) {
+    switch (mode) {
+      case ThemeMode.light:
+        return Icons.light_mode;
+      case ThemeMode.dark:
+        return Icons.dark_mode;
+      case ThemeMode.system:
+        return Icons.brightness_auto;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('选择主题模式'),
-      content: RadioGroup<ThemeMode>(
-        groupValue: currentThemeMode,
-        onChanged: (ThemeMode? value) {
-          if (value != null) {
-            onThemeChanged(value);
-          }
-        },
-        child: const Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            RadioListTile<ThemeMode>(
-              title: Text('浅色模式'),
-              value: ThemeMode.light,
+      title: Text(
+        '选择主题模式',
+        style: Theme.of(context).textTheme.headlineSmall,
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: ThemeMode.values.map((mode) {
+          final isSelected = currentThemeMode == mode;
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: ListTile(
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              tileColor: isSelected
+                  ? Theme.of(context).colorScheme.primaryContainer
+                  : null,
+              leading: Icon(
+                _getThemeModeIcon(mode),
+                color: isSelected
+                    ? Theme.of(context).colorScheme.onPrimaryContainer
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
+                size: 24,
+              ),
+              title: Text(
+                _getThemeModeText(mode),
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: isSelected
+                          ? Theme.of(context).colorScheme.onPrimaryContainer
+                          : Theme.of(context).colorScheme.onSurface,
+                      fontWeight:
+                          isSelected ? FontWeight.w600 : FontWeight.w400,
+                    ),
+              ),
+              trailing: isSelected
+                  ? Icon(
+                      Icons.check,
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      size: 20,
+                    )
+                  : null,
+              onTap: () => onThemeChanged(mode),
             ),
-            RadioListTile<ThemeMode>(
-              title: Text('深色模式'),
-              value: ThemeMode.dark,
-            ),
-            RadioListTile<ThemeMode>(
-              title: Text('跟随系统'),
-              value: ThemeMode.system,
-            ),
-          ],
-        ),
+          );
+        }).toList(),
       ),
       actions: [
         TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
+          onPressed: () => Navigator.of(context).pop(),
+          style: TextButton.styleFrom(
+            foregroundColor: Theme.of(context).colorScheme.primary,
+          ),
           child: const Text('取消'),
         ),
       ],
