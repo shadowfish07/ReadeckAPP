@@ -55,92 +55,128 @@ class _AiTagSettingsScreenState extends State<AiTagSettingsScreen> {
     super.dispose();
   }
 
-  void _showLanguageSelectionDialog() {
-    showDialog(
+  void _showLanguageSelectionBottomSheet() {
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(
-            '选择AI标签目标语言',
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: RadioGroup<String>(
-              groupValue: widget.viewModel.aiTagTargetLanguage,
-              onChanged: (String? value) {
-                if (value != null) {
-                  widget.viewModel.saveAiTagTargetLanguage.execute(value);
-                  Navigator.of(context).pop();
-                }
-              },
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children:
-                      AiTagSettingsViewModel.supportedLanguages.map((language) {
-                    final isSelected =
-                        widget.viewModel.aiTagTargetLanguage == language;
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 4),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        tileColor: isSelected
-                            ? Theme.of(context).colorScheme.primaryContainer
-                            : null,
-                        leading: Radio<String>(
-                          value: language,
-                        ),
-                        title: Text(
-                          language,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyLarge
-                              ?.copyWith(
-                                color: isSelected
-                                    ? Theme.of(context)
-                                        .colorScheme
-                                        .onPrimaryContainer
-                                    : Theme.of(context).colorScheme.onSurface,
-                                fontWeight: isSelected
-                                    ? FontWeight.w600
-                                    : FontWeight.w400,
-                              ),
-                        ),
-                        trailing: isSelected
-                            ? Icon(
-                                Icons.check,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onPrimaryContainer,
-                                size: 20,
-                              )
-                            : null,
-                        onTap: () {
-                          widget.viewModel.saveAiTagTargetLanguage
-                              .execute(language);
-                          Navigator.of(context).pop();
-                        },
-                      ),
-                    );
-                  }).toList(),
+        return DraggableScrollableSheet(
+          initialChildSize: 0.6,
+          minChildSize: 0.4,
+          maxChildSize: 0.8,
+          expand: false,
+          builder: (BuildContext context, ScrollController scrollController) {
+            return Column(
+              children: [
+                // 拖拽指示器
+                Container(
+                  width: 32,
+                  height: 4,
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurfaceVariant
+                        .withValues(alpha: 0.4),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              style: TextButton.styleFrom(
-                foregroundColor: Theme.of(context).colorScheme.primary,
-              ),
-              child: const Text('取消'),
-            ),
-          ],
+                // 标题
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  child: Row(
+                    children: [
+                      Text(
+                        '选择AI标签目标语言',
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                    ],
+                  ),
+                ),
+                // 语种列表
+                Expanded(
+                  child: RadioGroup<String>(
+                    groupValue: widget.viewModel.aiTagTargetLanguage,
+                    onChanged: (String? value) {
+                      if (value != null) {
+                        widget.viewModel.saveAiTagTargetLanguage.execute(value);
+                        Navigator.of(context).pop();
+                      }
+                    },
+                    child: ListView.builder(
+                      controller: scrollController,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      itemCount:
+                          AiTagSettingsViewModel.supportedLanguages.length,
+                      itemBuilder: (context, index) {
+                        final language =
+                            AiTagSettingsViewModel.supportedLanguages[index];
+                        final isSelected =
+                            widget.viewModel.aiTagTargetLanguage == language;
+
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 2),
+                          child: Material(
+                            color: isSelected
+                                ? Theme.of(context).colorScheme.primaryContainer
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(12),
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 4),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              leading: Radio<String>(
+                                value: language,
+                              ),
+                              title: Text(
+                                language,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyLarge
+                                    ?.copyWith(
+                                      color: isSelected
+                                          ? Theme.of(context)
+                                              .colorScheme
+                                              .onPrimaryContainer
+                                          : Theme.of(context)
+                                              .colorScheme
+                                              .onSurface,
+                                      fontWeight: isSelected
+                                          ? FontWeight.w600
+                                          : FontWeight.w400,
+                                    ),
+                              ),
+                              trailing: isSelected
+                                  ? Icon(
+                                      Icons.check,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimaryContainer,
+                                      size: 20,
+                                    )
+                                  : null,
+                              onTap: () {
+                                widget.viewModel.saveAiTagTargetLanguage
+                                    .execute(language);
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -166,7 +202,7 @@ class _AiTagSettingsScreenState extends State<AiTagSettingsScreen> {
                     icon: Icons.translate,
                     title: '标签推荐语言',
                     subtitle: widget.viewModel.aiTagTargetLanguage,
-                    onTap: _showLanguageSelectionDialog,
+                    onTap: _showLanguageSelectionBottomSheet,
                   ),
                 ],
               ),
