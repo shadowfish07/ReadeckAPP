@@ -5,6 +5,7 @@ import 'package:readeck_app/main.dart';
 import 'package:readeck_app/routing/routes.dart';
 import 'package:readeck_app/ui/settings/view_models/ai_settings_viewmodel.dart';
 import 'package:readeck_app/ui/core/ui/snack_bar_helper.dart';
+import 'package:readeck_app/ui/core/ui/settings_section.dart';
 
 class AiSettingsScreen extends StatefulWidget {
   const AiSettingsScreen({super.key, required this.viewModel});
@@ -74,20 +75,6 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
     }
   }
 
-  /// 构建分组标题
-  Widget _buildSectionHeader(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.w500,
-            ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -101,130 +88,194 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
           final selectedModel = widget.viewModel.selectedModel;
 
           return ListView(
+            padding: const EdgeInsets.all(16),
             children: [
-              // 页面描述
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      hasApiKey ? '配置 AI 功能和模型选择' : '开始使用 AI 功能',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                            fontWeight: FontWeight.w500,
-                          ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      hasApiKey
-                          ? '您的 API 密钥已配置，可以使用 AI 翻译和标签功能'
-                          : '首先配置 OpenRouter API 密钥以启用 AI 翻译和智能标签功能',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                    ),
-                  ],
-                ),
-              ),
-
               // API 配置分组
-              _buildSectionHeader(context, 'API 配置'),
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                child: TextField(
-                  controller: _apiKeyController,
-                  decoration: InputDecoration(
-                    labelText: 'OpenRouter API 密钥',
-                    hintText: hasApiKey ? '已配置 API 密钥' : '请输入您的 API 密钥',
-                    prefixIcon: Icon(
-                      Icons.key,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+              SettingsSection(
+                title: 'API 配置',
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'OpenRouter API 密钥',
+                          style:
+                              Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _apiKeyController,
+                          decoration: InputDecoration(
+                            hintText: hasApiKey ? '已配置 API 密钥' : '请输入您的 API 密钥',
+                            prefixIcon: Icon(
+                              Icons.key,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
+                            suffixIcon: hasApiKey
+                                ? Icon(
+                                    Icons.check_circle,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                    size: 20,
+                                  )
+                                : null,
+                            border: const OutlineInputBorder(),
+                          ),
+                          obscureText: true,
+                          onChanged: widget.viewModel.textChangedCommand.call,
+                          onSubmitted: (_) => _saveApiKey(),
+                        ),
+                      ],
                     ),
-                    suffixIcon: hasApiKey
-                        ? Icon(
-                            Icons.check_circle,
-                            color: Theme.of(context).colorScheme.primary,
-                            size: 20,
-                          )
-                        : null,
-                    border: const OutlineInputBorder(),
                   ),
-                  obscureText: true,
-                  onChanged: widget.viewModel.textChangedCommand.call,
-                  onSubmitted: (_) => _saveApiKey(),
-                ),
+                ],
               ),
+              const SizedBox(height: 24),
 
               // AI 功能分组
-              _buildSectionHeader(context, 'AI 功能'),
-              ListTile(
-                leading: Icon(
-                  Icons.smart_toy,
-                  color: hasApiKey
-                      ? Theme.of(context).colorScheme.onSurface
-                      : Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                title: const Text('模型选择'),
-                subtitle: Text(
-                  hasApiKey
-                      ? widget.viewModel.selectedModelName.isNotEmpty
-                          ? widget.viewModel.selectedModelName
-                          : selectedModel?.name ?? '未选择模型'
-                      : '需要先配置 API 密钥',
-                ),
-                trailing: const Icon(Icons.chevron_right),
-                enabled: hasApiKey,
-                onTap: hasApiKey
-                    ? () async {
-                        await context.push(Routes.modelSelection);
-                        widget.viewModel.loadSelectedModel.execute();
-                      }
-                    : null,
+              SettingsSection(
+                title: 'AI 功能',
+                children: [
+                  ListTile(
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    leading: Icon(
+                      Icons.smart_toy,
+                      color: hasApiKey
+                          ? Theme.of(context).colorScheme.onSurfaceVariant
+                          : Theme.of(context)
+                              .colorScheme
+                              .onSurfaceVariant
+                              .withValues(alpha: 0.5),
+                      size: 24,
+                    ),
+                    title: Text(
+                      '模型选择',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.w500,
+                            color: hasApiKey
+                                ? Theme.of(context).colorScheme.onSurface
+                                : Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withValues(alpha: 0.5),
+                          ),
+                    ),
+                    subtitle: Text(
+                      hasApiKey
+                          ? widget.viewModel.selectedModelName.isNotEmpty
+                              ? widget.viewModel.selectedModelName
+                              : selectedModel?.name ?? '未选择模型'
+                          : '需要先配置 API 密钥',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: hasApiKey
+                                ? Theme.of(context).colorScheme.onSurfaceVariant
+                                : Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant
+                                    .withValues(alpha: 0.5),
+                          ),
+                    ),
+                    onTap: hasApiKey
+                        ? () async {
+                            await context.push(Routes.modelSelection);
+                            widget.viewModel.loadSelectedModel.execute();
+                          }
+                        : null,
+                  ),
+                  ListTile(
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    leading: Icon(
+                      Icons.translate,
+                      color: hasApiKey
+                          ? Theme.of(context).colorScheme.onSurfaceVariant
+                          : Theme.of(context)
+                              .colorScheme
+                              .onSurfaceVariant
+                              .withValues(alpha: 0.5),
+                      size: 24,
+                    ),
+                    title: Text(
+                      '翻译设置',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.w500,
+                            color: hasApiKey
+                                ? Theme.of(context).colorScheme.onSurface
+                                : Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withValues(alpha: 0.5),
+                          ),
+                    ),
+                    subtitle: Text(
+                      hasApiKey ? '配置阅读翻译功能' : '需要先配置 API 密钥',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: hasApiKey
+                                ? Theme.of(context).colorScheme.onSurfaceVariant
+                                : Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant
+                                    .withValues(alpha: 0.5),
+                          ),
+                    ),
+                    onTap: hasApiKey
+                        ? () {
+                            context.push(Routes.translationSetting);
+                          }
+                        : null,
+                  ),
+                  ListTile(
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    leading: Icon(
+                      Icons.label,
+                      color: hasApiKey
+                          ? Theme.of(context).colorScheme.onSurfaceVariant
+                          : Theme.of(context)
+                              .colorScheme
+                              .onSurfaceVariant
+                              .withValues(alpha: 0.5),
+                      size: 24,
+                    ),
+                    title: Text(
+                      'AI 标签设置',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.w500,
+                            color: hasApiKey
+                                ? Theme.of(context).colorScheme.onSurface
+                                : Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withValues(alpha: 0.5),
+                          ),
+                    ),
+                    subtitle: Text(
+                      hasApiKey ? '配置 AI 标签推荐功能' : '需要先配置 API 密钥',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: hasApiKey
+                                ? Theme.of(context).colorScheme.onSurfaceVariant
+                                : Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant
+                                    .withValues(alpha: 0.5),
+                          ),
+                    ),
+                    onTap: hasApiKey
+                        ? () {
+                            context.push(Routes.aiTagSetting);
+                          }
+                        : null,
+                  ),
+                ],
               ),
-
-              ListTile(
-                leading: Icon(
-                  Icons.translate,
-                  color: hasApiKey
-                      ? Theme.of(context).colorScheme.onSurface
-                      : Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                title: const Text('翻译设置'),
-                subtitle: Text(
-                  hasApiKey ? '配置阅读翻译功能' : '需要先配置 API 密钥',
-                ),
-                trailing: const Icon(Icons.chevron_right),
-                enabled: hasApiKey,
-                onTap: hasApiKey
-                    ? () {
-                        context.push(Routes.translationSetting);
-                      }
-                    : null,
-              ),
-
-              ListTile(
-                leading: Icon(
-                  Icons.label,
-                  color: hasApiKey
-                      ? Theme.of(context).colorScheme.onSurface
-                      : Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                title: const Text('AI 标签设置'),
-                subtitle: Text(
-                  hasApiKey ? '配置 AI 标签推荐功能' : '需要先配置 API 密钥',
-                ),
-                trailing: const Icon(Icons.chevron_right),
-                enabled: hasApiKey,
-                onTap: hasApiKey
-                    ? () {
-                        context.push(Routes.aiTagSetting);
-                      }
-                    : null,
-              ),
+              const SizedBox(height: 16),
             ],
           );
         },

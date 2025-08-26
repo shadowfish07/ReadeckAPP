@@ -77,10 +77,6 @@ void main() {
       expect(find.byType(Scaffold), findsWidgets);
       expect(find.text('AI 标签设置'), findsOneWidget);
 
-      // Assert - Page description
-      expect(find.text('配置 AI 标签功能'), findsOneWidget);
-      expect(find.text('设置 AI 标签推荐的目标语言和专用模型'), findsOneWidget);
-
       // Assert - Section headers
       expect(find.text('基础设置'), findsOneWidget);
       expect(find.text('模型配置'), findsOneWidget);

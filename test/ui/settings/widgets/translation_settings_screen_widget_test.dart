@@ -95,10 +95,6 @@ void main() {
       expect(find.byType(Scaffold), findsWidgets);
       expect(find.text('翻译设置'), findsOneWidget);
 
-      // Assert - Page description
-      expect(find.text('配置翻译功能'), findsOneWidget);
-      expect(find.text('设置翻译服务提供方、目标语种和专用模型'), findsOneWidget);
-
       // Assert - Section headers
       expect(find.text('基础设置'), findsOneWidget);
       expect(find.text('模型配置'), findsOneWidget);
