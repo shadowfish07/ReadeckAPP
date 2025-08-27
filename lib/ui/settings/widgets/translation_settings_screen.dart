@@ -5,6 +5,8 @@ import 'package:readeck_app/main.dart';
 import 'package:readeck_app/routing/routes.dart';
 import 'package:readeck_app/ui/settings/view_models/translation_settings_viewmodel.dart';
 import 'package:readeck_app/ui/core/ui/snack_bar_helper.dart';
+import 'package:readeck_app/ui/core/ui/settings_section.dart';
+import 'package:readeck_app/ui/core/ui/settings_navigation_tile.dart';
 
 class TranslationSettingsScreen extends StatefulWidget {
   const TranslationSettingsScreen({super.key, required this.viewModel});
@@ -111,68 +113,132 @@ class _TranslationSettingsScreenState extends State<TranslationSettingsScreen> {
     super.dispose();
   }
 
-  void _showLanguageSelectionDialog() {
-    showDialog(
+  void _showLanguageSelectionBottomSheet() {
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('选择翻译目标语种'),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: RadioGroup<String>(
-              groupValue: widget.viewModel.translationTargetLanguage,
-              onChanged: (String? value) {
-                if (value != null) {
-                  widget.viewModel.saveTranslationTargetLanguage.execute(value);
-                  Navigator.of(context).pop();
-                }
-              },
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount:
-                    TranslationSettingsViewModel.supportedLanguages.length,
-                itemBuilder: (context, index) {
-                  final language =
-                      TranslationSettingsViewModel.supportedLanguages[index];
-                  return ListTile(
-                    title: Text(language),
-                    leading: Radio<String>(
-                      value: language,
-                    ),
-                    onTap: () {
-                      widget.viewModel.saveTranslationTargetLanguage
-                          .execute(language);
-                      Navigator.of(context).pop();
+        return DraggableScrollableSheet(
+          initialChildSize: 0.6,
+          minChildSize: 0.4,
+          maxChildSize: 0.8,
+          expand: false,
+          builder: (BuildContext context, ScrollController scrollController) {
+            return Column(
+              children: [
+                // 拖拽指示器
+                Container(
+                  width: 32,
+                  height: 4,
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurfaceVariant
+                        .withValues(alpha: 0.4),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                // 标题
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  child: Row(
+                    children: [
+                      Text(
+                        '选择翻译目标语种',
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                    ],
+                  ),
+                ),
+                // 语种列表
+                Expanded(
+                  child: RadioGroup<String>(
+                    groupValue: widget.viewModel.translationTargetLanguage,
+                    onChanged: (String? value) {
+                      if (value != null) {
+                        widget.viewModel.saveTranslationTargetLanguage
+                            .execute(value);
+                        Navigator.of(context).pop();
+                      }
                     },
-                  );
-                },
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('取消'),
-            ),
-          ],
+                    child: ListView.builder(
+                      controller: scrollController,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      itemCount: TranslationSettingsViewModel
+                          .supportedLanguages.length,
+                      itemBuilder: (context, index) {
+                        final language = TranslationSettingsViewModel
+                            .supportedLanguages[index];
+                        final isSelected =
+                            widget.viewModel.translationTargetLanguage ==
+                                language;
+
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 2),
+                          child: Material(
+                            color: isSelected
+                                ? Theme.of(context).colorScheme.primaryContainer
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(12),
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 4),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              leading: Radio<String>(
+                                value: language,
+                              ),
+                              title: Text(
+                                language,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyLarge
+                                    ?.copyWith(
+                                      color: isSelected
+                                          ? Theme.of(context)
+                                              .colorScheme
+                                              .onPrimaryContainer
+                                          : Theme.of(context)
+                                              .colorScheme
+                                              .onSurface,
+                                      fontWeight: isSelected
+                                          ? FontWeight.w600
+                                          : FontWeight.w400,
+                                    ),
+                              ),
+                              trailing: isSelected
+                                  ? Icon(
+                                      Icons.check,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimaryContainer,
+                                      size: 20,
+                                    )
+                                  : null,
+                              onTap: () {
+                                widget.viewModel.saveTranslationTargetLanguage
+                                    .execute(language);
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         );
       },
-    );
-  }
-
-  /// 构建分组标题
-  Widget _buildSectionHeader(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.w500,
-            ),
-      ),
     );
   }
 
@@ -186,80 +252,86 @@ class _TranslationSettingsScreenState extends State<TranslationSettingsScreen> {
         listenable: widget.viewModel,
         builder: (context, _) {
           return ListView(
+            padding: const EdgeInsets.all(16),
             children: [
-              // 页面描述
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '配置翻译功能',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
+              // 基础设置分组
+              SettingsSection(
+                title: '基础设置',
+                children: [
+                  SettingsNavigationTile(
+                    icon: Icons.translate,
+                    title: '翻译服务提供方',
+                    subtitle: widget.viewModel.translationProvider,
+                    onTap: () {
+                      SnackBarHelper.showInfo(
+                        context,
+                        '目前只支持 AI 翻译服务',
+                      );
+                    },
+                  ),
+                  SettingsNavigationTile(
+                    icon: Icons.language,
+                    title: '翻译目标语种',
+                    subtitle: widget.viewModel.translationTargetLanguage,
+                    onTap: _showLanguageSelectionBottomSheet,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // 模型配置分组
+              SettingsSection(
+                title: '模型配置',
+                children: [
+                  SettingsNavigationTile(
+                    icon: Icons.smart_toy,
+                    title: '专用模型',
+                    subtitle: widget.viewModel.translationModelName.isNotEmpty
+                        ? widget.viewModel.translationModelName
+                        : '使用全局模型',
+                    onTap: () {
+                      context.push(
+                          '${Routes.modelSelection}?scenario=translation');
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // 性能优化分组
+              SettingsSection(
+                title: '性能优化',
+                children: [
+                  SwitchListTile(
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    secondary: Icon(
+                      Icons.cached,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      size: 24,
+                    ),
+                    title: Text(
+                      '启用翻译缓存',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                             fontWeight: FontWeight.w500,
                           ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '设置翻译服务提供方、目标语种和专用模型',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    subtitle: Text(
+                      '缓存翻译结果以提高性能',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color:
                                 Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                     ),
-                  ],
-                ),
+                    value: widget.viewModel.translationCacheEnabled,
+                    onChanged: (bool value) {
+                      widget.viewModel.saveTranslationCacheEnabled
+                          .execute(value);
+                    },
+                  ),
+                ],
               ),
-
-              // 基础设置分组
-              _buildSectionHeader(context, '基础设置'),
-              ListTile(
-                leading: const Icon(Icons.translate),
-                title: const Text('翻译服务提供方'),
-                subtitle: Text(widget.viewModel.translationProvider),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () {
-                  SnackBarHelper.showInfo(
-                    context,
-                    '目前只支持 AI 翻译服务',
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.language),
-                title: const Text('翻译目标语种'),
-                subtitle: Text(widget.viewModel.translationTargetLanguage),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: _showLanguageSelectionDialog,
-              ),
-
-              // 模型配置分组
-              _buildSectionHeader(context, '模型配置'),
-              ListTile(
-                leading: const Icon(Icons.smart_toy),
-                title: const Text('专用模型'),
-                subtitle: Text(widget.viewModel.translationModelName.isNotEmpty
-                    ? widget.viewModel.translationModelName
-                    : '使用全局模型'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () {
-                  context.push('${Routes.modelSelection}?scenario=translation');
-                },
-              ),
-
-              // 性能优化分组
-              _buildSectionHeader(context, '性能优化'),
-              SwitchListTile(
-                secondary: const Icon(Icons.cached),
-                title: const Text('启用翻译缓存'),
-                subtitle: const Text('缓存翻译结果以提高性能'),
-                value: widget.viewModel.translationCacheEnabled,
-                onChanged: (bool value) {
-                  widget.viewModel.saveTranslationCacheEnabled.execute(value);
-                },
-              ),
+              const SizedBox(height: 16),
             ],
           );
         },

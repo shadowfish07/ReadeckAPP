@@ -1,29 +1,69 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:logger/logger.dart';
+import 'package:mockito/mockito.dart';
+import 'package:mockito/annotations.dart';
 import 'package:readeck_app/data/service/app_installer_service.dart';
 import 'package:readeck_app/data/service/download_service.dart';
 import 'package:readeck_app/domain/models/update/update_info.dart';
 import 'package:readeck_app/domain/use_cases/app_update_use_case.dart';
+import 'package:result_dart/result_dart.dart';
 
+import 'app_update_use_case_test.mocks.dart';
+
+@GenerateMocks([DownloadService, AppInstallerService])
 void main() {
+  // Provide dummy values for Mockito
+  provideDummy<Result<String>>(Failure(DownloadException('dummy')));
+  provideDummy<Result<int>>(Failure(DownloadException('dummy')));
+  provideDummy<Result<void>>(Failure(AppUpdateException('dummy')));
+
   TestWidgetsFlutterBinding.ensureInitialized();
   group('AppUpdateUseCase', () {
     late AppUpdateUseCase useCase;
     late UpdateInfo testUpdateInfo;
+    late MockDownloadService mockDownloadService;
+    late MockAppInstallerService mockInstallerService;
+    late Logger mockLogger;
 
     setUp(() {
+      // Create mock services
+      mockDownloadService = MockDownloadService();
+      mockInstallerService = MockAppInstallerService();
+
       // Create a mock logger for testing to avoid appLogger dependency
-      final mockLogger = Logger(
+      mockLogger = Logger(
         printer: PrettyPrinter(),
         output: null, // Don't output during tests
       );
 
-      final downloadService = DownloadService(logger: mockLogger);
-      final installerService = AppInstallerService(logger: mockLogger);
+      // Setup default stubs for all required methods
+      when(mockInstallerService.getInstallFileExtension()).thenReturn('apk');
+
+      when(mockInstallerService.isSupportedPlatform()).thenReturn(true);
+
+      when(mockInstallerService.hasInstallPermission())
+          .thenAnswer((_) async => true);
+
+      when(mockInstallerService.requestInstallPermission())
+          .thenAnswer((_) async => true);
+
+      when(mockInstallerService.installApk(any))
+          .thenAnswer((_) async => const Success(()));
+
+      when(mockDownloadService.fileExists(any)).thenAnswer((_) async => false);
+
+      // Setup default download failure for all downloadFile calls
+      when(mockDownloadService.downloadFile(any, any,
+              onProgress: anyNamed('onProgress')))
+          .thenAnswer(
+              (_) async => Failure(DownloadException('Download failed')));
+
+      // Setup default getFileSize to return 0 for all calls
+      when(mockDownloadService.getFileSize(any)).thenAnswer((_) async => 0);
 
       useCase = AppUpdateUseCase(
-        downloadService: downloadService,
-        installerService: installerService,
+        downloadService: mockDownloadService,
+        installerService: mockInstallerService,
         logger: mockLogger,
       );
 
@@ -59,6 +99,8 @@ void main() {
           releaseNotes: 'Test release',
           htmlUrl: 'https://example.com/release',
         );
+
+        // 默认存根已设置，网络错误返回0
 
         final size = await useCase.getUpdateFileSize(invalidUpdateInfo);
 
@@ -103,6 +145,10 @@ void main() {
       test('installUpdate should handle non-existent file', () async {
         const nonExistentFile = '/non/existent/file.apk';
 
+        // Mock fileExists to return false for this test
+        when(mockDownloadService.fileExists(nonExistentFile))
+            .thenAnswer((_) async => false);
+
         final result = await useCase.installUpdate(nonExistentFile);
 
         expect(result.isError(), true);
@@ -120,6 +166,11 @@ void main() {
           htmlUrl: 'https://example.com/release',
         );
 
+        // Mock download service to fail for invalid URL
+        when(mockDownloadService.downloadFile('invalid-url', any,
+                onProgress: anyNamed('onProgress')))
+            .thenAnswer((_) async => Failure(DownloadException('Invalid URL')));
+
         final result =
             await useCase.downloadAndInstallUpdate(invalidUpdateInfo);
 
@@ -136,6 +187,11 @@ void main() {
           htmlUrl: 'https://example.com/release',
         );
 
+        // Mock download service to fail for empty URL
+        when(mockDownloadService.downloadFile('', any,
+                onProgress: anyNamed('onProgress')))
+            .thenAnswer((_) async => Failure(DownloadException('Empty URL')));
+
         final result =
             await useCase.downloadAndInstallUpdate(invalidUpdateInfo);
 
@@ -150,6 +206,11 @@ void main() {
           htmlUrl: 'https://example.com/release',
         );
 
+        // Mock download service to fail for empty URL
+        when(mockDownloadService.downloadFile('', any,
+                onProgress: anyNamed('onProgress')))
+            .thenAnswer((_) async => Failure(DownloadException('Empty URL')));
+
         final result = await useCase.downloadUpdate(invalidUpdateInfo);
 
         expect(result.isError(), true);
@@ -160,6 +221,12 @@ void main() {
       test(
           'downloadAndInstallUpdate should handle progress callback without crash',
           () async {
+        // Set up mock to simulate download failure but without crash
+        when(mockDownloadService.downloadFile(testUpdateInfo.downloadUrl, any,
+                onProgress: anyNamed('onProgress')))
+            .thenAnswer(
+                (_) async => Failure(DownloadException('Download failed')));
+
         final result = await useCase.downloadAndInstallUpdate(
           testUpdateInfo,
           onProgress: (received, total) {
@@ -167,7 +234,7 @@ void main() {
           },
         );
 
-        // 应该失败（因为无效URL），但不应该崩溃
+        // 应该失败（因为下载失败），但不应该崩溃
         expect(result.isError(), true);
       });
     });
@@ -180,6 +247,13 @@ void main() {
           releaseNotes: 'Test release',
           htmlUrl: 'https://example.com/release',
         );
+
+        // Mock download service to fail
+        when(mockDownloadService.downloadFile(
+                'https://example.com/app.apk', any,
+                onProgress: anyNamed('onProgress')))
+            .thenAnswer(
+                (_) async => Failure(DownloadException('Download failed')));
 
         final result = await useCase.downloadUpdate(updateInfo);
 
@@ -195,9 +269,16 @@ void main() {
           htmlUrl: 'https://example.com/release',
         );
 
+        // Mock download service to fail
+        when(mockDownloadService.downloadFile(
+                'https://nonexistent-domain.com/app.apk', any,
+                onProgress: anyNamed('onProgress')))
+            .thenAnswer(
+                (_) async => Failure(DownloadException('Download failed')));
+
         final result = await useCase.downloadUpdate(updateInfo);
 
-        // 应该处理空发布说明的情况
+        // 应该处理下载失败的情况
         expect(result.isError(), true);
       });
 
@@ -208,6 +289,9 @@ void main() {
           releaseNotes: 'Test release',
           htmlUrl: 'https://example.com/release',
         );
+
+        // Mock getFileSize to return 0 for empty URL
+        when(mockDownloadService.getFileSize('')).thenAnswer((_) async => 0);
 
         final size = await useCase.getUpdateFileSize(updateInfo);
 
