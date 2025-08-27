@@ -44,23 +44,29 @@ class _BookmarkListFabState extends State<BookmarkListFab>
 
     // 初始状态显示FAB
     _animationController.forward();
+
+    // 监听滚动事件
+    widget.scrollController?.addListener(_onScroll);
   }
 
   @override
   void didUpdateWidget(BookmarkListFab oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.scrollController != widget.scrollController) {
-      // ScrollController 变化时重置状态
+      // 先解绑旧，再绑定新
+      oldWidget.scrollController?.removeListener(_onScroll);
+      widget.scrollController?.addListener(_onScroll);
+      // 重置滚动状态与动画
       _lastScrollPosition = 0;
-      setState(() {
-        _isVisible = true;
-      });
+      _isVisible = true;
       _animationController.forward();
     }
   }
 
   @override
   void dispose() {
+    // 解绑监听，防止内存泄漏与已销毁状态的 setState
+    widget.scrollController?.removeListener(_onScroll);
     _animationController.dispose();
     super.dispose();
   }
@@ -120,12 +126,6 @@ class _BookmarkListFabState extends State<BookmarkListFab>
 
   @override
   Widget build(BuildContext context) {
-    // 简单直接地绑定监听器
-    if (widget.scrollController != null) {
-      widget.scrollController!.removeListener(_onScroll);
-      widget.scrollController!.addListener(_onScroll);
-    }
-
     return ScaleTransition(
       scale: _animation,
       child: FloatingActionButton(

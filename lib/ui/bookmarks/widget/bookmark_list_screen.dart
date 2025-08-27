@@ -58,6 +58,7 @@ class BookmarkListScreen<T extends BaseBookmarksViewmodel>
 class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
     extends State<BookmarkListScreen<T>> {
   ScrollController? _scrollController;
+  bool _ownsController = false;
   late final ListenableSubscription _deleteSuccessSubscription;
 
   @override
@@ -93,16 +94,35 @@ class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    // 使用外部提供的 ScrollController 或创建自己的
-    _scrollController ??= widget.scrollController ?? ScrollController();
-    _scrollController?.addListener(_onScroll);
+    // 使用外部提供的 ScrollController 或创建自己的（仅首次绑定）
+    if (_scrollController == null) {
+      _scrollController = widget.scrollController ?? ScrollController();
+      _scrollController!.addListener(_onScroll);
+      _ownsController = widget.scrollController == null;
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant BookmarkListScreen<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.scrollController != widget.scrollController) {
+      // 解绑旧
+      _scrollController?.removeListener(_onScroll);
+      if (_ownsController) {
+        _scrollController?.dispose();
+      }
+      // 绑定新
+      _scrollController = widget.scrollController ?? ScrollController();
+      _ownsController = widget.scrollController == null;
+      _scrollController!.addListener(_onScroll);
+    }
   }
 
   @override
   void dispose() {
     _scrollController?.removeListener(_onScroll);
     // 只有自己创建的 ScrollController 才需要 dispose
-    if (widget.scrollController == null) {
+    if (_ownsController) {
       _scrollController?.dispose();
     }
     _deleteSuccessSubscription.cancel();
