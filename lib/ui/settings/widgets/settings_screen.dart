@@ -216,13 +216,15 @@ class SettingsScreen extends StatelessWidget {
                             ),
                             child: Text(
                               '更新',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onErrorContainer,
-                                fontWeight: FontWeight.w500,
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelSmall
+                                  ?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onErrorContainer,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                             ),
                           )
                         : null,
