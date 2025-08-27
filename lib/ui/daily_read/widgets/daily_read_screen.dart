@@ -27,8 +27,11 @@ class DailyReadScreen extends StatefulWidget {
 
 class _DailyReadScreenState extends State<DailyReadScreen> {
   late ConfettiController _confettiController;
-  ScrollController? _scrollController;
+  late final ScrollController _scrollController;
   late final ListenableSubscription _deleteSuccessSubscription;
+  late final ListenableSubscription _loadErrorSubscription;
+  late final ListenableSubscription _toggleArchivedErrorSubscription;
+  late final ListenableSubscription _toggleMarkedErrorSubscription;
 
   @override
   void initState() {
@@ -37,6 +40,9 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
     _confettiController = ConfettiController(
       duration: const Duration(seconds: 3),
     );
+    // 初始化滚动控制器
+    _scrollController = ScrollController();
+
     // 设置书签归档回调
     widget.viewModel.setOnBookmarkArchivedCallback(_onBookmarkArchived);
     // 设置导航回调
@@ -60,47 +66,54 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
         );
       }
     });
-  }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    // 创建ScrollController
-    _scrollController ??= ScrollController();
-    widget.viewModel.load.errors.where((x) => x != null).listen((error, _) {
-      appLogger.e(
-        '加载书签失败',
-        error: error,
-      );
-      SnackBarHelper.showError(
-        context,
-        '加载书签失败',
-      );
+    // 监听加载错误事件
+    _loadErrorSubscription =
+        widget.viewModel.load.errors.where((x) => x != null).listen((error, _) {
+      if (mounted) {
+        appLogger.e(
+          '加载书签失败',
+          error: error,
+        );
+        SnackBarHelper.showError(
+          context,
+          '加载书签失败',
+        );
+      }
     });
-    widget.viewModel.toggleBookmarkArchived.errors
+
+    // 监听归档切换错误事件
+    _toggleArchivedErrorSubscription = widget
+        .viewModel.toggleBookmarkArchived.errors
         .where((x) => x != null)
         .listen((error, _) {
-      appLogger.e(
-        '切换书签归档状态失败',
-        error: error,
-      );
-      SnackBarHelper.showError(
-        context,
-        '切换书签归档状态失败',
-      );
+      if (mounted) {
+        appLogger.e(
+          '切换书签归档状态失败',
+          error: error,
+        );
+        SnackBarHelper.showError(
+          context,
+          '切换书签归档状态失败',
+        );
+      }
     });
-    widget.viewModel.toggleBookmarkMarked.errors
+
+    // 监听标记切换错误事件
+    _toggleMarkedErrorSubscription = widget
+        .viewModel.toggleBookmarkMarked.errors
         .where((x) => x != null)
         .listen((error, _) {
-      appLogger.e(
-        '切换书签标记状态失败',
-        error: error,
-      );
-      SnackBarHelper.showError(
-        context,
-        '切换书签标记状态失败',
-      );
+      if (mounted) {
+        appLogger.e(
+          '切换书签标记状态失败',
+          error: error,
+        );
+        SnackBarHelper.showError(
+          context,
+          '切换书签标记状态失败',
+        );
+      }
     });
   }
 
@@ -124,9 +137,12 @@ class _DailyReadScreenState extends State<DailyReadScreen> {
     // 释放动画控制器
     _confettiController.dispose();
     // 释放滚动控制器
-    _scrollController?.dispose();
-    // 取消删除成功监听
+    _scrollController.dispose();
+    // 取消所有订阅
     _deleteSuccessSubscription.cancel();
+    _loadErrorSubscription.cancel();
+    _toggleArchivedErrorSubscription.cancel();
+    _toggleMarkedErrorSubscription.cancel();
     // 清除回调
     widget.viewModel.setOnBookmarkArchivedCallback(null);
     widget.viewModel.setNavigateToDetailCallback((_) {});
