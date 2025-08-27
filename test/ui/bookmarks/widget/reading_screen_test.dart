@@ -8,15 +8,21 @@ import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 import 'package:readeck_app/domain/models/bookmark_display_model/bookmark_display_model.dart';
 import 'package:readeck_app/ui/bookmarks/view_models/bookmarks_viewmodel.dart';
 import 'package:readeck_app/ui/bookmarks/widget/reading_screen.dart';
+import 'package:readeck_app/main_viewmodel.dart';
+import 'package:readeck_app/ui/settings/view_models/about_viewmodel.dart';
 
 import 'reading_screen_test.mocks.dart';
 
-@GenerateMocks([ReadingViewmodel])
+@GenerateMocks([ReadingViewmodel, MainAppViewModel, AboutViewModel])
 void main() {
   late MockReadingViewmodel mockReadingViewmodel;
+  late MockMainAppViewModel mockMainAppViewModel;
+  late MockAboutViewModel mockAboutViewModel;
 
   setUp(() {
     mockReadingViewmodel = MockReadingViewmodel();
+    mockMainAppViewModel = MockMainAppViewModel();
+    mockAboutViewModel = MockAboutViewModel();
 
     // Stub all commands that might be accessed during build
     final mockLoadCommand =
@@ -51,12 +57,29 @@ void main() {
     when(mockReadingViewmodel.hasMoreData).thenReturn(false);
     when(mockReadingViewmodel.isLoadingMore).thenReturn(false);
     when(mockReadingViewmodel.availableLabels).thenReturn([]);
+
+    // Mock MainAppViewModel
+    when(mockMainAppViewModel.shareTextStream)
+        .thenAnswer((_) => const Stream.empty());
+
+    // Mock AboutViewModel
+    when(mockAboutViewModel.updateInfo).thenReturn(null);
   });
 
   Widget createWidgetUnderTest() {
     return MaterialApp(
-      home: ChangeNotifierProvider<ReadingViewmodel>.value(
-        value: mockReadingViewmodel,
+      home: MultiProvider(
+        providers: [
+          ChangeNotifierProvider<ReadingViewmodel>.value(
+            value: mockReadingViewmodel,
+          ),
+          ChangeNotifierProvider<MainAppViewModel>.value(
+            value: mockMainAppViewModel,
+          ),
+          ChangeNotifierProvider<AboutViewModel>.value(
+            value: mockAboutViewModel,
+          ),
+        ],
         child: ReadingScreen(viewModel: mockReadingViewmodel),
       ),
     );
@@ -131,12 +154,11 @@ void main() {
 
     testWidgets('should use correct texts for reading context',
         (WidgetTester tester) async {
+      // Arrange - Set up empty bookmarks before creating widget
+      when(mockReadingViewmodel.bookmarks).thenReturn([]);
+
       // Act
       await tester.pumpWidget(createWidgetUnderTest());
-
-      // Verify the screen uses the correct BookmarkListTexts
-      // This is verified by checking the empty state which uses these texts
-      when(mockReadingViewmodel.bookmarks).thenReturn([]);
       await tester.pump();
 
       // Assert that the appropriate reading-related texts are shown

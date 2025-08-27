@@ -6,13 +6,19 @@
 import 'dart:async' as _i8;
 import 'dart:ui' as _i6;
 
+import 'package:flutter/material.dart' as _i10;
 import 'package:flutter_command/flutter_command.dart' as _i2;
 import 'package:mockito/mockito.dart' as _i1;
+import 'package:mockito/src/dummies.dart' as _i12;
 import 'package:readeck_app/domain/models/bookmark/bookmark.dart' as _i7;
 import 'package:readeck_app/domain/models/bookmark_display_model/bookmark_display_model.dart'
     as _i4;
+import 'package:readeck_app/domain/models/update/update_info.dart' as _i13;
+import 'package:readeck_app/main_viewmodel.dart' as _i9;
 import 'package:readeck_app/ui/daily_read/view_models/daily_read_viewmodel.dart'
     as _i3;
+import 'package:readeck_app/ui/settings/view_models/about_viewmodel.dart'
+    as _i11;
 import 'package:readeck_app/utils/reading_stats_calculator.dart' as _i5;
 
 // ignore_for_file: type=lint
@@ -309,6 +315,231 @@ class MockDailyReadViewModel extends _i1.Mock
         Invocation.method(
           #removeListener,
           [listener],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void notifyListeners() => super.noSuchMethod(
+        Invocation.method(
+          #notifyListeners,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
+}
+
+/// A class which mocks [MainAppViewModel].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockMainAppViewModel extends _i1.Mock implements _i9.MainAppViewModel {
+  @override
+  _i10.ThemeMode get themeMode => (super.noSuchMethod(
+        Invocation.getter(#themeMode),
+        returnValue: _i10.ThemeMode.system,
+        returnValueForMissingStub: _i10.ThemeMode.system,
+      ) as _i10.ThemeMode);
+
+  @override
+  _i8.Stream<String> get shareTextStream => (super.noSuchMethod(
+        Invocation.getter(#shareTextStream),
+        returnValue: _i8.Stream<String>.empty(),
+        returnValueForMissingStub: _i8.Stream<String>.empty(),
+      ) as _i8.Stream<String>);
+
+  @override
+  bool get hasListeners => (super.noSuchMethod(
+        Invocation.getter(#hasListeners),
+        returnValue: false,
+        returnValueForMissingStub: false,
+      ) as bool);
+
+  @override
+  void setPendingSharedText(String? text) => super.noSuchMethod(
+        Invocation.method(
+          #setPendingSharedText,
+          [text],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void clearPendingSharedText() => super.noSuchMethod(
+        Invocation.method(
+          #clearPendingSharedText,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void dispose() => super.noSuchMethod(
+        Invocation.method(
+          #dispose,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void addListener(_i6.VoidCallback? listener) => super.noSuchMethod(
+        Invocation.method(
+          #addListener,
+          [listener],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void removeListener(_i6.VoidCallback? listener) => super.noSuchMethod(
+        Invocation.method(
+          #removeListener,
+          [listener],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void notifyListeners() => super.noSuchMethod(
+        Invocation.method(
+          #notifyListeners,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
+}
+
+/// A class which mocks [AboutViewModel].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockAboutViewModel extends _i1.Mock implements _i11.AboutViewModel {
+  @override
+  _i2.Command<dynamic, dynamic> get load => (super.noSuchMethod(
+        Invocation.getter(#load),
+        returnValue: _FakeCommand_0<dynamic, dynamic>(
+          this,
+          Invocation.getter(#load),
+        ),
+        returnValueForMissingStub: _FakeCommand_0<dynamic, dynamic>(
+          this,
+          Invocation.getter(#load),
+        ),
+      ) as _i2.Command<dynamic, dynamic>);
+
+  @override
+  String get version => (super.noSuchMethod(
+        Invocation.getter(#version),
+        returnValue: _i12.dummyValue<String>(
+          this,
+          Invocation.getter(#version),
+        ),
+        returnValueForMissingStub: _i12.dummyValue<String>(
+          this,
+          Invocation.getter(#version),
+        ),
+      ) as String);
+
+  @override
+  double get downloadProgress => (super.noSuchMethod(
+        Invocation.getter(#downloadProgress),
+        returnValue: 0.0,
+        returnValueForMissingStub: 0.0,
+      ) as double);
+
+  @override
+  bool get isDownloading => (super.noSuchMethod(
+        Invocation.getter(#isDownloading),
+        returnValue: false,
+        returnValueForMissingStub: false,
+      ) as bool);
+
+  @override
+  bool get isInstalling => (super.noSuchMethod(
+        Invocation.getter(#isInstalling),
+        returnValue: false,
+        returnValueForMissingStub: false,
+      ) as bool);
+
+  @override
+  _i2.Command<_i13.UpdateInfo, void> get downloadAndInstallUpdateCommand =>
+      (super.noSuchMethod(
+        Invocation.getter(#downloadAndInstallUpdateCommand),
+        returnValue: _FakeCommand_0<_i13.UpdateInfo, void>(
+          this,
+          Invocation.getter(#downloadAndInstallUpdateCommand),
+        ),
+        returnValueForMissingStub: _FakeCommand_0<_i13.UpdateInfo, void>(
+          this,
+          Invocation.getter(#downloadAndInstallUpdateCommand),
+        ),
+      ) as _i2.Command<_i13.UpdateInfo, void>);
+
+  @override
+  _i2.Command<_i13.UpdateInfo, String> get downloadUpdateCommand =>
+      (super.noSuchMethod(
+        Invocation.getter(#downloadUpdateCommand),
+        returnValue: _FakeCommand_0<_i13.UpdateInfo, String>(
+          this,
+          Invocation.getter(#downloadUpdateCommand),
+        ),
+        returnValueForMissingStub: _FakeCommand_0<_i13.UpdateInfo, String>(
+          this,
+          Invocation.getter(#downloadUpdateCommand),
+        ),
+      ) as _i2.Command<_i13.UpdateInfo, String>);
+
+  @override
+  _i2.Command<String, void> get installUpdateCommand => (super.noSuchMethod(
+        Invocation.getter(#installUpdateCommand),
+        returnValue: _FakeCommand_0<String, void>(
+          this,
+          Invocation.getter(#installUpdateCommand),
+        ),
+        returnValueForMissingStub: _FakeCommand_0<String, void>(
+          this,
+          Invocation.getter(#installUpdateCommand),
+        ),
+      ) as _i2.Command<String, void>);
+
+  @override
+  set load(_i2.Command<dynamic, dynamic>? _load) => super.noSuchMethod(
+        Invocation.setter(
+          #load,
+          _load,
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  bool get hasListeners => (super.noSuchMethod(
+        Invocation.getter(#hasListeners),
+        returnValue: false,
+        returnValueForMissingStub: false,
+      ) as bool);
+
+  @override
+  void addListener(_i6.VoidCallback? listener) => super.noSuchMethod(
+        Invocation.method(
+          #addListener,
+          [listener],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void removeListener(_i6.VoidCallback? listener) => super.noSuchMethod(
+        Invocation.method(
+          #removeListener,
+          [listener],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void dispose() => super.noSuchMethod(
+        Invocation.method(
+          #dispose,
+          [],
         ),
         returnValueForMissingStub: null,
       );
