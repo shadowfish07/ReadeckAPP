@@ -10,7 +10,6 @@ import 'package:readeck_app/ui/core/ui/loading.dart';
 import 'package:readeck_app/ui/bookmarks/view_models/bookmarks_viewmodel.dart';
 import 'package:readeck_app/utils/network_error_exception.dart';
 import 'package:readeck_app/ui/core/ui/snack_bar_helper.dart';
-import 'package:readeck_app/ui/core/main_layout.dart';
 
 /// 书签列表页面的文案配置
 class BookmarkListTexts {
@@ -45,10 +44,12 @@ class BookmarkListScreen<T extends BaseBookmarksViewmodel>
     super.key,
     required this.viewModel,
     required this.texts,
+    this.scrollController,
   });
 
   final T viewModel;
   final BookmarkListTexts texts;
+  final ScrollController? scrollController;
 
   @override
   State<BookmarkListScreen<T>> createState() => _BookmarkListScreenState<T>();
@@ -57,6 +58,7 @@ class BookmarkListScreen<T extends BaseBookmarksViewmodel>
 class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
     extends State<BookmarkListScreen<T>> {
   ScrollController? _scrollController;
+  bool _ownsController = false;
   late final ListenableSubscription _deleteSuccessSubscription;
 
   @override
@@ -92,37 +94,37 @@ class _BookmarkListScreenState<T extends BaseBookmarksViewmodel>
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    // 只有在没有外部提供ScrollController时才创建自己的
+    // 使用外部提供的 ScrollController 或创建自己的（仅首次绑定）
     if (_scrollController == null) {
-      _scrollController = ScrollController();
-      _scrollController?.addListener(_onScroll);
+      _scrollController = widget.scrollController ?? ScrollController();
+      _scrollController!.addListener(_onScroll);
+      _ownsController = widget.scrollController == null;
+    }
+  }
 
-      // 延迟到下一帧更新Provider，避免在build过程中触发rebuild
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          try {
-            final provider = context.read<ScrollControllerProvider?>();
-            provider?.setScrollController(_scrollController);
-          } catch (e) {
-            // 在测试环境中可能会失败，忽略
-          }
-        }
-      });
+  @override
+  void didUpdateWidget(covariant BookmarkListScreen<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.scrollController != widget.scrollController) {
+      // 解绑旧
+      _scrollController?.removeListener(_onScroll);
+      if (_ownsController) {
+        _scrollController?.dispose();
+      }
+      // 绑定新
+      _scrollController = widget.scrollController ?? ScrollController();
+      _ownsController = widget.scrollController == null;
+      _scrollController!.addListener(_onScroll);
     }
   }
 
   @override
   void dispose() {
-    // 清除Provider中的ScrollController引用
-    try {
-      final provider = context.read<ScrollControllerProvider?>();
-      provider?.setScrollController(null);
-    } catch (e) {
-      // 在测试或context已失效时忽略错误
-    }
-
     _scrollController?.removeListener(_onScroll);
-    _scrollController?.dispose();
+    // 只有自己创建的 ScrollController 才需要 dispose
+    if (_ownsController) {
+      _scrollController?.dispose();
+    }
     _deleteSuccessSubscription.cancel();
     super.dispose();
   }

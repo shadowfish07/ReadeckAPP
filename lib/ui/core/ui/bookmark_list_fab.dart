@@ -46,31 +46,29 @@ class _BookmarkListFabState extends State<BookmarkListFab>
     _animationController.forward();
 
     // 监听滚动事件
-    _attachScrollListener();
+    widget.scrollController?.addListener(_onScroll);
   }
 
   @override
   void didUpdateWidget(BookmarkListFab oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.scrollController != widget.scrollController) {
-      _detachScrollListener(oldWidget.scrollController);
-      _attachScrollListener();
+      // 先解绑旧，再绑定新
+      oldWidget.scrollController?.removeListener(_onScroll);
+      widget.scrollController?.addListener(_onScroll);
+      // 重置滚动状态与动画
+      _lastScrollPosition = 0;
+      _isVisible = true;
+      _animationController.forward();
     }
   }
 
   @override
   void dispose() {
-    _detachScrollListener(widget.scrollController);
+    // 解绑监听，防止内存泄漏与已销毁状态的 setState
+    widget.scrollController?.removeListener(_onScroll);
     _animationController.dispose();
     super.dispose();
-  }
-
-  void _attachScrollListener() {
-    widget.scrollController?.addListener(_onScroll);
-  }
-
-  void _detachScrollListener(ScrollController? controller) {
-    controller?.removeListener(_onScroll);
   }
 
   void _onScroll() {
@@ -83,10 +81,11 @@ class _BookmarkListFabState extends State<BookmarkListFab>
     final scrollDelta = currentScrollPosition - _lastScrollPosition;
 
     // 滚动阈值，避免微小滚动导致频繁切换
-    const scrollThreshold = 3.0;
+    const scrollThreshold = 5.0;
 
     // 如果滚动距离太小，忽略
     if (scrollDelta.abs() < scrollThreshold) {
+      _lastScrollPosition = currentScrollPosition;
       return;
     }
 

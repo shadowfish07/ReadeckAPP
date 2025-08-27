@@ -4,28 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:readeck_app/main_viewmodel.dart';
 import 'package:readeck_app/routing/routes.dart';
-import 'package:readeck_app/ui/core/ui/bookmark_list_fab.dart';
 import 'package:readeck_app/ui/settings/view_models/about_viewmodel.dart';
-
-/// ScrollController提供者，用于FAB和页面之间共享滚动控制器
-class ScrollControllerProvider extends ChangeNotifier {
-  ScrollController? _scrollController;
-
-  ScrollController? get scrollController => _scrollController;
-
-  void setScrollController(ScrollController? controller) {
-    if (_scrollController != controller) {
-      _scrollController = controller;
-      notifyListeners();
-    }
-  }
-
-  @override
-  void dispose() {
-    _scrollController = null;
-    super.dispose();
-  }
-}
+import 'package:readeck_app/ui/core/ui/bookmark_list_fab.dart';
 
 class MainLayout extends StatefulWidget {
   final Widget child;
@@ -35,6 +15,7 @@ class MainLayout extends StatefulWidget {
   final Widget? leading;
   final bool automaticallyImplyLeading;
   final Widget? floatingActionButton;
+  final ScrollController? scrollController;
   final bool showFab;
 
   const MainLayout({
@@ -46,6 +27,7 @@ class MainLayout extends StatefulWidget {
     this.leading,
     this.automaticallyImplyLeading = true,
     this.floatingActionButton,
+    this.scrollController,
     this.showFab = false,
   });
 
@@ -137,72 +119,63 @@ class _MainLayoutState extends State<MainLayout> {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => ScrollControllerProvider(),
-      child: Scaffold(
-        appBar: widget.appBar ??
-            (widget.title != null ||
-                    widget.actions != null ||
-                    widget.leading != null
-                ? AppBar(
-                    title: widget.title != null ? Text(widget.title!) : null,
-                    actions: widget.actions,
-                    leading: widget.leading,
-                    automaticallyImplyLeading: widget.automaticallyImplyLeading,
-                  )
-                : AppBar(
-                    automaticallyImplyLeading: widget.automaticallyImplyLeading,
-                    leading: Builder(
-                      builder: (context) {
-                        return IconButton(
-                          icon: const Icon(Icons.menu),
-                          onPressed: () {
-                            Scaffold.of(context).openDrawer();
-                          },
-                        );
-                      },
-                    ),
-                  )),
-        drawer: NavigationDrawer(
-          children: [
-            ListTile(
-              title: const Text('每日阅读'),
-              onTap: () => _navigateToRoute(context, Routes.dailyRead),
-            ),
-            ListTile(
-              title: const Text('未读'),
-              onTap: () => _navigateToRoute(context, Routes.unarchived),
-            ),
-            ListTile(
-              title: const Text('阅读中'),
-              onTap: () => _navigateToRoute(context, Routes.reading),
-            ),
-            ListTile(
-              title: const Text('已归档'),
-              onTap: () => _navigateToRoute(context, Routes.archived),
-            ),
-            ListTile(
-              title: const Text('收藏'),
-              onTap: () => _navigateToRoute(context, Routes.marked),
-            ),
-            ListTile(
-              title: const Text('设置'),
-              trailing: _hasUpdate ? const Badge() : null,
-              onTap: () => _navigateToRoute(context, Routes.settings),
-            ),
-          ],
-        ),
-        body: widget.child, // 显示当前路由的页面
-        floatingActionButton: widget.showFab
-            ? Consumer<ScrollControllerProvider>(
-                builder: (context, provider, child) {
-                  return BookmarkListFab(
-                    scrollController: provider.scrollController,
-                  );
-                },
-              )
-            : widget.floatingActionButton,
+    return Scaffold(
+      appBar: widget.appBar ??
+          (widget.title != null ||
+                  widget.actions != null ||
+                  widget.leading != null
+              ? AppBar(
+                  title: widget.title != null ? Text(widget.title!) : null,
+                  actions: widget.actions,
+                  leading: widget.leading,
+                  automaticallyImplyLeading: widget.automaticallyImplyLeading,
+                )
+              : AppBar(
+                  automaticallyImplyLeading: widget.automaticallyImplyLeading,
+                  leading: Builder(
+                    builder: (context) {
+                      return IconButton(
+                        icon: const Icon(Icons.menu),
+                        onPressed: () {
+                          Scaffold.of(context).openDrawer();
+                        },
+                      );
+                    },
+                  ),
+                )),
+      drawer: NavigationDrawer(
+        children: [
+          ListTile(
+            title: const Text('每日阅读'),
+            onTap: () => _navigateToRoute(context, Routes.dailyRead),
+          ),
+          ListTile(
+            title: const Text('未读'),
+            onTap: () => _navigateToRoute(context, Routes.unarchived),
+          ),
+          ListTile(
+            title: const Text('阅读中'),
+            onTap: () => _navigateToRoute(context, Routes.reading),
+          ),
+          ListTile(
+            title: const Text('已归档'),
+            onTap: () => _navigateToRoute(context, Routes.archived),
+          ),
+          ListTile(
+            title: const Text('收藏'),
+            onTap: () => _navigateToRoute(context, Routes.marked),
+          ),
+          ListTile(
+            title: const Text('设置'),
+            trailing: _hasUpdate ? const Badge() : null,
+            onTap: () => _navigateToRoute(context, Routes.settings),
+          ),
+        ],
       ),
+      body: widget.child, // 显示当前路由的页面
+      floatingActionButton: widget.showFab && widget.scrollController != null
+          ? BookmarkListFab(scrollController: widget.scrollController!)
+          : widget.floatingActionButton,
     );
   }
 }

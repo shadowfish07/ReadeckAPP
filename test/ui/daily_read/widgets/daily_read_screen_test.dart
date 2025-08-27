@@ -9,18 +9,25 @@ import 'package:readeck_app/domain/models/bookmark/bookmark.dart';
 import 'package:readeck_app/domain/models/bookmark_display_model/bookmark_display_model.dart';
 import 'package:readeck_app/ui/daily_read/view_models/daily_read_viewmodel.dart';
 import 'package:readeck_app/ui/daily_read/widgets/daily_read_screen.dart';
-import 'package:readeck_app/ui/core/main_layout.dart';
+import 'package:readeck_app/main_viewmodel.dart';
+import 'package:readeck_app/ui/settings/view_models/about_viewmodel.dart';
 
 import 'daily_read_screen_test.mocks.dart';
 
-@GenerateNiceMocks([MockSpec<DailyReadViewModel>()])
+@GenerateNiceMocks([
+  MockSpec<DailyReadViewModel>(),
+  MockSpec<MainAppViewModel>(),
+  MockSpec<AboutViewModel>(),
+])
 void main() {
   late MockDailyReadViewModel mockDailyReadViewModel;
-  late ScrollControllerProvider scrollControllerProvider;
+  late MockMainAppViewModel mockMainAppViewModel;
+  late MockAboutViewModel mockAboutViewModel;
 
   setUp(() {
     mockDailyReadViewModel = MockDailyReadViewModel();
-    scrollControllerProvider = ScrollControllerProvider();
+    mockMainAppViewModel = MockMainAppViewModel();
+    mockAboutViewModel = MockAboutViewModel();
 
     // Stub all other commands that might be accessed during build
     final mockOpenUrlCommand =
@@ -47,10 +54,13 @@ void main() {
         .thenReturn(null);
     when(mockDailyReadViewModel.setNavigateToDetailCallback(any))
         .thenReturn(null);
-  });
 
-  tearDown(() {
-    scrollControllerProvider.dispose();
+    // Mock MainAppViewModel
+    when(mockMainAppViewModel.shareTextStream)
+        .thenAnswer((_) => const Stream.empty());
+
+    // Mock AboutViewModel
+    when(mockAboutViewModel.updateInfo).thenReturn(null);
   });
 
   Widget createWidgetUnderTest() {
@@ -60,8 +70,11 @@ void main() {
           ChangeNotifierProvider<DailyReadViewModel>.value(
             value: mockDailyReadViewModel,
           ),
-          ChangeNotifierProvider<ScrollControllerProvider>.value(
-            value: scrollControllerProvider,
+          ChangeNotifierProvider<MainAppViewModel>.value(
+            value: mockMainAppViewModel,
+          ),
+          ChangeNotifierProvider<AboutViewModel>.value(
+            value: mockAboutViewModel,
           ),
         ],
         child: DailyReadScreen(viewModel: mockDailyReadViewModel),

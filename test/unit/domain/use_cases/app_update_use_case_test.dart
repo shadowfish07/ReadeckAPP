@@ -8,6 +8,7 @@ import 'package:readeck_app/domain/models/update/update_info.dart';
 import 'package:readeck_app/domain/use_cases/app_update_use_case.dart';
 import 'package:result_dart/result_dart.dart';
 
+import '../../../helpers/test_logger_helper.dart';
 import 'app_update_use_case_test.mocks.dart';
 
 @GenerateMocks([DownloadService, AppInstallerService])
@@ -25,15 +26,18 @@ void main() {
     late MockAppInstallerService mockInstallerService;
     late Logger mockLogger;
 
+    setupTestGroupLogging();
+
     setUp(() {
       // Create mock services
       mockDownloadService = MockDownloadService();
       mockInstallerService = MockAppInstallerService();
 
-      // Create a mock logger for testing to avoid appLogger dependency
+      // Use the test logger which only outputs on failure
       mockLogger = Logger(
-        printer: PrettyPrinter(),
-        output: null, // Don't output during tests
+        printer: SimpleTestPrinter(),
+        output: MultiOutput([]),
+        level: Level.off,
       );
 
       // Setup default stubs for all required methods
@@ -302,14 +306,16 @@ void main() {
 
     group('Integration Tests', () {
       test('multiple use case instances should work independently', () {
-        // Create mock loggers for this test
+        // Create silent test loggers
         final mockLogger1 = Logger(
-          printer: PrettyPrinter(),
-          output: null, // Don't output during tests
+          printer: SimpleTestPrinter(),
+          output: MultiOutput([]),
+          level: Level.off,
         );
         final mockLogger2 = Logger(
-          printer: PrettyPrinter(),
-          output: null, // Don't output during tests
+          printer: SimpleTestPrinter(),
+          output: MultiOutput([]),
+          level: Level.off,
         );
 
         final useCase1 = AppUpdateUseCase(
