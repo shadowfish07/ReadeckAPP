@@ -16,29 +16,26 @@ class FilterChipSelector<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Wrap(
+      spacing: 8.0,
       children: options.map((option) {
         final isSelected = selectedValue == option;
-        return Padding(
-          padding: const EdgeInsets.only(right: 8),
-          child: FilterChip(
-            selected: isSelected,
-            label: Text(labelBuilder(option)),
-            onSelected: (selected) {
-              if (selected) {
-                onSelectionChanged(option);
-              }
-            },
-            selectedColor: Theme.of(context).colorScheme.secondaryContainer,
-            checkmarkColor: Theme.of(context).colorScheme.onSecondaryContainer,
-            labelStyle: TextStyle(
-              fontSize: 12,
-              color: isSelected
-                  ? Theme.of(context).colorScheme.onSecondaryContainer
-                  : Theme.of(context).colorScheme.onSurface,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+        return FilterChip(
+          selected: isSelected,
+          label: Text(labelBuilder(option)),
+          onSelected: (selected) {
+            if (selected) {
+              onSelectionChanged(option);
+            }
+          },
+          selectedColor: Theme.of(context).colorScheme.secondaryContainer,
+          checkmarkColor: Theme.of(context).colorScheme.onSecondaryContainer,
+          labelStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: isSelected
+                    ? Theme.of(context).colorScheme.onSecondaryContainer
+                    : Theme.of(context).colorScheme.onSurface,
+                fontWeight: FontWeight.w500,
+              ),
         );
       }).toList(),
     );

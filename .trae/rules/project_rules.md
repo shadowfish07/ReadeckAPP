@@ -652,7 +652,7 @@ This project follows a Test-Driven Development (TDD) approach. All new features 
 
 1. **主题选择器**：`FilterChip` 实现多选一
    - 选中状态：`secondaryContainer` + `onSecondaryContainer` 配色
-   - 字体：12px + `fontWeight.w500`
+   - 文本样式：基于 `Theme.of(context).textTheme.labelSmall` 并通过 `copyWith(fontWeight: FontWeight.w500)` 调整字重
 
 2. **导航设置项**：图标 + 标题 + 副标题的标准布局
    - 支持可选的 `trailing` 组件（如更新提示标签）
