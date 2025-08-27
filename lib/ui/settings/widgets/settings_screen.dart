@@ -62,7 +62,6 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  /// 构建导出日志项
   Widget _buildExportLogsTile(BuildContext context) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -105,7 +104,9 @@ class SettingsScreen extends StatelessWidget {
         ),
       ),
       onTap: () {
-        viewModel.exportLogs.execute();
+        if (!viewModel.exportLogs.isExecuting.value) {
+          viewModel.exportLogs.execute();
+        }
       },
     );
   }
